@@ -5,6 +5,7 @@ interface User {
   userid: number;
   username: string;
   companyid: number;
+  company_name?: string;
   name?: string;
   role?: string;
 }

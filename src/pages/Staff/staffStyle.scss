@@ -1,0 +1,54 @@
+/* Custom styles specifically for the Staff page */
+@import "../../styles/common.scss";
+
+.staff-page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  color: var(--cream);
+  font-family: 'DM Sans', sans-serif;
+  animation: modalContentIn 0.5s ease-out;
+}
+
+// Action Button inside Table
+.staff-action-edit {
+  background: rgba(245,158,11,0.1);
+  color: var(--amber);
+  border: 1px solid rgba(245,158,11,0.2);
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: rgba(245,158,11,0.2);
+    border-color: var(--amber);
+  }
+}
+
+// Table specific cells
+.staff-profile-pill {
+  width: 32px; 
+  height: 32px; 
+  border-radius: 50%; 
+  object-fit: cover; 
+  border: 1px solid var(--border);
+}
+
+.staff-role-badge {
+  font-size: 0.85rem; 
+  color: var(--amber-lt); 
+  background: rgba(245,158,11,0.1); 
+  padding: 4px 10px; 
+  border-radius: 20px; 
+  font-weight: 600;
+}
+
+// Form specific spacing
+.staff-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}

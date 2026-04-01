@@ -3,7 +3,6 @@ import { Outlet, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../store';
 import DefaultAside from './DefaultAside';
-import Header from './Header';
 import Footer from './Footer';
 
 const DefaultLayout: React.FC = () => {
@@ -16,9 +15,8 @@ const DefaultLayout: React.FC = () => {
   return (
     <div className="admin-container">
       <DefaultAside />
-      <main className="content" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-        <Header />
-        <div className="page-wrapper" style={{ flex: 1, padding: '16px', overflowY: 'auto', background: '#f8fafc' }}>
+      <main className="content" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: 'transparent' }}>
+        <div className="page-wrapper" style={{ flex: 1, overflowY: 'auto', background: 'transparent', display: 'flex', flexDirection: 'column' }}>
           <Outlet />
         </div>
         <Footer />

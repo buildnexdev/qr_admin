@@ -1,16 +1,16 @@
 :root {
-  --primary: #EF4444;
-  --primary-dark: #DC2626;
-  --primary-light: #FEE2E2;
-  --accent: #F59E0B;
-  --bg-main: #FFFAF5;
-  --sidebar-bg: #18181B;
-  --sidebar-text: #A1A1AA;
-  --sidebar-active: #FFFFFF;
-  --text-dark: #18181B;
-  --text-muted: #71717A;
-  --border-color: #E4E4E7;
-  --shadow-premium: 0 10px 40px rgba(0,0,0,0.06);
+  --primary: #ea580c;
+  --primary-dark: #c2410c;
+  --primary-light: rgba(234, 88, 12, 0.1);
+  --accent: #f59e0b;
+  --bg-main: transparent;
+  --sidebar-bg: rgba(14, 11, 8, 0.4);
+  --sidebar-text: #a8956e;
+  --sidebar-active: #f59e0b;
+  --text-dark: #fef3c7;
+  --text-muted: #a8956e;
+  --border-color: rgba(245, 158, 11, 0.14);
+  --shadow-premium: 0 10px 40px rgba(0,0,0,0.5);
   --radius: 16px;
   --font-serif: 'Playfair Display', serif;
 }

@@ -1,0 +1,183 @@
+/* Custom styles specifically for the Menu page */
+@import "../../styles/common.scss";
+
+.menu-page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  color: var(--cream);
+  font-family: 'DM Sans', sans-serif;
+  animation: modalContentIn 0.5s ease-out;
+}
+
+/* Card Grid Layout */
+.menu-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  padding: 32px;
+}
+
+.menu-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+    border-color: var(--amber);
+  }
+}
+
+.menu-card-img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-bottom: 1px solid var(--border);
+}
+
+.menu-img-placeholder {
+  width: 100%;
+  height: 180px;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.menu-card-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.menu-category-badge {
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--amber);
+  background: rgba(245,158,11,0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+  align-self: flex-start;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.menu-card-price {
+  font-size: 1.25rem;
+  color: var(--cream);
+  font-weight: 700;
+  margin-top: auto;
+  padding-top: 16px;
+  font-family: 'Playfair Display', serif;
+}
+
+.menu-actions {
+  display: flex;
+  gap: 8px;
+  padding: 16px 20px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.btn-icon-edit {
+  flex: 1;
+  background: rgba(245,158,11,0.1);
+  color: var(--amber);
+  border: 1px solid rgba(245,158,11,0.2);
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+
+  &:hover {
+    background: rgba(245,158,11,0.2);
+    border-color: var(--amber);
+  }
+}
+
+.btn-icon-delete {
+  flex: 1;
+  background: rgba(239,68,68,0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239,68,68,0.2);
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+
+  &:hover {
+    background: rgba(239,68,68,0.2);
+    border-color: #ef4444;
+  }
+}
+
+/* Image Upload Tabs */
+.img-mode-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.img-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &.active {
+    border-color: var(--amber);
+    background: rgba(245,158,11,0.1);
+    color: var(--amber);
+  }
+
+  &:hover:not(.active) {
+    border-color: var(--border-h);
+    color: var(--cream);
+  }
+}
+
+.upload-placeholder {
+  width: 100%;
+  height: 140px;
+  border-radius: 12px;
+  border: 2px dashed var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  background: rgba(255,255,255,0.02);
+
+  &:hover {
+    border-color: var(--amber);
+    color: var(--amber);
+    background: rgba(245,158,11,0.05);
+  }
+}

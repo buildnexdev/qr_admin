@@ -1,16 +1,22 @@
-import { 
-  UserCircle, 
-  Tags, 
-  Utensils, 
-  Grid, 
-  ChefHat, 
-  ClipboardList, 
-  Receipt, 
-  Package, 
+import {
+  UserCircle,
+  Building2,
+  Tags,
+  Utensils,
+  Grid,
+  ChefHat,
+  ClipboardList,
+  Receipt,
+  Package,
   BarChart3
 } from 'lucide-react';
 
 export const ADMIN_MENU = [
+  {
+    path: '/branch',
+    name: 'Branch',
+    icon: Building2,
+  },
   {
     path: '/staff',
     name: 'Staff',

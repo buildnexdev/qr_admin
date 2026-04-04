@@ -8,8 +8,8 @@ interface CommonHeaderProps {
   searchPlaceholder?: string;
   searchValue: string;
   onSearchChange: (value: string) => void;
-  onAddClick: () => void;
-  addButtonLabel: string;
+  onAddClick?: () => void;
+  addButtonLabel?: string;
 }
 
 const CommonHeader: React.FC<CommonHeaderProps> = ({
@@ -42,9 +42,11 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
       </div>
 
       <div className="d-flex align-items-center">
-        <button onClick={onAddClick} className="btn-premium">
-          <Plus size={18} /> {addButtonLabel}
-        </button>
+        {onAddClick && addButtonLabel && (
+          <button onClick={onAddClick} className="btn-premium">
+            <Plus size={18} /> {addButtonLabel}
+          </button>
+        )}
       </div>
     </header>
   );

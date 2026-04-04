@@ -88,10 +88,10 @@ const Dashboard: React.FC = () => {
 
   const statusColor = (status: string) => {
     switch (status?.toLowerCase()) {
-      case 'pending':   return { bg: 'rgba(245,158,11,0.1)',  text: '#f59e0b' };
+      case 'pending':   return { bg: 'rgba(245,158,11,0.1)',  text: 'var(--amber)' };
       case 'preparing': return { bg: 'rgba(234,88,12,0.1)',   text: '#ea580c' };
       case 'served':    return { bg: 'rgba(16,185,129,0.1)',  text: '#10b981' };
-      default:          return { bg: 'rgba(255,255,255,0.06)', text: '#a8956e' };
+      default:          return { bg: 'rgba(255,255,255,0.06)', text: 'var(--muted)' };
     }
   };
 
@@ -102,7 +102,7 @@ const Dashboard: React.FC = () => {
 
         .dash-page {
           min-height: 100vh;
-          background: #0e0b08;
+          background: var(--bg);
           font-family: 'DM Sans', sans-serif;
           padding: 36px 40px 60px;
           position: relative;
@@ -137,12 +137,12 @@ const Dashboard: React.FC = () => {
           font-family: 'Playfair Display', serif;
           font-size: 36px;
           font-weight: 700;
-          color: #fef3c7;
+          color: var(--cream);
           line-height: 1.1;
           margin-bottom: 6px;
         }
-        .dash-title em { font-style: italic; color: #fbbf24; }
-        .dash-subtitle { font-size: 15px; color: #a8956e; }
+        .dash-title em { font-style: italic; color: var(--amber-lt); }
+        .dash-subtitle { font-size: 15px; color: var(--muted); }
 
         /* ── Stat cards ─────────────────────────────────────────── */
         .stat-grid {
@@ -152,8 +152,8 @@ const Dashboard: React.FC = () => {
           margin-bottom: 40px;
         }
         .stat-card {
-          background: #1f1810;
-          border: 1px solid rgba(245,158,11,0.12);
+          background: var(--card);
+          border: 1px solid var(--border);
           border-radius: 20px;
           padding: 24px 22px;
           display: flex;
@@ -188,12 +188,12 @@ const Dashboard: React.FC = () => {
           font-family: 'Playfair Display', serif;
           font-size: 34px;
           font-weight: 700;
-          color: #fef3c7;
+          color: var(--cream);
           line-height: 1;
         }
         .stat-label {
           font-size: 13px;
-          color: #a8956e;
+          color: var(--muted);
           font-weight: 500;
           letter-spacing: 0.02em;
         }
@@ -211,8 +211,8 @@ const Dashboard: React.FC = () => {
 
         /* ── Card shared ────────────────────────────────────────── */
         .dash-card {
-          background: #1f1810;
-          border: 1px solid rgba(245,158,11,0.12);
+          background: var(--card);
+          border: 1px solid var(--border);
           border-radius: 20px;
           overflow: hidden;
         }
@@ -227,14 +227,14 @@ const Dashboard: React.FC = () => {
           font-family: 'Playfair Display', serif;
           font-size: 18px;
           font-weight: 700;
-          color: #fef3c7;
+          color: var(--cream);
         }
         .dash-card-link {
           display: flex;
           align-items: center;
           gap: 5px;
           font-size: 13px;
-          color: #f59e0b;
+          color: var(--amber);
           cursor: pointer;
           font-weight: 500;
           transition: gap 0.15s;
@@ -268,10 +268,10 @@ const Dashboard: React.FC = () => {
           flex-shrink: 0;
         }
         .order-meta { display: flex; flex-direction: column; gap: 2px; }
-        .order-customer { font-size: 14px; font-weight: 600; color: #fef3c7; }
-        .order-time { font-size: 12px; color: #a8956e; display: flex; align-items: center; gap: 4px; }
+        .order-customer { font-size: 14px; font-weight: 600; color: var(--cream); }
+        .order-time { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
         .order-right { display: flex; align-items: center; gap: 14px; }
-        .order-amount { font-size: 15px; font-weight: 700; color: #fef3c7; }
+        .order-amount { font-size: 15px; font-weight: 700; color: var(--cream); }
         .status-badge {
           font-size: 11px;
           font-weight: 600;
@@ -283,7 +283,7 @@ const Dashboard: React.FC = () => {
         .empty-orders {
           padding: 40px 24px;
           text-align: center;
-          color: #a8956e;
+          color: var(--muted);
           font-size: 14px;
         }
         .empty-orders .ein { font-size: 36px; margin-bottom: 10px; }
@@ -312,14 +312,14 @@ const Dashboard: React.FC = () => {
           flex-shrink: 0;
         }
         .qa-text { flex: 1; }
-        .qa-label { font-size: 14px; font-weight: 600; color: #fef3c7; }
-        .qa-sub { font-size: 12px; color: #a8956e; margin-top: 2px; }
-        .qa-arrow { color: #a8956e; transition: color 0.15s, transform 0.15s; }
-        .quick-action-btn:hover .qa-arrow { color: #f59e0b; transform: translateX(3px); }
+        .qa-label { font-size: 14px; font-weight: 600; color: var(--cream); }
+        .qa-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+        .qa-arrow { color: var(--muted); transition: color 0.15s, transform 0.15s; }
+        .quick-action-btn:hover .qa-arrow { color: var(--amber); transform: translateX(3px); }
 
         /* ── Skeleton loader ────────────────────────────────────── */
         .skel {
-          background: linear-gradient(90deg, #1f1810 25%, #251c12 50%, #1f1810 75%);
+          background: linear-gradient(90deg, var(--card) 25%, var(--card-hov) 50%, var(--card) 75%);
           background-size: 200% 100%;
           animation: shimmer 1.5s infinite;
           border-radius: 8px;

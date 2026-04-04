@@ -4,10 +4,10 @@ import axios from 'axios';
 import { QRCodeSVG } from 'qrcode.react';
 import { Plus, Trash2, PrinterIcon } from 'lucide-react';
 import { Base64 } from 'js-base64';
-import type { RootState } from '../store';
-import { setTables, setLoading } from '../store/tableSlice';
-import type { Table } from '../store/tableSlice';
-import Modal from '../components/Modal';
+import type { RootState } from '../../store';
+import { setTables, setLoading } from '../../store/tableSlice';
+import type { Table } from '../../store/tableSlice';
+import Modal from '../../components/Modal';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -103,20 +103,7 @@ const Tables: React.FC = () => {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         /* ── Variables ────────────────────────────────────────── */
-        :root {
-          --bg:       #0e0b08;
-          --surface:  #19140e;
-          --card:     #1f1810;
-          --card-hov: #251c12;
-          --amber:    #f59e0b;
-          --amber-lt: #fbbf24;
-          --ember:    #ea580c;
-          --cream:    #fef3c7;
-          --muted:    #a8956e;
-          --border:   rgba(245,158,11,0.14);
-          --border-h: rgba(245,158,11,0.32);
-          --glow:     rgba(245,158,11,0.20);
-        }
+        /* Relying on global :root CSS variables in index.css */
 
         /* ── Page wrapper ─────────────────────────────────────── */
         .tables-page {

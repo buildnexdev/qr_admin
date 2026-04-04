@@ -28,6 +28,33 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+html[data-theme='light'] {
+  --bg:       #f8fafc;
+  --surface:  #f1f5f9;
+  --card:     #ffffff;
+  --card-hov: #f8fafc;
+  --amber:    #d97706;
+  --amber-lt: #f59e0b;
+  --ember:    #ea580c;
+  --cream:    #0f172a;
+  --muted:    #64748b;
+  --border:   rgba(0,0,0,0.1);
+  --border-h: rgba(0,0,0,0.2);
+  --glow:     rgba(217,119,6,0.05);
+  
+  color-scheme: light;
+}
+
+html[data-theme='light'] body::before {
+  background: 
+    radial-gradient(ellipse 55% 40% at 15% 20%, rgba(234,88,12,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 50% at 85% 80%, rgba(245,158,11,0.04) 0%, transparent 70%);
+}
+
+html[data-theme='light'] .text-white { color: var(--cream) !important; }
+html[data-theme='light'] .text-white-50 { color: var(--muted) !important; }
+html[data-theme='light'] .bg-dark { background-color: var(--surface) !important; color: var(--cream) !important; }
+
 body {
   margin: 0;
   min-width: 320px;

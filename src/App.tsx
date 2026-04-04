@@ -1,5 +1,5 @@
 import { useRoutes, Navigate, type RouteObject } from 'react-router-dom';
-import Login from './pages/Login';
+import Login from './pages/Login/Login';
 import { contentRouters } from './router/contentRouters';
 import './App.css';
 

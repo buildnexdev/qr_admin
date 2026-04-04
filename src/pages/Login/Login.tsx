@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { loginUser, clearError } from '../store/authSlice';
-import type { RootState, AppDispatch } from '../store';
+import { loginUser, clearError } from '../../store/authSlice';
+import type { RootState, AppDispatch } from '../../store';
 import { User, Lock, ArrowRight, Loader2 } from 'lucide-react';
 
 /* ─── Floating food particle data ─────────────────────────── */
@@ -24,7 +24,7 @@ const FOOD_PARTICLES = [
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [mounted, setMounted] = useState(false);
+
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { status, error, isAuthenticated } = useSelector(
@@ -32,7 +32,7 @@ const Login: React.FC = () => {
   );
 
   useEffect(() => {
-    setMounted(true);
+
     if (isAuthenticated) navigate('/');
     return () => { dispatch(clearError()); };
   }, [isAuthenticated, navigate, dispatch]);

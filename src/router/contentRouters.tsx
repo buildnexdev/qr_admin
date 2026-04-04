@@ -12,6 +12,7 @@ import Orders from '../pages/Orders/Orders';
 import Bills from '../pages/Bill/Bills';
 import Stocks from '../pages/Stocks/Stocks';
 import Reports from '../pages/Reports/Reports';
+import Profile from '../pages/Profile/Profile';
 
 export const contentRouters: RouteObject[] = [
   {
@@ -28,7 +29,8 @@ export const contentRouters: RouteObject[] = [
       { path: 'orders', element: <Orders /> },
       { path: 'bills', element: <Bills /> },
       { path: 'stocks', element: <Stocks /> },
-      { path: 'reports', element: <Reports /> }
+      { path: 'reports', element: <Reports /> },
+      { path: 'profile', element: <Profile /> }
     ]
   }
 ];

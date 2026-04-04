@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
-import { UtensilsActivity, Edit2, Trash2, Save } from 'lucide-react';
+import { Utensils, Edit2, Trash2, Save } from 'lucide-react';
 import type { RootState } from '../../store';
 import { setMenuItems, setLoading } from '../../store/menuSlice';
 import CommonHeader from '../../components/common/CommonHeader';
@@ -92,7 +92,7 @@ const Menu: React.FC = () => {
       {/* Header */}
       <CommonHeader 
         title="Menu Management" 
-        icon={UtensilsActivity} 
+        icon={Utensils} 
         searchPlaceholder="Search dishes or categories..."
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
@@ -116,7 +116,7 @@ const Menu: React.FC = () => {
                   <img src={item.image} alt={item.name} className="menu-card-img" />
                 ) : (
                   <div className="menu-img-placeholder">
-                    <UtensilsActivity size={40} />
+                    <Utensils size={40} />
                   </div>
                 )}
 

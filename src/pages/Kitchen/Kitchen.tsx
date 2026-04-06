@@ -51,8 +51,9 @@ const Kitchen: React.FC = () => {
   };
 
   // Helper: calculate elapsed minutes
-  const getElapsedMinutes = (timestamp: string | Date) => {
-    const orderTime = new Date(timestamp).getTime();
+  const getElapsedMinutes = (timestamp: any) => {
+    const validTime = timestamp || new Date();
+    const orderTime = new Date(validTime).getTime();
     const now = currentTime.getTime();
     return Math.floor((now - orderTime) / 60000);
   };
@@ -75,7 +76,7 @@ const Kitchen: React.FC = () => {
   };
 
   const TicketCard = ({ order, statusType }: { order: Order; statusType: 'pending' | 'preparing' | 'ready' }) => {
-    const elapsed = getElapsedMinutes(order.timestamp);
+    const elapsed = getElapsedMinutes(order.timestamp || (order as any).created_at);
 
     return (
       <div className="ticket-card" style={{ animationDelay: `${Math.random() * 0.2}s` }}>

@@ -110,3 +110,8 @@ body::before {
 .toggle-switch input:checked + .toggle-switch-slider:before {
   transform: translateX(20px);
 }
+
+/* SweetAlert2: keep toasts/dialogs above layout & offcanvas */
+.swal2-container {
+  z-index: 20000 !important;
+}

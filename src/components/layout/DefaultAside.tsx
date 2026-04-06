@@ -6,7 +6,12 @@ import { logout } from '../../store/authSlice';
 import type { RootState } from '../../store';
 import { ADMIN_MENU } from '../../const/menu';
 
-const DefaultAside: React.FC = () => {
+type AsideProps = {
+  isOpen?: boolean;
+  onClose?: () => void;
+};
+
+const DefaultAside: React.FC<AsideProps> = ({ isOpen = false, onClose }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
@@ -68,7 +73,10 @@ const DefaultAside: React.FC = () => {
           flex-shrink: 0;
         }
       `}</style>
-    <aside className="sidebar" style={{ width: '220px', padding: '24px 16px', display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: 'var(--bg, #0b0f19)' }}>
+    <aside
+      className={`sidebar${isOpen ? ' sidebar--open' : ''}`}
+      style={{ width: '220px', padding: '24px 16px', display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: 'var(--bg, #0b0f19)' }}
+    >
       <Link to="/" className="logo-link" style={{ flexShrink: 0, marginBottom: '24px' }}>
         <div className="logo">
           <QrCode size={28} strokeWidth={2.5} />
@@ -87,6 +95,7 @@ const DefaultAside: React.FC = () => {
               end={item.path === '/'}
               className={({ isActive }) => isActive ? 'active' : ''}
               style={{ padding: '10px 14px', fontSize: '0.9rem' }}
+              onClick={() => onClose?.()}
             >
               <Icon size={18} />
               <span>{item.name}</span>
@@ -119,7 +128,14 @@ const DefaultAside: React.FC = () => {
         {isProfileMenuOpen && (
           <div style={{ animation: 'fadeDown 0.2s ease-out' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '12px' }}>
-              <button className="profile-menu-btn" onClick={() => { navigate('/profile'); setIsProfileMenuOpen(false); }}>
+              <button
+                className="profile-menu-btn"
+                onClick={() => {
+                  navigate('/profile');
+                  setIsProfileMenuOpen(false);
+                  onClose?.();
+                }}
+              >
                 <User size={20} color={theme === 'dark' ? "#e4e4e7" : "#0f172a"} strokeWidth={1.8} />
                 <span style={{ letterSpacing: '0.3px', color: theme === 'dark' ? '#f8fafc' : '#0f172a' }}>Profile</span>
               </button>

@@ -83,7 +83,7 @@ const Orders: React.FC = () => {
                         #{order.id.toString().slice(-4)}
                       </h4>
                       <small style={{ color: 'var(--muted)' }}><Clock size={12} className="me-1" />
-                        {new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(order.timestamp || (order as any).created_at || new Date()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </small>
                     </div>
                     <span 
@@ -112,21 +112,27 @@ const Orders: React.FC = () => {
                   </div>
 
                   <div className="flex-grow-1 border-top border-bottom py-3 mb-4" style={{ borderColor: 'rgba(128,128,128,0.1) !important' }}>
-                    {order.items.map((item: any, idx: number) => (
-                      <div key={idx} className="d-flex justify-content-between align-items-center mb-2">
-                        <span className="text-white">
-                          <span className="badge me-2" style={{ background: 'var(--card-hov)', color: 'var(--amber)' }}>{item.quantity}x</span>
-                          {item.name}
-                        </span>
-                        <span style={{ color: 'var(--muted)' }}>${(item.price * item.quantity).toFixed(2)}</span>
-                      </div>
-                    ))}
+                    {(order.items || []).map((item: any, idx: number) => {
+                      const itemPrice = item.price !== undefined ? item.price : (item.price_at_time !== undefined ? item.price_at_time : 0);
+                      const itemQuantity = item.quantity || 1;
+                      return (
+                        <div key={idx} className="d-flex justify-content-between align-items-center mb-2">
+                          <span className="text-white">
+                            <span className="badge me-2" style={{ background: 'var(--card-hov)', color: 'var(--amber)' }}>{itemQuantity}x</span>
+                            {item.name}
+                          </span>
+                          <span style={{ color: 'var(--muted)' }}>${Number(itemPrice * itemQuantity).toFixed(2)}</span>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   <div className="mt-auto">
                     <div className="d-flex justify-content-between align-items-center mb-3">
                       <span className="text-secondary small text-uppercase fw-bold">TOTAL AMOUNT</span>
-                      <span className="fs-5 fw-bold" style={{ color: 'var(--cream)' }}>${order.total.toFixed(2)}</span>
+                      <span className="fs-5 fw-bold" style={{ color: 'var(--cream)' }}>
+                        ${Number(order.total !== undefined ? order.total : ((order as any).total_amount !== undefined ? (order as any).total_amount : 0)).toFixed(2)}
+                      </span>
                     </div>
                     
                     {order.status === 'Preparing' && (

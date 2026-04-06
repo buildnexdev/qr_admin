@@ -1,10 +1,22 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import axios from 'axios';
 import { Tags, Search, Plus, Edit2, Trash2, X, Save } from 'lucide-react';
+import type { RootState } from '../../store';
+import { setCategories, setCategoriesLoading, type MenuCategory } from '../../store/categorySlice';
+import { triggerToast } from '../../components/common/CommonAlert';
+import { getApiErrorMessage } from '../../utils/apiError';
+
+const API_BASE_URL = 'http://localhost:5000/api';
 
 const Categories: React.FC = () => {
+  const dispatch = useDispatch();
+  const { categories: categoryData, loading } = useSelector((state: RootState) => state.categories);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -13,57 +25,30 @@ const Categories: React.FC = () => {
     status: true
   });
 
-  const [categoryData, setCategoryData] = useState([
-    { 
-      id: 1, 
-      name: 'Starters', 
-      subtitle: 'APPETIZERS & SOUPS',
-      description: 'Kickstart the meal with our premium selection of appetizers, both vegetarian and non-vegetarian offerings to satisfy early cravings before the main course.', 
-      displayOrder: '1', 
-      itemsCount: 12, 
-      status: true,
-      tags: ['Quick Prep', 'High Margin', 'Spicy']
-    },
-    { 
-      id: 2, 
-      name: 'Main Course', 
-      subtitle: 'HEAVY MEALS & COMBOS',
-      description: 'Hearty and fulfilling dishes ranging from traditional curries to global platters. Ensures maximum customer satisfaction with beautifully plated massive portions.', 
-      displayOrder: '2', 
-      itemsCount: 25, 
-      status: true,
-      tags: ['Chef Special', 'Popular', 'Family']
-    },
-    { 
-      id: 3, 
-      name: 'Beverages', 
-      subtitle: 'HOT & COLD DRINKS',
-      description: 'A finely curated list of artisanal coffees, teas, imported aerated cans, and in-house special mocktails meant to accompany every meal.', 
-      displayOrder: '3', 
-      itemsCount: 18, 
-      status: true,
-      tags: ['Chilled', 'Signature', 'Refills']
-    },
-    { 
-      id: 4, 
-      name: 'Desserts', 
-      subtitle: 'SWEETS & ICE CREAMS',
-      description: 'Delicate, handcrafted sweet offerings including traditional delicacies, premium ice cream scoops, and signature brownie sizzlers for the perfect ending.', 
-      displayOrder: '4', 
-      itemsCount: 8, 
-      status: false,
-      tags: ['Sweet', 'Bestseller', 'Kids']
-    },
-  ]);
+  const fetchCategories = async () => {
+    dispatch(setCategoriesLoading(true));
+    try {
+      const res = await axios.get<MenuCategory[]>(`${API_BASE_URL}/categories`);
+      dispatch(setCategories(res.data));
+    } catch (err) {
+      console.error(err);
+      triggerToast('Could not load categories', 'error', getApiErrorMessage(err, 'Failed to load categories'));
+    }
+    dispatch(setCategoriesLoading(false));
+  };
 
-  const handleOpenModal = (category?: any) => {
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const handleOpenModal = (category?: MenuCategory) => {
     if (category) {
       setEditingCategory(category);
       setFormData({
         name: category.name || '',
         description: category.description || '',
         displayOrder: category.displayOrder || '',
-        status: category.status !== undefined ? category.status : true
+        status: Boolean(category.status)
       });
     } else {
       setEditingCategory(null);
@@ -85,33 +70,50 @@ const Categories: React.FC = () => {
     setFormData(prev => ({ ...prev, status: e.target.checked }));
   };
 
-  const handleSave = () => {
-    if (editingCategory) {
-      setCategoryData(prev => prev.map(cat => 
-        cat.id === editingCategory.id ? { ...cat, ...formData } : cat
-      ));
-    } else {
-      const newCategory = {
-        ...formData,
-        id: Date.now(),
-        subtitle: 'NEW CATEGORY',
-        itemsCount: 0,
-        tags: ['New Added']
+  const handleSave = async () => {
+    if (!formData.name.trim()) {
+      triggerToast('Validation', 'error', 'Category name is required');
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = {
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        displayOrder: formData.displayOrder || '0',
+        status: formData.status,
+        subtitle: editingCategory?.subtitle || '',
+        tags: editingCategory?.tags?.length ? editingCategory.tags : ['New'],
       };
-      setCategoryData(prev => [newCategory, ...prev]);
+      if (editingCategory) {
+        await axios.put(`${API_BASE_URL}/categories/${editingCategory.id}`, payload);
+        triggerToast('Category updated', 'success', 'Your changes were saved.');
+      } else {
+        await axios.post(`${API_BASE_URL}/categories`, payload);
+        triggerToast('Category added', 'success', 'The new category was created.');
+      }
+      await fetchCategories();
+      handleCloseModal();
+    } catch (err) {
+      triggerToast('Save failed', 'error', getApiErrorMessage(err, 'Failed to save category'));
     }
-    handleCloseModal();
+    setSaving(false);
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this category?')) {
-      setCategoryData(prev => prev.filter(cat => cat.id !== id));
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this category?')) return;
+    try {
+      await axios.delete(`${API_BASE_URL}/categories/${id}`);
+      await fetchCategories();
+      triggerToast('Category deleted', 'success', 'The category was removed.');
+    } catch (err) {
+      triggerToast('Delete failed', 'error', getApiErrorMessage(err, 'Failed to delete category'));
     }
   };
 
-  const filteredData = categoryData.filter(cat => 
-    cat.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    cat.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredData = categoryData.filter(cat =>
+    cat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (cat.description || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -270,7 +272,11 @@ const Categories: React.FC = () => {
 
       <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '32px' }}>
         <div className="card-grid">
-          {filteredData.length > 0 ? filteredData.map((cat) => (
+          {loading ? (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px', color: 'var(--muted)' }}>
+              Loading categories…
+            </div>
+          ) : filteredData.length > 0 ? filteredData.map((cat) => (
             <div key={cat.id} className="cat-card">
               
               <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -394,15 +400,16 @@ const Categories: React.FC = () => {
             Cancel
           </button>
           <button 
+            type="button"
+            disabled={saving}
             onClick={handleSave} 
             className="btn-add"
-            style={{ flex: 2, height: '42px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: 0 }} 
+            style={{ flex: 2, height: '42px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: 0, opacity: saving ? 0.7 : 1 }} 
           >
-            <Save size={18} /> {editingCategory ? 'Save Changes' : 'Add Category'}
+            <Save size={18} /> {saving ? 'Saving…' : editingCategory ? 'Save Changes' : 'Add Category'}
           </button>
         </div>
       </div>
-
     </div>
   );
 };

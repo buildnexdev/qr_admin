@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import axios from 'axios';
 import {
   Building2,
   Search,
@@ -7,13 +9,26 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Save
+  Save,
+  Trash2
 } from 'lucide-react';
+import type { RootState } from '../../store';
+import { setBranches, setLoading, type Branch } from '../../store/branchSlice';
+import { triggerToast } from '../../components/common/CommonAlert';
+import { getApiErrorMessage } from '../../utils/apiError';
+
+const API_BASE_URL = 'http://localhost:5000/api';
+
+const isActive = (b: Branch) => Boolean(b.status);
 
 const Branch: React.FC = () => {
+  const dispatch = useDispatch();
+  const { branches, loading } = useSelector((state: RootState) => state.branches);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [isOffcanvasOpen, setIsOffcanvasOpen] = useState(false);
-  const [editingBranch, setEditingBranch] = useState<any>(null);
+  const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -25,13 +40,23 @@ const Branch: React.FC = () => {
     status: true
   });
 
-  const [branchData, setBranchData] = useState([
-    { id: 1, name: 'Main Branch', code: 'BR-001', location: 'Downtown City Center', pincode: '600001', manager: 'John Doe', phone: '9876543210', staffCount: 12, status: true },
-    { id: 2, name: 'North Branch', code: 'BR-002', location: 'Northside Business Park', pincode: '600002', manager: 'Jane Smith', phone: '9876543211', staffCount: 8, status: true },
-    { id: 3, name: 'South Branch', code: 'BR-003', location: 'South Industrial Area', pincode: '600003', manager: 'Mike Johnson', phone: '9876543212', staffCount: 15, status: false },
-  ]);
+  const fetchBranches = async () => {
+    dispatch(setLoading(true));
+    try {
+      const res = await axios.get<Branch[]>(`${API_BASE_URL}/branches`);
+      dispatch(setBranches(res.data));
+    } catch (error) {
+      console.error('Error fetching branches:', error);
+      triggerToast('Could not load branches', 'error', getApiErrorMessage(error, 'Failed to load branches'));
+    }
+    dispatch(setLoading(false));
+  };
 
-  const handleOpenOffcanvas = (branch?: any) => {
+  useEffect(() => {
+    fetchBranches();
+  }, []);
+
+  const handleOpenOffcanvas = (branch?: Branch) => {
     if (branch) {
       setEditingBranch(branch);
       setFormData({
@@ -41,7 +66,7 @@ const Branch: React.FC = () => {
         pincode: branch.pincode || '',
         manager: branch.manager || '',
         phone: branch.phone || '',
-        status: branch.status !== undefined ? branch.status : true
+        status: isActive(branch)
       });
     } else {
       setEditingBranch(null);
@@ -63,33 +88,71 @@ const Branch: React.FC = () => {
     setFormData(prev => ({ ...prev, status: e.target.checked }));
   };
 
-  const handleSave = () => {
-    if (editingBranch) {
-      setBranchData(prev => prev.map(branch => 
-        branch.id === editingBranch.id ? { ...branch, ...formData } : branch
-      ));
-    } else {
-      const newBranch = {
-        ...formData,
-        id: Date.now(),
-        staffCount: 0
-      };
-      setBranchData(prev => [newBranch, ...prev]);
+  const handleSave = async () => {
+    if (!formData.name.trim() || !formData.code.trim()) {
+      triggerToast('Validation', 'error', 'Branch name and code are required');
+      return;
     }
-    handleCloseOffcanvas();
+    setSaving(true);
+    try {
+      const payload = {
+        name: formData.name.trim(),
+        code: formData.code.trim(),
+        location: formData.location.trim() || null,
+        pincode: formData.pincode.trim() || null,
+        manager: formData.manager.trim() || null,
+        phone: formData.phone.trim() || null,
+        status: formData.status
+      };
+      if (editingBranch) {
+        await axios.put(`${API_BASE_URL}/branches/${editingBranch.id}`, payload);
+        triggerToast('Branch updated', 'success', 'Changes were saved successfully.');
+      } else {
+        await axios.post(`${API_BASE_URL}/branches`, payload);
+        triggerToast('Branch added', 'success', 'The new branch was created successfully.');
+      }
+      await fetchBranches();
+      handleCloseOffcanvas();
+    } catch (err: unknown) {
+      triggerToast('Save failed', 'error', getApiErrorMessage(err, 'Failed to save branch'));
+    }
+    setSaving(false);
   };
 
-  const toggleBranchStatus = (id: number) => {
-    setBranchData(prev => prev.map(branch => 
-      branch.id === id ? { ...branch, status: !branch.status } : branch
-    ));
+  const toggleBranchStatus = async (branch: Branch) => {
+    try {
+      await axios.put(`${API_BASE_URL}/branches/${branch.id}`, {
+        name: branch.name,
+        code: branch.code,
+        location: branch.location,
+        pincode: branch.pincode,
+        manager: branch.manager,
+        phone: branch.phone,
+        status: !isActive(branch)
+      });
+      await fetchBranches();
+      triggerToast('Status updated', 'success', 'Branch active status was saved.');
+    } catch (err: unknown) {
+      triggerToast('Update failed', 'error', getApiErrorMessage(err, 'Failed to update status'));
+    }
   };
 
-  const filteredData = branchData.filter(branch => 
-    branch.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  const handleDelete = async (branch: Branch) => {
+    if (!window.confirm(`Delete branch "${branch.name}"?`)) return;
+    try {
+      await axios.delete(`${API_BASE_URL}/branches/${branch.id}`);
+      await fetchBranches();
+      triggerToast('Branch deleted', 'success', 'The branch was removed successfully.');
+    } catch (err: unknown) {
+      triggerToast('Delete failed', 'error', getApiErrorMessage(err, 'Failed to delete branch'));
+    }
+  };
+
+  const filteredData = branches.filter(branch =>
+    branch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     branch.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    branch.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    branch.manager.toLowerCase().includes(searchTerm.toLowerCase())
+    (branch.location || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (branch.manager || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -244,7 +307,7 @@ const Branch: React.FC = () => {
 
       {/* BODY SECTION (Scrollable Table Body) */}
       <div style={{ padding: '0', background: 'transparent', flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-        <div className="table-container" style={{ width: '100%', borderRadius: '0', overflow: 'hidden', borderBottom: '1px solid var(--border)' }}>
+        <div className="table-container table-wrapper" style={{ width: '100%', borderRadius: '0', borderBottom: '1px solid var(--border)' }}>
           <table className="premium-dark-table">
             <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
               <tr className='text-nowrap'>
@@ -253,31 +316,41 @@ const Branch: React.FC = () => {
                 <th>Location</th>
                 <th style={{ textAlign: 'center' }}>No of Staff</th>
                 <th style={{ textAlign: 'center' }}>Edit</th>
+                <th style={{ textAlign: 'center' }}>Delete</th>
                 <th style={{ textAlign: 'center' }}>Publish</th>
               </tr>
             </thead>
             <tbody>
-              {filteredData.length > 0 ? filteredData.map((branch, index) => (
+              {loading ? (
+                <tr>
+                  <td colSpan={7} style={{ background: 'var(--card)', textAlign: 'center', padding: '40px', color: 'var(--muted)', borderBottom: '1px solid var(--border)' }}>Loading branches…</td>
+                </tr>
+              ) : filteredData.length > 0 ? filteredData.map((branch, index) => (
                 <tr key={branch.id}>
                   <td style={{ paddingLeft: '32px', fontWeight: 600, color: 'var(--muted)' }}>{index + 1}</td>
                   <td style={{ fontWeight: 600 }}>{branch.name}</td>
-                  <td><span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>{branch.location}</span></td>
-                  <td style={{ textAlign: 'center', fontWeight: 600, color: 'var(--amber-lt)' }}>{branch.staffCount || 0}</td>
+                  <td><span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>{branch.location || '—'}</span></td>
+                  <td style={{ textAlign: 'center', fontWeight: 600, color: 'var(--amber-lt)' }}>{branch.staffCount ?? 0}</td>
                   <td style={{ textAlign: 'center' }}>
-                    <button onClick={() => handleOpenOffcanvas(branch)} style={{ background: 'rgba(245,158,11,0.1)', color: 'var(--amber)', border: '1px solid rgba(245,158,11,0.2)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', margin: '0 auto' }} onMouseOver={(e: any) => { e.currentTarget.style.background = 'rgba(245,158,11,0.2)'; e.currentTarget.style.borderColor = 'var(--amber)'; }} onMouseOut={(e: any) => { e.currentTarget.style.background = 'rgba(245,158,11,0.1)'; e.currentTarget.style.borderColor = 'rgba(245,158,11,0.2)'; }}>
+                    <button onClick={() => handleOpenOffcanvas(branch)} style={{ background: 'rgba(245,158,11,0.1)', color: 'var(--amber)', border: '1px solid rgba(245,158,11,0.2)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', margin: '0 auto' }} onMouseOver={(e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = 'rgba(245,158,11,0.2)'; e.currentTarget.style.borderColor = 'var(--amber)'; }} onMouseOut={(e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = 'rgba(245,158,11,0.1)'; e.currentTarget.style.borderColor = 'rgba(245,158,11,0.2)'; }}>
                       <Edit3 size={16} />
                     </button>
                   </td>
                   <td style={{ textAlign: 'center' }}>
+                    <button type="button" onClick={() => handleDelete(branch)} style={{ background: 'rgba(239,68,68,0.12)', color: '#f87171', border: '1px solid rgba(239,68,68,0.25)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', margin: '0 auto' }} title="Delete branch">
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
                     <label className="toggle-switch" style={{ margin: '0 auto' }}>
-                      <input type="checkbox" checked={branch.status} onChange={() => toggleBranchStatus(branch.id)} />
-                      <span className="toggle-switch-slider" style={{ background: branch.status ? 'var(--amber)' : 'rgba(255,255,255,0.1)' }}></span>
+                      <input type="checkbox" checked={isActive(branch)} onChange={() => toggleBranchStatus(branch)} />
+                      <span className="toggle-switch-slider" style={{ background: isActive(branch) ? 'var(--amber)' : 'rgba(255,255,255,0.1)' }}></span>
                     </label>
                   </td>
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={6} style={{ background: 'var(--card)', textAlign: 'center', padding: '40px', color: 'var(--muted)', borderBottom: '1px solid var(--border)' }}>No branches found.</td>
+                  <td colSpan={7} style={{ background: 'var(--card)', textAlign: 'center', padding: '40px', color: 'var(--muted)', borderBottom: '1px solid var(--border)' }}>No branches found.</td>
                 </tr>
               )}
             </tbody>
@@ -285,7 +358,7 @@ const Branch: React.FC = () => {
 
           {/* PAGINATION */}
           <div className="pagination" style={{ padding: '20px 32px', background: 'var(--surface)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div className="page-info" style={{ fontWeight: 600, color: 'var(--muted)' }}>Showing 1 to {filteredData.length} of {branchData.length} entries</div>
+            <div className="page-info" style={{ fontWeight: 600, color: 'var(--muted)' }}>Showing 1 to {filteredData.length} of {branches.length} entries</div>
             <div className="page-controls" style={{ display: 'flex', gap: '8px' }}>
               <button style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--cream)', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><ChevronLeft size={18} /></button>
               <button style={{ background: 'var(--amber)', color: '#000', border: 'none', width: '32px', height: '32px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>1</button>
@@ -373,8 +446,8 @@ const Branch: React.FC = () => {
           >
             Cancel
           </button>
-          <button onClick={handleSave} className="btn-add" style={{ flex: 2, height: '42px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: 0 }}>
-            <Save size={18} /> {editingBranch ? 'Save Changes' : 'Add Branch'}
+          <button type="button" disabled={saving} onClick={handleSave} className="btn-add" style={{ flex: 2, height: '42px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: 0, opacity: saving ? 0.7 : 1 }}>
+            <Save size={18} /> {saving ? 'Saving…' : editingBranch ? 'Save Changes' : 'Add Branch'}
           </button>
         </div>
       </div>

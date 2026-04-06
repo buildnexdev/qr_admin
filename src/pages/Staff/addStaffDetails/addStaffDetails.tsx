@@ -1,18 +1,24 @@
 import React, { useState, useEffect } from 'react';
+import {
+  RESTAURANT_ROLES,
+  DEFAULT_RESTAURANT_ROLE,
+  isKnownRestaurantRole,
+} from '../../../const/restaurantRoles';
 
 interface AddStaffDetailsProps {
-  initialData?: any;
-  onSave: (data: any) => void;
+  initialData?: Record<string, unknown> | null;
+  branchOptions?: string[];
+  onSave: (data: Record<string, unknown>) => void;
   onCancel: () => void;
 }
 
-const AddStaffDetails: React.FC<AddStaffDetailsProps> = ({ initialData, onSave }) => {
+const AddStaffDetails: React.FC<AddStaffDetailsProps> = ({ initialData, branchOptions = ['Main Branch'], onSave }) => {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     email: '',
     password: '',
-    role: 'Field Officer (level3)',
+    role: DEFAULT_RESTAURANT_ROLE,
     branch: 'Main Branch',
     qualification: '',
     address: '',
@@ -22,18 +28,30 @@ const AddStaffDetails: React.FC<AddStaffDetailsProps> = ({ initialData, onSave }
   useEffect(() => {
     if (initialData) {
       setFormData({
-        name: initialData.name || '',
-        phone: initialData.phone || '',
-        email: initialData.email || '',
-        password: '', // Blank for security
-        role: initialData.role || 'Field Officer (level3)',
-        branch: initialData.branch || 'Main Branch',
-        qualification: initialData.qualification || '',
-        address: initialData.address || '',
-        status: initialData.status !== undefined ? initialData.status : true
+        name: (initialData.name as string) || '',
+        phone: (initialData.phone as string) || '',
+        email: (initialData.email as string) || '',
+        password: '',
+        role: (initialData.role as string) || DEFAULT_RESTAURANT_ROLE,
+        branch: (initialData.branch as string) || branchOptions[0] || 'Main Branch',
+        qualification: (initialData.qualification as string) || '',
+        address: (initialData.address as string) || '',
+        status: initialData.status !== undefined ? Boolean(initialData.status) : true
+      });
+    } else {
+      setFormData({
+        name: '',
+        phone: '',
+        email: '',
+        password: '',
+        role: DEFAULT_RESTAURANT_ROLE,
+        branch: branchOptions[0] || 'Main Branch',
+        qualification: '',
+        address: '',
+        status: true
       });
     }
-  }, [initialData]);
+  }, [initialData, branchOptions]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -69,7 +87,7 @@ const AddStaffDetails: React.FC<AddStaffDetailsProps> = ({ initialData, onSave }
       {!initialData && (
         <div className="input-group d-flex flex-column gap-1">
           <label className="input-label">Password *</label>
-          <input name="password" value={formData.password} onChange={handleInputChange} type="password" placeholder="Create a password" className="dark-input" required />
+          <input name="password" value={formData.password} onChange={handleInputChange} type="password" placeholder="Create a password" className="dark-input" autoComplete="new-password" required />
         </div>
       )}
 
@@ -77,19 +95,25 @@ const AddStaffDetails: React.FC<AddStaffDetailsProps> = ({ initialData, onSave }
         <div className="input-group d-flex flex-column gap-1 w-50">
           <label className="input-label">Role *</label>
           <select name="role" value={formData.role} onChange={handleInputChange} className="dark-input dark-select">
-            <option value="Field Officer (level3)">Field Officer</option>
-            <option value="Coll Manager (level3)">Coll Manager</option>
-            <option value="Sub Admin (level4)">Sub Admin</option>
-            <option value="collection (level3)">Collection</option>
+            {formData.role && !isKnownRestaurantRole(formData.role) && (
+              <option value={formData.role}>{formData.role} (current)</option>
+            )}
+            {RESTAURANT_ROLES.map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
           </select>
         </div>
 
         <div className="input-group d-flex flex-column gap-1 w-50">
           <label className="input-label">Branch *</label>
           <select name="branch" value={formData.branch} onChange={handleInputChange} className="dark-input dark-select">
-            <option value="Main Branch">Main Branch</option>
-            <option value="North Branch">North Branch</option>
-            <option value="South Branch">South Branch</option>
+            {branchOptions.map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
           </select>
         </div>
       </div>

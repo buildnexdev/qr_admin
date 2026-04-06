@@ -1,16 +1,18 @@
 .kitchen-board {
   padding: 24px 28px;
-  min-height: calc(100vh - 80px);
+  min-height: 100%;
   background: var(--bg, #0e0b08);
   font-family: 'DM Sans', sans-serif;
+  display: flex;
+  flex-direction: column;
 }
 
 .kds-grid {
   display: flex;
+  flex: 1;
   gap: 20px;
   overflow-x: auto;
   padding-bottom: 24px;
-  min-height: calc(100vh - 180px);
   align-items: flex-start;
 }
 
@@ -23,7 +25,6 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  height: 100%;
 }
 
 .kds-column-header {

@@ -3,11 +3,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import { QRCodeSVG } from 'qrcode.react';
 import { Plus, Trash2, PrinterIcon } from 'lucide-react';
-import { Base64 } from 'js-base64';
 import type { RootState } from '../../store';
 import { setTables, setLoading } from '../../store/tableSlice';
 import type { Table } from '../../store/tableSlice';
 import Modal from '../../components/Modal';
+import { triggerToast } from '../../components/common/CommonAlert';
+import { getApiErrorMessage } from '../../utils/apiError';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -23,61 +24,37 @@ const FOOD_PARTICLES = [
 const Tables: React.FC = () => {
   const dispatch = useDispatch();
   const { tables, loading } = useSelector((state: RootState) => state.tables);
-  const { user } = useSelector((state: RootState) => state.auth);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [successModalOpen, setSuccessModalOpen] = useState(false);
-  const [deleteSuccessModalOpen, setDeleteSuccessModalOpen] = useState(false);
   const [newTableName, setNewTableName] = useState('');
-  const [toast, setToast] = useState<{ message: string } | null>(null);
-
-  const showToast = (message: string) => {
-    setToast({ message });
-    setTimeout(() => setToast(null), 3000);
-  };
 
   useEffect(() => { fetchTables(); }, []);
 
   const fetchTables = async () => {
     dispatch(setLoading(true));
     try {
-      const res = await axios.get(`${API_BASE_URL}/tables`);
-      dispatch(setTables(res.data));
+      const res = await axios.get<{ id: number; name: string }[]>(`${API_BASE_URL}/tables`);
+      const normalized: Table[] = res.data.map((t) => ({ id: String(t.id), name: t.name }));
+      dispatch(setTables(normalized));
     } catch (error) {
       console.error('Error fetching tables:', error);
+      triggerToast('Could not load tables', 'error', getApiErrorMessage(error, 'Failed to load tables'));
     }
     dispatch(setLoading(false));
   };
 
-  const handleSaveTables = async (updatedTables: Table[]) => {
-    try {
-      await axios.post(`${API_BASE_URL}/tables`, updatedTables);
-      dispatch(setTables(updatedTables));
-    } catch {
-      showToast('Failed to save tables');
-    }
-  };
-
   const handleAddTable = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTableName || !user) return;
-
-    const tableDetails = { id: Date.now().toString(), name: newTableName };
-    const payload = {
-      userid: user.userid,
-      companyid: user.companyid,
-      table_details: tableDetails,
-    };
-    const encodedPayload = Base64.encode(JSON.stringify(payload));
+    const name = newTableName.trim();
+    if (!name) return;
 
     try {
-      await axios.post(`${API_BASE_URL}/tables/add`, { data: encodedPayload });
-      handleSaveTables([...tables, tableDetails]);
-      setSuccessModalOpen(true);
+      await axios.post(`${API_BASE_URL}/tables/add`, { name });
+      await fetchTables();
+      triggerToast('Table added', 'success', 'Ready for QR ordering.');
     } catch (error) {
-      console.warn('API /tables/add failed, falling back to /tables', error);
-      handleSaveTables([...tables, tableDetails]);
-      setSuccessModalOpen(true);
+      console.error('Error adding table:', error);
+      triggerToast('Could not add table', 'error', getApiErrorMessage(error, 'Failed to add table'));
     }
     setNewTableName('');
     setIsModalOpen(false);
@@ -86,11 +63,11 @@ const Tables: React.FC = () => {
   const deleteTable = async (id: string) => {
     try {
       await axios.delete(`${API_BASE_URL}/tables/${id}`);
-      dispatch(setTables(tables.filter((t: Table) => t.id !== id)));
-      setDeleteSuccessModalOpen(true);
+      await fetchTables();
+      triggerToast('Table removed', 'success', 'Deleted from your layout.');
     } catch (error) {
       console.error('Error deleting table:', error);
-      showToast('Failed to delete table');
+      triggerToast('Delete failed', 'error', getApiErrorMessage(error, 'Failed to delete table'));
     }
   };
 
@@ -690,53 +667,6 @@ const Tables: React.FC = () => {
             </form>
           </div>
         </Modal>
-
-        {/* ── Success Modal ─────────────────────────────────────── */}
-        <Modal
-          isOpen={successModalOpen}
-          onClose={() => setSuccessModalOpen(false)}
-          title="Success"
-        >
-          <div className="craving-modal-body" style={{ textAlign: 'center', padding: '10px 0 20px' }}>
-            <div style={{ fontSize: 56, marginBottom: 16 }}>🎉</div>
-            <h3 style={{ fontFamily: "'Playfair Display', serif", color: 'var(--cream)', fontSize: 24, marginBottom: 8 }}>Table Added</h3>
-            <p style={{ color: 'var(--muted)', fontSize: 15, marginBottom: 30 }}>Your new table has been successfully created and is ready for use.</p>
-            <button
-              className="btn-create"
-              onClick={() => setSuccessModalOpen(false)}
-              style={{ width: '100%', padding: '0', height: '48px' }}
-            >
-              Continue
-            </button>
-          </div>
-        </Modal>
-
-        {/* ── Delete Success Modal ───────────────────────────────── */}
-        <Modal
-          isOpen={deleteSuccessModalOpen}
-          onClose={() => setDeleteSuccessModalOpen(false)}
-          title="Deleted"
-        >
-          <div className="craving-modal-body" style={{ textAlign: 'center', padding: '10px 0 20px' }}>
-            <div style={{ fontSize: 56, marginBottom: 16 }}>🗑️</div>
-            <h3 style={{ fontFamily: "'Playfair Display', serif", color: '#18181b', fontSize: 24, marginBottom: 8 }}>Table Removed</h3>
-            <p style={{ color: '#6b7280', fontSize: 15, marginBottom: 30 }}>The table has been permanently deleted from your restaurant layout.</p>
-            <button
-              className="btn-create"
-              onClick={() => setDeleteSuccessModalOpen(false)}
-              style={{ width: '100%', padding: '0', height: '48px' }}
-            >
-              Got it
-            </button>
-          </div>
-        </Modal>
-
-        {/* ── Error Toast (top-right) ────────────────────────────── */}
-        {toast && (
-          <div className="craving-toast">
-            ⚠️ {toast.message}
-          </div>
-        )}
       </div>
     </>
   );

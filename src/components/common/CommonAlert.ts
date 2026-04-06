@@ -14,25 +14,30 @@ export const triggerAlert = (title: string, text: string, icon: 'success' | 'err
   });
 };
 
-export const triggerToast = (title: string, icon: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+export const triggerToast = (
+  title: string,
+  icon: 'success' | 'error' | 'warning' | 'info' = 'success',
+  text?: string
+) => {
   const Toast = Swal.mixin({
     toast: true,
     position: 'top-end',
     showConfirmButton: false,
-    timer: 3000,
+    timer: icon === 'error' ? 4500 : 3200,
     timerProgressBar: true,
     background: '#1f1810',
     color: '#fef3c7',
-    iconColor: '#f59e0b',
+    iconColor: icon === 'error' ? '#f87171' : '#f59e0b',
     didOpen: (toast) => {
-      toast.addEventListener('mouseenter', Swal.stopTimer)
-      toast.addEventListener('mouseleave', Swal.resumeTimer)
-    }
+      toast.addEventListener('mouseenter', Swal.stopTimer);
+      toast.addEventListener('mouseleave', Swal.resumeTimer);
+    },
   });
 
   return Toast.fire({
     icon,
-    title
+    title,
+    ...(text ? { text } : {}),
   });
 };
 

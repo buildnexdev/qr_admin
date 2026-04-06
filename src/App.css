@@ -38,7 +38,6 @@
 body {
   margin: 0;
   font-family: 'Inter', -apple-system, sans-serif;
-  background-color: var(--bg-main);
   color: var(--text-dark);
 }
 
@@ -403,13 +402,13 @@ header h1 {
 /* --- Animatic & Creative Overhaul --- */
 
 @keyframes modalBackdropIn {
-  from { opacity: 0; backdrop-filter: blur(0px); }
-  to { opacity: 1; backdrop-filter: blur(10px); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes modalBackdropOut {
-  from { opacity: 1; backdrop-filter: blur(10px); }
-  to { opacity: 0; backdrop-filter: blur(0px); }
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 @keyframes modalContentIn {
@@ -422,6 +421,17 @@ header h1 {
   to { opacity: 0; transform: scale(0.95) translateY(20px); }
 }
 
+/* Dialog only: no scale (avoids blurry text in Chrome when nested under transformed parents) */
+@keyframes modalDialogIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalDialogOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
 @keyframes cardLift {
   to { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.12); }
 }
@@ -432,11 +442,13 @@ header h1 {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(24, 24, 27, 0.4);
+  /* No backdrop-filter here — it blurs the modal card in Chrome when on the same layer */
+  background: rgba(14, 11, 8, 0.72);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  /* Above sidebar, offcanvas, and layout layers */
+  z-index: 10000;
   animation: modalBackdropIn 0.4s ease forwards;
 }
 
@@ -444,7 +456,9 @@ header h1 {
   animation: modalBackdropOut 0.3s ease forwards;
 }
 
-.modal {
+/* Named to avoid Bootstrap `.modal { display: none }` overriding this when common.scss loads after App.css */
+.premium-modal-card {
+  display: block;
   background: white;
   padding: 40px;
   border-radius: 24px;
@@ -452,21 +466,25 @@ header h1 {
   max-width: 500px;
   box-shadow: 0 40px 100px rgba(0,0,0,0.2);
   position: relative;
-  animation: modalContentIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  z-index: 1;
+  isolation: isolate;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  animation: modalDialogIn 0.25s ease-out forwards;
 }
 
-.modal-overlay.exit .modal {
-  animation: modalContentOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.modal-overlay.exit .premium-modal-card {
+  animation: modalDialogOut 0.25s ease-in forwards;
 }
 
-.modal-header {
+.premium-modal-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 32px;
 }
 
-.modal-header h2 {
+.premium-modal-head h2 {
   font-family: var(--font-serif);
   font-size: 1.8rem;
   margin: 0;
@@ -978,4 +996,138 @@ input:checked + .toggle-slider:before {
   transform: scale(1.4);
   background: #4F46E5 !important;
   box-shadow: 0 0 10px rgba(79, 70, 229, 0.4);
+}
+
+/* --- Mobile: admin shell (drawer nav, tables, modals) --- */
+body.admin-nav-open {
+  overflow: hidden;
+  touch-action: none;
+}
+
+@media (max-width: 991.98px) {
+  .admin-container {
+    position: relative;
+    min-width: 0;
+  }
+
+  .admin-container > .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: min(288px, 88vw) !important;
+    max-width: 100%;
+    z-index: 2000;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: none;
+    border-right: 1px solid var(--border-color);
+  }
+
+  .admin-container > .sidebar.sidebar--open {
+    transform: translateX(0);
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.45);
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1998;
+    background: rgba(14, 11, 8, 0.55);
+    border: none;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    animation: modalBackdropIn 0.25s ease forwards;
+  }
+
+  .admin-container .content {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .mobile-nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin: 10px 10px 0 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background: var(--sidebar-bg);
+    color: var(--text-dark);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s, border-color 0.2s;
+    z-index: 5;
+  }
+
+  .mobile-nav-toggle:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
+
+@media (min-width: 992px) {
+  .sidebar-backdrop {
+    display: none !important;
+  }
+
+  .mobile-nav-toggle {
+    display: none !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .premium-modal-card {
+    margin: 12px;
+    padding: 24px 20px;
+    max-width: calc(100vw - 24px);
+    max-height: min(92vh, 720px);
+    overflow-y: auto;
+    border-radius: 18px;
+  }
+
+  .premium-modal-head h2 {
+    font-size: 1.35rem;
+  }
+
+  .login-page-wrapper .login-split-container {
+    flex-direction: column;
+  }
+
+  .login-page-wrapper .login-visual {
+    min-height: 220px;
+    flex: none;
+  }
+
+  .login-page-wrapper .visual-content {
+    padding: 28px 20px;
+  }
+
+  .login-page-wrapper .visual-text h2 {
+    font-size: 2rem;
+  }
+
+  .login-page-wrapper .login-form-side {
+    padding: 32px 20px;
+  }
+}
+
+.app-footer {
+  flex-shrink: 0;
+}
+
+@media (max-width: 576px) {
+  .app-footer p {
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.5;
+    padding: 4px 8px;
+    font-size: 0.7rem !important;
+  }
 }

@@ -4,10 +4,12 @@ import axios from 'axios';
 import { Utensils, Edit2, Trash2, Save } from 'lucide-react';
 import type { RootState } from '../../store';
 import { setMenuItems, setLoading } from '../../store/menuSlice';
+import type { FoodItem } from '../../store/menuSlice';
 import CommonHeader from '../../components/common/CommonHeader';
 import CommonOffcanvas from '../../components/common/CommonOffcanvas';
-import { triggerToast, confirmAlert } from '../../components/common/CommonAlert';
+import { confirmAlert, triggerToast } from '../../components/common/CommonAlert';
 import AddMenu from './addMenu';
+import { getApiErrorMessage } from '../../utils/apiError';
 import './menuStyle.scss';
 
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -18,7 +20,8 @@ const Menu: React.FC = () => {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [isOffcanvasOpen, setIsOffcanvasOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<any>(null);
+  const [editingItem, setEditingItem] = useState<FoodItem | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => { 
     fetchMenu(); 
@@ -27,64 +30,63 @@ const Menu: React.FC = () => {
   const fetchMenu = async () => {
     dispatch(setLoading(true));
     try {
-      const res = await axios.get(`${API_BASE_URL}/menu`);
+      const res = await axios.get<FoodItem[]>(`${API_BASE_URL}/menu`);
       dispatch(setMenuItems(res.data));
     } catch (error) {
       console.error('Error fetching menu:', error);
-      // Fallback mock data if server fails
-      if (menu.length === 0) {
-        dispatch(setMenuItems([
-          { id: 1, name: 'Truffle Pasta', price: 450, category: 'Main', rate: 4.8, description: 'Homemade pasta with black truffle cream sauce.', image: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=500&q=80', status: true },
-          { id: 2, name: 'Classic Burger', price: 250, category: 'Main', rate: 4.2, description: 'Double beef patty with melted cheese and house sauce.', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&q=80', status: true },
-          { id: 3, name: 'Mango Smoothie', price: 120, category: 'Beverages', rate: 4.5, description: 'Fresh organic mangoes blended with coconut milk.', image: 'https://images.unsplash.com/photo-1546888636-237435f9dd7b?w=500&q=80', status: true }
-        ]));
-      }
+      triggerToast('Could not load menu', 'error', getApiErrorMessage(error, 'Failed to load menu'));
     }
     dispatch(setLoading(false));
   };
 
-  const handleOpenOffcanvas = (item?: any) => {
+  const handleOpenOffcanvas = (item?: FoodItem) => {
     setEditingItem(item || null);
     setIsOffcanvasOpen(true);
   };
 
-  const saveMenuItem = async (data: any) => {
-    let updated;
-    if (editingItem) {
-      updated = menu.map((m: any) => m.id === editingItem.id ? { ...m, ...data } : m);
-      triggerToast('Menu item updated successfully!', 'success');
-    } else {
-      updated = [{ ...data, id: Date.now() }, ...menu];
-      triggerToast('New menu item added!', 'success');
-    }
-    
-    // Attempt API Request, gracefully fallback to local redux state if failed
+  const saveMenuItem = async (data: Record<string, unknown>) => {
+    setSaving(true);
+    const payload = {
+      name: data.name,
+      price: data.price,
+      category: data.category,
+      description: data.description ?? '',
+      image: data.image ?? '',
+      status: data.status !== false,
+      rate: data.rate,
+    };
     try {
-      await axios.post(`${API_BASE_URL}/menu`, updated);
-    } catch (error) {
-      console.warn('API sync failed, using local redux store');
+      if (editingItem) {
+        await axios.put(`${API_BASE_URL}/menu/${editingItem.id}`, payload);
+        triggerToast('Menu updated', 'success', 'The dish was saved successfully.');
+      } else {
+        await axios.post(`${API_BASE_URL}/menu`, payload);
+        triggerToast('Menu item added', 'success', 'The new dish was added to the menu.');
+      }
+      await fetchMenu();
+      setIsOffcanvasOpen(false);
+    } catch (err) {
+      triggerToast('Save failed', 'error', getApiErrorMessage(err, 'Failed to save menu item'));
     }
-    
-    dispatch(setMenuItems(updated));
-    setIsOffcanvasOpen(false);
+    setSaving(false);
   };
 
   const deleteMenuItem = async (id: number) => {
     const confirmation = await confirmAlert('Delete Menu Item?', 'Are you sure you want to remove this dish from the menu?');
-    if (confirmation.isConfirmed) {
-      const updated = menu.filter((m: any) => m.id !== id);
-      try {
-        await axios.post(`${API_BASE_URL}/menu`, updated);
-      } catch (error) { }
-      dispatch(setMenuItems(updated));
-      triggerToast('Menu item deleted', 'error');
+    if (!confirmation.isConfirmed) return;
+    try {
+      await axios.delete(`${API_BASE_URL}/menu/${id}`);
+      await fetchMenu();
+      triggerToast('Menu item deleted', 'success', 'The dish was removed from the menu.');
+    } catch (err) {
+      triggerToast('Delete failed', 'error', getApiErrorMessage(err, 'Failed to delete menu item'));
     }
   };
 
-  // Filter Data
-  const filteredMenu = menu.filter((item: any) => 
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    item.category.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredMenu = menu.filter(
+    (item) =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -108,7 +110,7 @@ const Menu: React.FC = () => {
           </div>
         ) : (
           <div className="menu-card-grid">
-            {filteredMenu.map((item: any) => (
+            {filteredMenu.map((item) => (
               <div key={item.id} className="menu-card">
                 
                 {/* Image Section */}
@@ -170,18 +172,20 @@ const Menu: React.FC = () => {
         width="480px"
         footer={
           <>
-            <button onClick={() => setIsOffcanvasOpen(false)} className="btn-cancel">
+            <button type="button" onClick={() => setIsOffcanvasOpen(false)} className="btn-cancel" disabled={saving}>
               Cancel
             </button>
-            <button type="submit" form="menu-form" className="btn-premium btn-save">
-              <Save size={18} /> {editingItem ? 'Save Updates' : 'Publish Dish'}
+            <button type="submit" form="menu-form" className="btn-premium btn-save" disabled={saving}>
+              <Save size={18} /> {saving ? 'Saving…' : editingItem ? 'Save Updates' : 'Publish Dish'}
             </button>
           </>
         }
       >
         <AddMenu
           initialData={editingItem}
-          onSave={saveMenuItem}
+          onSave={(data) => {
+            void saveMenuItem(data);
+          }}
         />
       </CommonOffcanvas>
     </div>

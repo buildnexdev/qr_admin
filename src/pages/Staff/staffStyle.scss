@@ -10,6 +10,7 @@
   color: var(--cream);
   font-family: 'DM Sans', sans-serif;
   animation: modalContentIn 0.5s ease-out;
+  min-width: 0;
 }
 
 // Action Button inside Table

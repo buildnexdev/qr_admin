@@ -333,6 +333,32 @@ const Dashboard: React.FC = () => {
           from { opacity: 0; transform: translateY(18px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+
+        @media (max-width: 576px) {
+          .dash-page { padding: 16px 12px 48px; }
+          .dash-title { font-size: 28px; }
+          .dash-subtitle { font-size: 14px; }
+          .stat-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+          }
+          .stat-card { padding: 18px 14px; }
+          .stat-value { font-size: 26px; }
+          .dash-card-header { flex-wrap: wrap; gap: 8px; padding: 16px 16px 12px; }
+          .order-row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+            padding: 14px 16px;
+          }
+          .order-right {
+            padding-left: 48px;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+          }
+          .quick-action-btn { padding: 14px 16px; }
+        }
       `}</style>
 
       <div className="dash-page">

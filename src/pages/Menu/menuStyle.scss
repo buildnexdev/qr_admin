@@ -10,6 +10,7 @@
   color: var(--cream);
   font-family: 'DM Sans', sans-serif;
   animation: modalContentIn 0.5s ease-out;
+  min-width: 0;
 }
 
 /* Card Grid Layout */
@@ -179,5 +180,13 @@
     border-color: var(--amber);
     color: var(--amber);
     background: rgba(245,158,11,0.05);
+  }
+}
+
+@media (max-width: 768px) {
+  .menu-card-grid {
+    padding: 16px 12px 32px;
+    gap: 16px;
+    grid-template-columns: 1fr;
   }
 }

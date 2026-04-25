@@ -12,53 +12,54 @@ import {
 } from 'lucide-react';
 
 export const ADMIN_MENU = [
+  
   {
-    path: '/branch',
+    path: '/admin/branch',
     name: 'Branch',
     icon: Building2,
   },
   {
-    path: '/staff',
+    path: '/admin/staff',
     name: 'Staff',
     icon: UserCircle,
   },
   {
-    path: '/categories',
+    path: '/admin/categories',
     name: 'Categories',
     icon: Tags,
   },
   {
-    path: '/menu',
+    path: '/admin/menu',
     name: 'Menu',
     icon: Utensils,
   },
   {
-    path: '/tables',
+    path: '/admin/tables',
     name: 'Tables',
     icon: Grid,
   },
   {
-    path: '/kitchen',
+    path: '/admin/kitchen',
     name: 'Kitchen',
     icon: ChefHat,
   },
   {
-    path: '/orders',
+    path: '/admin/orders',
     name: 'Orders',
     icon: ClipboardList,
   },
   {
-    path: '/bills',
+    path: '/admin/bills',
     name: 'Bills',
     icon: Receipt,
   },
   {
-    path: '/stocks',
+    path: '/admin/stocks',
     name: 'Stocks',
     icon: Package,
   },
   {
-    path: '/reports',
+    path: '/admin/reports',
     name: 'Reports',
     icon: BarChart3,
   }

@@ -103,7 +103,7 @@ const Menu: React.FC = () => {
       />
 
       {/* Card Grid Content */}
-      <div className="flex-grow-1 overflow-auto">
+      <div className="">
         {loading ? (
           <div className="d-flex align-items-center justify-content-center h-100">
             <span className="text-muted">Loading culinary delights...</span>

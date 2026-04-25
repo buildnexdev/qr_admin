@@ -13,13 +13,13 @@ import {
   Trash2
 } from 'lucide-react';
 import type { RootState } from '../../store';
-import { setBranches, setLoading, type Branch } from '../../store/branchSlice';
+import { setBranches, setLoading, type Branch as BranchType } from '../../store/branchSlice';
 import { triggerToast } from '../../components/common/CommonAlert';
 import { getApiErrorMessage } from '../../utils/apiError';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
-const isActive = (b: Branch) => Boolean(b.status);
+const isActive = (b: BranchType) => Boolean(b.status);
 
 const Branch: React.FC = () => {
   const dispatch = useDispatch();
@@ -27,7 +27,7 @@ const Branch: React.FC = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isOffcanvasOpen, setIsOffcanvasOpen] = useState(false);
-  const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
+  const [editingBranch, setEditingBranch] = useState<BranchType | null>(null);
   const [saving, setSaving] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -43,7 +43,7 @@ const Branch: React.FC = () => {
   const fetchBranches = async () => {
     dispatch(setLoading(true));
     try {
-      const res = await axios.get<Branch[]>(`${API_BASE_URL}/branches`);
+      const res = await axios.get<BranchType[]>(`${API_BASE_URL}/branches`);
       dispatch(setBranches(res.data));
     } catch (error) {
       console.error('Error fetching branches:', error);
@@ -56,7 +56,7 @@ const Branch: React.FC = () => {
     fetchBranches();
   }, []);
 
-  const handleOpenOffcanvas = (branch?: Branch) => {
+  const handleOpenOffcanvas = (branch?: BranchType) => {
     if (branch) {
       setEditingBranch(branch);
       setFormData({
@@ -119,7 +119,7 @@ const Branch: React.FC = () => {
     setSaving(false);
   };
 
-  const toggleBranchStatus = async (branch: Branch) => {
+  const toggleBranchStatus = async (branch: BranchType) => {
     try {
       await axios.put(`${API_BASE_URL}/branches/${branch.id}`, {
         name: branch.name,
@@ -137,7 +137,7 @@ const Branch: React.FC = () => {
     }
   };
 
-  const handleDelete = async (branch: Branch) => {
+  const handleDelete = async (branch: BranchType) => {
     if (!window.confirm(`Delete branch "${branch.name}"?`)) return;
     try {
       await axios.delete(`${API_BASE_URL}/branches/${branch.id}`);
@@ -161,9 +161,7 @@ const Branch: React.FC = () => {
       background: 'transparent',
       display: 'flex',
       flexDirection: 'column',
-      height: '100%',
       position: 'relative',
-      overflow: 'hidden',
       color: 'var(--cream)',
       fontFamily: "'DM Sans', sans-serif"
     }}>
@@ -305,8 +303,8 @@ const Branch: React.FC = () => {
         </div>
       </header>
 
-      {/* BODY SECTION (Scrollable Table Body) */}
-      <div style={{ padding: '0', background: 'transparent', flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+      {/* BODY SECTION (Table Body) */}
+      <div style={{ padding: '0', background: 'transparent', flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div className="table-container table-wrapper" style={{ width: '100%', borderRadius: '0', borderBottom: '1px solid var(--border)' }}>
           <table className="premium-dark-table">
             <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>

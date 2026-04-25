@@ -4,9 +4,7 @@
 .menu-page-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
   position: relative;
-  overflow: hidden;
   color: var(--cream);
   font-family: 'DM Sans', sans-serif;
   animation: modalContentIn 0.5s ease-out;

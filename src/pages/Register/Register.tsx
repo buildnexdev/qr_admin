@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Building2, User, Mail, Phone, MapPin, FileText, Loader2, ArrowLeft } from 'lucide-react';
+import { Building2, User, Mail, Phone, MapPin, FileText, Loader2, ArrowLeft, QrCode } from 'lucide-react';
 import { triggerToast } from '../../components/common/CommonAlert';
 import { getApiErrorMessage } from '../../utils/apiError';
 import '../Login/loginAuth.scss';
@@ -125,33 +125,34 @@ const Register: React.FC = () => {
 
       <div className="craving-split">
         <div className="brand-panel">
-          <div className="plate-ring" />
+          <div className="brand-panel-glow" />
+          <div className="brand-panel-mesh" />
 
           <div className="brand-top">
-            <div className="brand-wordmark">
-              <div className="wordmark-dot" />
-              QR Order
+            <div className="nammaqr-wordmark">
+              <QrCode size={24} className="logo-icon" />
+              <span>NammaQr</span>
             </div>
           </div>
 
-          <div className="brand-hero">
-            <span className="bowl-hero">📝</span>
-            <div className="steam">
-              <span className="steam-line" />
-              <span className="steam-line" />
-              <span className="steam-line" />
+          <div className="brand-hero-cinematic">
+            <div className="hero-floating-card">
+              <FileText size={48} className="hero-icon" />
+              <div className="card-shine" />
             </div>
-            <h2>
-              <em>Join</em> the<br />
-              platform.
+            
+            <h2 className="cinematic-title">
+              Join the <span>Platform</span> today.
             </h2>
-            <p>Tell us about your restaurant and who to contact. We will email you next steps.</p>
+            <p className="cinematic-sub">
+              Tell us about your restaurant and who to contact. We will email you next steps.
+            </p>
           </div>
 
           <div className="brand-bottom">
-            <div className="qr-badge">
-              <span className="qr-icon">✉️</span>
-              Request · Review · Onboard
+            <div className="premium-capsule">
+              <span className="dot" />
+              <span>Request · Review · Onboard</span>
             </div>
           </div>
         </div>

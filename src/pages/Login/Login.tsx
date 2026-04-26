@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginUser, clearError } from '../../store/authSlice';
 import type { RootState, AppDispatch } from '../../store';
-import { User, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { User, Lock, ArrowRight, Loader2, QrCode, UtensilsCrossed } from 'lucide-react';
 import './loginAuth.scss';
 
 /* ─── Floating food particle data ─────────────────────────── */
@@ -34,7 +34,7 @@ const Login: React.FC = () => {
 
   useEffect(() => {
 
-    if (isAuthenticated) navigate('/');
+    if (isAuthenticated) navigate('/admin');
     return () => { dispatch(clearError()); };
   }, [isAuthenticated, navigate, dispatch]);
 
@@ -66,34 +66,34 @@ const Login: React.FC = () => {
         <div className="craving-split">
           {/* ── Brand panel ─────────────────────────────────── */}
           <div className="brand-panel">
-            <div className="plate-ring" />
+            <div className="brand-panel-glow" />
+            <div className="brand-panel-mesh" />
 
             <div className="brand-top">
-              <div className="brand-wordmark">
-                <div className="wordmark-dot" />
-                QR Order
+              <div className="nammaqr-wordmark">
+                <QrCode size={24} className="logo-icon" />
+                <span>NammaQr</span>
               </div>
             </div>
 
-            <div className="brand-hero">
-              <span className="bowl-hero">🍽️</span>
-              <div className="steam">
-                <span className="steam-line" />
-                <span className="steam-line" />
-                <span className="steam-line" />
+            <div className="brand-hero-cinematic">
+              <div className="hero-floating-card">
+                <UtensilsCrossed size={48} className="hero-icon" />
+                <div className="card-shine" />
               </div>
-              <h2>
-                <em>Taste</em> meets<br />Technology.
+              
+              <h2 className="cinematic-title">
+                Experience the <span>Future</span> of Dining.
               </h2>
-              <p>
-                Upload your menu once. Let your guests scan, explore and order — right at the table.
+              <p className="cinematic-sub">
+                The ultimate QR-powered ordering system designed for modern hospitality.
               </p>
             </div>
 
             <div className="brand-bottom">
-              <div className="qr-badge">
-                <span className="qr-icon">📲</span>
-                QR · Dine-in · Contactless
+              <div className="premium-capsule">
+                <span className="dot" />
+                <span>QR · Dine-in · Seamless</span>
               </div>
             </div>
           </div>

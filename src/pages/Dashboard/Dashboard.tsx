@@ -1,51 +1,47 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Grid, Utensils, ClipboardList, TrendingUp, Plus, ArrowRight, Clock } from 'lucide-react';
+import {
+  Grid, Utensils, ClipboardList, TrendingUp, Plus,
+  ArrowRight, Clock, Users, DollarSign, Info,
+  AlertCircle, CheckCircle2, ChevronRight, Package,
+  ShoppingBag, Calendar
+} from 'lucide-react';
+import Chart from 'react-apexcharts';
+import './Dashboard.scss';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
-interface StatCard {
-  label: string;
-  value: number | string;
-  icon: React.ReactNode;
-  color: string;
-  glow: string;
-  suffix?: string;
-}
-
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [stats, setStats] = useState({ tables: 0, menuItems: 0, activeOrders: 0, revenue: 0 });
-  const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [data, setData] = useState({
+    orders: [] as any[],
+    tables: [] as any[],
+    staff: [] as any[],
+    menu: [] as any[],
+    stocks: [] as any[],
+  });
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [tablesRes, menuRes, ordersRes] = await Promise.allSettled([
+        const [tablesRes, menuRes, ordersRes, staffRes, stocksRes] = await Promise.allSettled([
           axios.get(`${API_BASE_URL}/tables`),
           axios.get(`${API_BASE_URL}/menu`),
           axios.get(`${API_BASE_URL}/orders`),
+          axios.get(`${API_BASE_URL}/staff`),
+          axios.get(`${API_BASE_URL}/stocks`),
         ]);
 
-        const tables = tablesRes.status === 'fulfilled' ? tablesRes.value.data : [];
-        const menu   = menuRes.status   === 'fulfilled' ? menuRes.value.data   : [];
-        const orders = ordersRes.status === 'fulfilled' ? ordersRes.value.data : [];
-
-        const active  = orders.filter((o: any) => o.status !== 'Served' && o.status !== 'Cancelled');
-        const revenue = orders
-          .filter((o: any) => o.status === 'Served')
-          .reduce((sum: number, o: any) => sum + parseFloat(o.total_amount || o.total || 0), 0);
-
-        setStats({
-          tables: tables.length,
-          menuItems: menu.length,
-          activeOrders: active.length,
-          revenue,
+        setData({
+          tables: tablesRes.status === 'fulfilled' ? tablesRes.value.data : [],
+          menu: menuRes.status === 'fulfilled' ? menuRes.value.data : [],
+          orders: ordersRes.status === 'fulfilled' ? ordersRes.value.data : [],
+          staff: staffRes.status === 'fulfilled' ? staffRes.value.data : [],
+          stocks: stocksRes.status === 'fulfilled' ? stocksRes.value.data : [],
         });
-
-        setRecentOrders(orders.slice(0, 5));
       } catch (err) {
         console.error('Dashboard fetch error:', err);
       } finally {
@@ -55,460 +51,282 @@ const Dashboard: React.FC = () => {
     fetchAll();
   }, []);
 
-  const statCards: StatCard[] = [
-    {
-      label: 'Total Tables',
-      value: stats.tables,
-      icon: <Grid size={24} />,
-      color: '#f59e0b',
-      glow: 'rgba(245,158,11,0.15)',
-    },
-    {
-      label: 'Menu Items',
-      value: stats.menuItems,
-      icon: <Utensils size={24} />,
-      color: '#ea580c',
-      glow: 'rgba(234,88,12,0.15)',
-    },
-    {
-      label: 'Active Orders',
-      value: stats.activeOrders,
-      icon: <ClipboardList size={24} />,
-      color: '#10b981',
-      glow: 'rgba(16,185,129,0.15)',
-    },
-    {
-      label: "Today's Revenue",
-      value: `$${stats.revenue.toFixed(2)}`,
-      icon: <TrendingUp size={24} />,
-      color: '#8b5cf6',
-      glow: 'rgba(139,92,246,0.15)',
-    },
-  ];
+  // ── Derived Metrics ───────────────────────────────────────
+  const today = new Date(selectedDate).toDateString();
+  const todayOrders = data.orders.filter(o => new Date(o.timestamp || o.created_at).toDateString() === today);
 
-  const statusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'pending':   return { bg: 'rgba(245,158,11,0.1)',  text: 'var(--amber)' };
-      case 'preparing': return { bg: 'rgba(234,88,12,0.1)',   text: '#ea580c' };
-      case 'served':    return { bg: 'rgba(16,185,129,0.1)',  text: '#10b981' };
-      default:          return { bg: 'rgba(255,255,255,0.06)', text: 'var(--muted)' };
-    }
+  const orderStats = {
+    total: todayOrders.length,
+    pending: todayOrders.filter(o => o.status === 'Pending').length,
+    preparing: todayOrders.filter(o => o.status === 'Preparing').length,
+    ready: todayOrders.filter(o => o.status === 'Ready').length, // Assuming 'Ready' exists
+    served: todayOrders.filter(o => o.status === 'Served').length,
+    cancelled: todayOrders.filter(o => o.status === 'Cancelled').length,
+  };
+
+  const revenue = todayOrders
+    .filter(o => o.status === 'Served')
+    .reduce((sum, o) => sum + parseFloat(o.total || o.total_amount || 0), 0);
+
+  const tableStats = {
+    total: data.tables.length,
+    occupied: data.tables.filter(t => t.status === 'Occupied' || t.is_occupied).length,
+    available: data.tables.filter(t => t.status === 'Available' || !t.is_occupied).length,
+  };
+
+  const staffStats = {
+    total: data.staff.length,
+    online: data.staff.filter(s => s.status).length,
+    busy: Math.floor(data.staff.filter(s => s.status).length * 0.7), // Dummy busy logic
+    onBreak: 0,
+  };
+
+  const customerCount = new Set(todayOrders.map(o => o.customer_phone || o.customer_name)).size;
+
+  const stockStats = {
+    total: data.stocks.length,
+    low: data.stocks.filter(s => s.quantity <= s.minThreshold).length,
+  };
+
+  // ── Chart Data Processing ────────────────────────────────
+  const last7Days = [...Array(7)].map((_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    return d.toDateString();
+  }).reverse();
+
+  const revenueTrend = last7Days.map(dateStr => {
+    return data.orders
+      .filter(o => new Date(o.timestamp || o.created_at).toDateString() === dateStr && o.status === 'Served')
+      .reduce((sum, o) => sum + parseFloat(o.total || o.total_amount || 0), 0);
+  });
+
+  const statusDistribution = {
+    labels: ['Served', 'Preparing', 'Pending', 'Cancelled'],
+    series: [
+      data.orders.filter(o => o.status === 'Served').length,
+      data.orders.filter(o => o.status === 'Preparing').length,
+      data.orders.filter(o => o.status === 'Pending').length,
+      data.orders.filter(o => o.status === 'Cancelled').length,
+    ]
+  };
+
+  const areaChartOptions: any = {
+    chart: { type: 'area', toolbar: { show: false }, zoom: { enabled: false } },
+    dataLabels: { enabled: false },
+    stroke: { curve: 'smooth', width: 3 },
+    fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.1, stops: [0, 90, 100] } },
+    xaxis: { categories: last7Days.map(d => d.split(' ')[1] + ' ' + d.split(' ')[2]), axisBorder: { show: false }, axisTicks: { show: false } },
+    yaxis: { labels: { show: true } },
+    grid: { borderColor: 'rgba(0,0,0,0.05)', strokeDashArray: 5 },
+    colors: ['#4318ff'],
+    tooltip: { x: { format: 'dd MMM' } },
+  };
+
+  const donutChartOptions: any = {
+    labels: statusDistribution.labels,
+    colors: ['#05cd99', '#ffb547', '#4318ff', '#ee5d50'],
+    chart: { type: 'donut' },
+    plotOptions: { pie: { donut: { size: '75%', labels: { show: true, total: { show: true, label: 'Total', fontSize: '14px', fontWeight: 600 } } } } },
+    dataLabels: { enabled: false },
+    legend: { position: 'bottom', fontSize: '12px', fontWeight: 500, markers: { radius: 12 } },
+    stroke: { show: false },
   };
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
-
-        .dash-page {
-          min-height: 100vh;
-          background: var(--bg);
-          font-family: 'DM Sans', sans-serif;
-          padding: 36px 40px 60px;
-          position: relative;
-          overflow-x: hidden;
-        }
-        .dash-page::before {
-          content: '';
-          position: fixed;
-          inset: 0;
-          background:
-            radial-gradient(ellipse 60% 40% at 10% 10%, rgba(234,88,12,0.07) 0%, transparent 65%),
-            radial-gradient(ellipse 50% 50% at 90% 85%, rgba(245,158,11,0.06) 0%, transparent 65%);
-          pointer-events: none;
-          z-index: 0;
-        }
-        .dash-inner { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; }
-
-        /* ── Hero heading ───────────────────────────────────────── */
-        .dash-hero {
-          margin-bottom: 40px;
-          animation: dashFadeUp 0.6s ease both;
-        }
-        .dash-eyebrow {
-          font-size: 11px;
-          letter-spacing: 0.18em;
-          color: #f59e0b;
-          text-transform: uppercase;
-          font-weight: 600;
-          margin-bottom: 8px;
-        }
-        .dash-title {
-          font-family: 'Playfair Display', serif;
-          font-size: 36px;
-          font-weight: 700;
-          color: var(--cream);
-          line-height: 1.1;
-          margin-bottom: 6px;
-        }
-        .dash-title em { font-style: italic; color: var(--amber-lt); }
-        .dash-subtitle { font-size: 15px; color: var(--muted); }
-
-        /* ── Stat cards ─────────────────────────────────────────── */
-        .stat-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-          gap: 18px;
-          margin-bottom: 40px;
-        }
-        .stat-card {
-          background: var(--card);
-          border: 1px solid var(--border);
-          border-radius: 20px;
-          padding: 24px 22px;
-          display: flex;
-          flex-direction: column;
-          gap: 14px;
-          position: relative;
-          overflow: hidden;
-          transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-          animation: dashFadeUp 0.6s ease both;
-        }
-        .stat-card:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 14px 40px rgba(0,0,0,0.35);
-          border-color: rgba(245,158,11,0.25);
-        }
-        .stat-card::before {
-          content: '';
-          position: absolute;
-          top: -20px; right: -20px;
-          width: 80px; height: 80px;
-          border-radius: 50%;
-          pointer-events: none;
-          opacity: 0.6;
-        }
-        .stat-icon {
-          width: 46px; height: 46px;
-          border-radius: 14px;
-          display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0;
-        }
-        .stat-value {
-          font-family: 'Playfair Display', serif;
-          font-size: 34px;
-          font-weight: 700;
-          color: var(--cream);
-          line-height: 1;
-        }
-        .stat-label {
-          font-size: 13px;
-          color: var(--muted);
-          font-weight: 500;
-          letter-spacing: 0.02em;
-        }
-
-        /* ── Section layout ─────────────────────────────────────── */
-        .dash-row {
-          display: grid;
-          grid-template-columns: 1fr 340px;
-          gap: 24px;
-          animation: dashFadeUp 0.7s ease both 0.1s;
-        }
-        @media (max-width: 900px) {
-          .dash-row { grid-template-columns: 1fr; }
-        }
-
-        /* ── Card shared ────────────────────────────────────────── */
-        .dash-card {
-          background: var(--card);
-          border: 1px solid var(--border);
-          border-radius: 20px;
-          overflow: hidden;
-        }
-        .dash-card-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 20px 24px 16px;
-          border-bottom: 1px solid rgba(245,158,11,0.08);
-        }
-        .dash-card-title {
-          font-family: 'Playfair Display', serif;
-          font-size: 18px;
-          font-weight: 700;
-          color: var(--cream);
-        }
-        .dash-card-link {
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          font-size: 13px;
-          color: var(--amber);
-          cursor: pointer;
-          font-weight: 500;
-          transition: gap 0.15s;
-          background: none;
-          border: none;
-          padding: 0;
-        }
-        .dash-card-link:hover { gap: 8px; }
-
-        /* ── Recent orders ──────────────────────────────────────── */
-        .order-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 14px 24px;
-          border-bottom: 1px solid rgba(255,255,255,0.04);
-          transition: background 0.15s;
-        }
-        .order-row:last-child { border-bottom: none; }
-        .order-row:hover { background: rgba(245,158,11,0.04); }
-        .order-row-left { display: flex; align-items: center; gap: 12px; }
-        .order-num {
-          width: 36px; height: 36px;
-          border-radius: 10px;
-          background: rgba(245,158,11,0.08);
-          border: 1px solid rgba(245,158,11,0.14);
-          display: flex; align-items: center; justify-content: center;
-          font-size: 13px;
-          font-weight: 700;
-          color: #f59e0b;
-          flex-shrink: 0;
-        }
-        .order-meta { display: flex; flex-direction: column; gap: 2px; }
-        .order-customer { font-size: 14px; font-weight: 600; color: var(--cream); }
-        .order-time { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
-        .order-right { display: flex; align-items: center; gap: 14px; }
-        .order-amount { font-size: 15px; font-weight: 700; color: var(--cream); }
-        .status-badge {
-          font-size: 11px;
-          font-weight: 600;
-          padding: 3px 10px;
-          border-radius: 20px;
-          letter-spacing: 0.04em;
-          text-transform: capitalize;
-        }
-        .empty-orders {
-          padding: 40px 24px;
-          text-align: center;
-          color: var(--muted);
-          font-size: 14px;
-        }
-        .empty-orders .ein { font-size: 36px; margin-bottom: 10px; }
-
-        /* ── Quick actions ──────────────────────────────────────── */
-        .quick-actions { display: flex; flex-direction: column; gap: 0; }
-        .quick-action-btn {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-          padding: 16px 24px;
-          border: none;
-          background: transparent;
-          cursor: pointer;
-          border-bottom: 1px solid rgba(255,255,255,0.04);
-          transition: background 0.15s;
-          width: 100%;
-          text-align: left;
-        }
-        .quick-action-btn:last-child { border-bottom: none; }
-        .quick-action-btn:hover { background: rgba(245,158,11,0.05); }
-        .qa-icon {
-          width: 40px; height: 40px;
-          border-radius: 12px;
-          display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0;
-        }
-        .qa-text { flex: 1; }
-        .qa-label { font-size: 14px; font-weight: 600; color: var(--cream); }
-        .qa-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-        .qa-arrow { color: var(--muted); transition: color 0.15s, transform 0.15s; }
-        .quick-action-btn:hover .qa-arrow { color: var(--amber); transform: translateX(3px); }
-
-        /* ── Skeleton loader ────────────────────────────────────── */
-        .skel {
-          background: linear-gradient(90deg, var(--card) 25%, var(--card-hov) 50%, var(--card) 75%);
-          background-size: 200% 100%;
-          animation: shimmer 1.5s infinite;
-          border-radius: 8px;
-        }
-        @keyframes shimmer {
-          0%   { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-
-        @keyframes dashFadeUp {
-          from { opacity: 0; transform: translateY(18px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-
-        @media (max-width: 576px) {
-          .dash-page { padding: 16px 12px 48px; }
-          .dash-title { font-size: 28px; }
-          .dash-subtitle { font-size: 14px; }
-          .stat-grid {
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-          }
-          .stat-card { padding: 18px 14px; }
-          .stat-value { font-size: 26px; }
-          .dash-card-header { flex-wrap: wrap; gap: 8px; padding: 16px 16px 12px; }
-          .order-row {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 10px;
-            padding: 14px 16px;
-          }
-          .order-right {
-            padding-left: 48px;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 8px;
-          }
-          .quick-action-btn { padding: 14px 16px; }
-        }
-      `}</style>
-
-      <div className="dash-page">
-        <div className="dash-inner">
-
-          {/* ── Hero ────────────────────────────────────────────── */}
-          <div className="dash-hero">
-            <p className="dash-eyebrow">Craving Admin</p>
-            <h1 className="dash-title"><em>Restaurant</em> Dashboard</h1>
-            <p className="dash-subtitle">Real-time overview of your dining floor and kitchen.</p>
-          </div>
-
-          {/* ── Stat cards ──────────────────────────────────────── */}
-          <div className="stat-grid">
-            {statCards.map((card, i) => (
-              <div
-                key={card.label}
-                className="stat-card"
-                style={{ animationDelay: `${i * 0.08}s` }}
-              >
-                <div
-                  className="stat-icon"
-                  style={{ background: card.glow, color: card.color }}
-                >
-                  {card.icon}
-                </div>
-                {loading
-                  ? <div className="skel" style={{ height: 34, width: '60%' }} />
-                  : <div className="stat-value">{card.value}</div>
-                }
-                <div className="stat-label">{card.label}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* ── Main row ────────────────────────────────────────── */}
-          <div className="dash-row">
-
-            {/* Recent Orders */}
-            <div className="dash-card">
-              <div className="dash-card-header">
-                <span className="dash-card-title">Recent Orders</span>
-                <button className="dash-card-link" onClick={() => navigate('/orders')}>
-                  View all <ArrowRight size={14} />
-                </button>
-              </div>
-
-              {loading ? (
-                <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="skel" style={{ height: 44 }} />
-                  ))}
-                </div>
-              ) : recentOrders.length === 0 ? (
-                <div className="empty-orders">
-                  <div className="ein">🍽️</div>
-                  No orders yet today
-                </div>
-              ) : (
-                recentOrders.map((order) => {
-                  const sc = statusColor(order.status);
-                  return (
-                    <div key={order.id} className="order-row">
-                      <div className="order-row-left">
-                        <div className="order-num">#{String(order.id).slice(-3)}</div>
-                        <div className="order-meta">
-                          <span className="order-customer">{order.customer_name || order.customerName || 'Guest'}</span>
-                          <span className="order-time">
-                            <Clock size={11} />
-                            {new Date(order.created_at || order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="order-right">
-                        <span className="order-amount">${parseFloat(order.total_amount || order.total || 0).toFixed(2)}</span>
-                        <span
-                          className="status-badge"
-                          style={{ background: sc.bg, color: sc.text }}
-                        >
-                          {order.status}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {/* Quick Actions */}
-            <div className="dash-card">
-              <div className="dash-card-header">
-                <span className="dash-card-title">Quick Actions</span>
-              </div>
-              <div className="quick-actions">
-                {[
-                  {
-                    icon: <Plus size={18} />,
-                    iconBg: 'rgba(245,158,11,0.12)',
-                    iconColor: '#f59e0b',
-                    label: 'Add New Table',
-                    sub: 'Create a QR-linked table',
-                    to: '/tables',
-                  },
-                  {
-                    icon: <Utensils size={18} />,
-                    iconBg: 'rgba(234,88,12,0.12)',
-                    iconColor: '#ea580c',
-                    label: 'Manage Menu',
-                    sub: 'Update dishes & prices',
-                    to: '/menu',
-                  },
-                  {
-                    icon: <ClipboardList size={18} />,
-                    iconBg: 'rgba(16,185,129,0.12)',
-                    iconColor: '#10b981',
-                    label: 'View Orders',
-                    sub: 'Monitor live orders',
-                    to: '/orders',
-                  },
-                  {
-                    icon: <Grid size={18} />,
-                    iconBg: 'rgba(139,92,246,0.12)',
-                    iconColor: '#8b5cf6',
-                    label: 'Tables Overview',
-                    sub: 'Manage seating layout',
-                    to: '/tables',
-                  },
-                ].map((qa) => (
-                  <button
-                    key={qa.label}
-                    className="quick-action-btn"
-                    onClick={() => navigate(qa.to)}
-                  >
-                    <div className="qa-icon" style={{ background: qa.iconBg, color: qa.iconColor }}>
-                      {qa.icon}
-                    </div>
-                    <div className="qa-text">
-                      <div className="qa-label">{qa.label}</div>
-                      <div className="qa-sub">{qa.sub}</div>
-                    </div>
-                    <ArrowRight size={16} className="qa-arrow" />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-          </div>
+    <div>
+      {/* ── Row 1: Today's Summary ────────────────────────── */}
+      <div className="section-title">
+        {selectedDate === new Date().toISOString().split('T')[0] ? "Today's Summary" : "Daily Summary"}
+        <div className="date-picker-container">
+          <label htmlFor="dash-date-picker" className="date-display-wrap">
+            <Calendar size={16} className="date-icon" />
+            <span className="section-date">
+              {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+            </span>
+          </label>
+          <input
+            id="dash-date-picker"
+            type="date"
+            className="hidden-date-input"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+          />
         </div>
       </div>
-    </>
+      <div className="dash-main-grid four-col">
+
+        {/* Today Orders */}
+        <div className="stat-card">
+          <div className="stat-icon-wrap purple">
+            <ShoppingBag size={24} />
+          </div>
+          <div className="stat-content">
+            <span className="stat-label">Today Orders</span>
+            <div className="stat-value">{String(orderStats.total).padStart(2, '0')}</div>
+            <span className="stat-trend positive">+{orderStats.pending} pending</span>
+          </div>
+        </div>
+
+        {/* Today Earnings */}
+        <div className="stat-card">
+          <div className="stat-icon-wrap green">
+            <DollarSign size={24} />
+          </div>
+          <div className="stat-content">
+            <span className="stat-label">Today Earnings</span>
+            <div className="stat-value">${revenue.toLocaleString()}</div>
+            <span className="stat-trend positive">Average bill: ${(revenue / (orderStats.total || 1)).toFixed(1)}</span>
+          </div>
+        </div>
+
+        {/* Working Staff */}
+        <div className="stat-card">
+          <div className="stat-icon-wrap blue">
+            <Users size={24} />
+          </div>
+          <div className="stat-content">
+            <span className="stat-label">Working Staff</span>
+            <div className="stat-value">{String(staffStats.online).padStart(2, '0')}</div>
+            <span className="stat-trend">{staffStats.busy} active now</span>
+          </div>
+        </div>
+
+        {/* Today Customers */}
+        <div className="stat-card">
+          <div className="stat-icon-wrap amber">
+            <TrendingUp size={24} />
+          </div>
+          <div className="stat-content">
+            <span className="stat-label">Today Customers</span>
+            <div className="stat-value">{String(customerCount).padStart(2, '0')}</div>
+            <span className="stat-trend positive">Unique visitors</span>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ── Row 2: Operations ──────────────────────────────── */}
+      <div className="section-title">Operations Overview</div>
+      <div className="dash-main-grid three-col">
+
+        {/* Stocks Card */}
+        <div className="metric-card">
+          <div className="card-header">
+            <div className="card-icon-round orange">
+              <Package size={20} />
+            </div>
+            <div className="card-title-area">
+              <span className="card-title">Inventory Stocks</span>
+              <span className="card-subtitle">{stockStats.total} Items tracked</span>
+            </div>
+            <div className="card-main-num" style={{ marginLeft: 'auto' }}>
+              {String(stockStats.low).padStart(2, '0')}
+            </div>
+          </div>
+          <div className="card-subgrid">
+            <div className="subgrid-item">
+              <div className="subgrid-label">Low Stock</div>
+              <div className="subgrid-value" style={{ color: 'var(--accent-red)' }}>{stockStats.low}</div>
+            </div>
+            <div className="subgrid-item">
+              <div className="subgrid-label">In Stock</div>
+              <div className="subgrid-value">{stockStats.total - stockStats.low}</div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Kitchen Card */}
+        <div className="metric-card">
+          <div className="card-header">
+            <div className="card-icon-round red">
+              <Utensils size={20} />
+            </div>
+            <div className="card-title-area">
+              <span className="card-title">Kitchen Status</span>
+              <span className="card-subtitle">Active Preparations</span>
+            </div>
+            <div className="card-main-num" style={{ marginLeft: 'auto' }}>
+              {String(orderStats.preparing).padStart(2, '0')}
+            </div>
+          </div>
+          <div className="card-subgrid">
+            <div className="subgrid-item">
+              <div className="subgrid-label">Preparing</div>
+              <div className="subgrid-value">{orderStats.preparing}</div>
+            </div>
+            <div className="subgrid-item">
+              <div className="subgrid-label">Ready</div>
+              <div className="subgrid-value">{orderStats.ready}</div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Tables Card */}
+        <div className="metric-card">
+          <div className="card-header">
+            <div className="card-icon-round blue">
+              <Grid size={20} />
+            </div>
+            <div className="card-title-area">
+              <span className="card-title">Dining Areas</span>
+              <span className="card-subtitle">{tableStats.total} Tables total</span>
+            </div>
+            <div className="card-main-num blue" style={{ marginLeft: 'auto' }}>
+              {String(tableStats.occupied).padStart(2, '0')}
+            </div>
+          </div>
+          <div className="card-subgrid">
+            <div className="subgrid-item">
+              <div className="subgrid-label">Occupied</div>
+              <div className="subgrid-value">{tableStats.occupied}</div>
+            </div>
+            <div className="subgrid-item">
+              <div className="subgrid-label">Available</div>
+              <div className="subgrid-value">{tableStats.available}</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* ── Row 3: Analytics ──────────────────────────────── */}
+      <div className="section-title">Analytics Overview</div>
+      <div className="analytics-grid">
+        
+        {/* Revenue Trend Chart */}
+        <div className="chart-card">
+          <div className="chart-header">
+            <div className="chart-title-wrap">
+              <span className="chart-label">Revenue Trend</span>
+              <span className="chart-main-val">${revenueTrend.reduce((a, b) => a + b, 0).toLocaleString()}</span>
+              <span className="chart-sub">Total revenue (Last 7 days)</span>
+            </div>
+          </div>
+          <div className="chart-body">
+            <Chart options={areaChartOptions} series={[{ name: 'Revenue', data: revenueTrend }]} type="area" height={280} />
+          </div>
+        </div>
+
+        {/* Order Distribution Chart */}
+        <div className="chart-card">
+          <div className="chart-header">
+            <div className="chart-title-wrap">
+              <span className="chart-label">Order Distribution</span>
+              <span className="chart-main-val">{data.orders.length}</span>
+              <span className="chart-sub">Lifetime Orders</span>
+            </div>
+          </div>
+          <div className="chart-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Chart options={donutChartOptions} series={statusDistribution.series} type="donut" height={320} width="100%" />
+          </div>
+        </div>
+
+      </div>
+    </div>
   );
 };
 

@@ -16,7 +16,7 @@ import Profile from '../pages/Profile/Profile';
 
 export const contentRouters: RouteObject[] = [
   {
-    path: '/',
+    path: '/admin',
     element: <DefaultLayout />,
     children: [
       { index: true, element: <Dashboard /> },

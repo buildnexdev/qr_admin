@@ -1,0 +1,146 @@
+.landing-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-h);
+  padding: 8px 0;
+  font-family: 'Outfit', sans-serif;
+  transition: background-color 0.3s ease;
+
+  .landing-navbar__container {
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 50px;
+  }
+
+  .landing-navbar__logo {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+
+    .nammaqr-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--amber);
+      text-decoration: none;
+      letter-spacing: -0.5px;
+
+      span {
+        color: var(--cream);
+      }
+    }
+  }
+
+  .landing-navbar__links {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    margin-left: auto;
+    margin-right: 48px;
+
+    @media (max-width: 768px) {
+      display: none;
+    }
+
+    a {
+      color: var(--cream);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: color 0.2s;
+
+      &:hover {
+        color: var(--amber);
+      }
+    }
+  }
+
+  .landing-navbar__actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .theme-toggle-btn {
+      background: transparent;
+      border: none;
+      color: var(--cream);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      transition: background 0.2s;
+
+      &:hover {
+        background: rgba(128, 128, 128, 0.1);
+      }
+    }
+
+    .btn-login {
+      padding: 8px 24px;
+      border-radius: 8px;
+      border: 1px solid var(--border-h);
+      background: transparent;
+      color: var(--cream);
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.2s;
+
+      &:hover {
+        border-color: var(--amber);
+        color: var(--amber);
+      }
+    }
+  }
+}
+
+html[data-theme='light'] {
+  .landing-navbar {
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+
+    .landing-navbar__logo .nammaqr-logo {
+      color: var(--amber);
+
+      span {
+        color: #0f172a;
+      }
+    }
+
+    .landing-navbar__links a {
+      color: #334155;
+
+      &:hover {
+        color: var(--ember);
+      }
+    }
+
+    .landing-navbar__actions {
+      .theme-toggle-btn {
+        color: #475569;
+      }
+
+      .btn-login {
+        border-color: #cbd5e1;
+        color: #0f172a;
+
+        &:hover {
+          border-color: var(--ember);
+        }
+      }
+    }
+  }
+}

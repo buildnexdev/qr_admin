@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
+import { API_BASE_URL } from '../router/const';
 
 interface User {
   userid: number;
@@ -29,7 +30,7 @@ export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (credentials: { username: string; password?: string }, { rejectWithValue }) => {
     try {
-      const response = await fetch('http://localhost:5000/api/login', {
+      const response = await fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),

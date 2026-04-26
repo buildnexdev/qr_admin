@@ -9,8 +9,8 @@ import type { Table } from '../../store/tableSlice';
 import Modal from '../../components/Modal';
 import { triggerToast } from '../../components/common/CommonAlert';
 import { getApiErrorMessage } from '../../utils/apiError';
+import { API_BASE_URL } from '../../router/const';
 
-const API_BASE_URL = 'http://localhost:5000/api';
 
 /* ─── Floating food particles (subtle, fewer than login) ─── */
 const FOOD_PARTICLES = [

@@ -1,20 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
-  Grid, Utensils, ClipboardList, TrendingUp, Plus,
-  ArrowRight, Clock, Users, DollarSign, Info,
-  AlertCircle, CheckCircle2, ChevronRight, Package,
+  Grid, Utensils, TrendingUp, Users, DollarSign, Package,
   ShoppingBag, Calendar
 } from 'lucide-react';
 import Chart from 'react-apexcharts';
 import './Dashboard.scss';
+import { API_BASE_URL } from '../../router/const';
 
-const API_BASE_URL = 'http://localhost:5000/api';
 
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
   const [data, setData] = useState({
     orders: [] as any[],
     tables: [] as any[],
@@ -45,7 +40,7 @@ const Dashboard: React.FC = () => {
       } catch (err) {
         console.error('Dashboard fetch error:', err);
       } finally {
-        setLoading(false);
+        // fetch complete
       }
     };
     fetchAll();

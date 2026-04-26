@@ -6,8 +6,8 @@ import type { RootState } from '../../store';
 import { setCategories, setCategoriesLoading, type MenuCategory } from '../../store/categorySlice';
 import { triggerToast } from '../../components/common/CommonAlert';
 import { getApiErrorMessage } from '../../utils/apiError';
+import { API_BASE_URL } from '../../router/const';
 
-const API_BASE_URL = 'http://localhost:5000/api';
 
 const Categories: React.FC = () => {
   const dispatch = useDispatch();

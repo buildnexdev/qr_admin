@@ -1247,7 +1247,7 @@ body.admin-nav-open {
 .page-scroll-container {
   flex: 1;
   overflow-y: auto;
-  padding: 32px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 32px;

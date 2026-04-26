@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Navigate, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Menu, QrCode, Bell, Sun, Moon, LogOut, User } from 'lucide-react';
+import { Menu, QrCode, Bell, Sun, Moon, LogOut } from 'lucide-react';
 import { logout } from '../../store/authSlice';
 import type { RootState, AppDispatch } from '../../store';
 import DefaultAside from './DefaultAside';
-import Footer from './Footer';
 
 const DefaultLayout: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -105,7 +104,6 @@ const DefaultLayout: React.FC = () => {
           )}
           <div className="page-scroll-container">
             <Outlet />
-            <Footer />
           </div>
         </main>
       </div>

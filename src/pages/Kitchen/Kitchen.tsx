@@ -8,8 +8,8 @@ import type { Order } from '../../store/orderSlice';
 import CommonHeader from '../../components/common/CommonHeader';
 import { triggerToast } from '../../components/common/CommonAlert';
 import './kitchenStyle.scss';
+import { API_BASE_URL } from '../../router/const';
 
-const API_BASE_URL = 'http://localhost:5000/api';
 
 const Kitchen: React.FC = () => {
   const dispatch = useDispatch();

@@ -7,8 +7,8 @@ import type { RootState } from '../../store';
 import type { Order } from '../../store/orderSlice';
 import type { Table } from '../../store/tableSlice';
 import CommonHeader from '../../components/common/CommonHeader';
+import { API_BASE_URL } from '../../router/const';
 
-const API_BASE_URL = 'http://localhost:5000/api';
 
 const Orders: React.FC = () => {
   const dispatch = useDispatch();

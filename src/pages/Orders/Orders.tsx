@@ -7,7 +7,7 @@ import type { RootState } from '../../store';
 import type { Order } from '../../store/orderSlice';
 import type { Table } from '../../store/tableSlice';
 import CommonHeader from '../../components/common/CommonHeader';
-import { API_BASE_URL } from '../../router/const';
+import { API_BASE_URL } from '../../routes/const';
 
 
 const Orders: React.FC = () => {

@@ -8,21 +8,21 @@ $secondary: var(--muted);
 $dark: var(--bg);
 $light: var(--cream);
 
-// Custom Theme Variables (Craving Admin Premium Dark)
+// Custom Theme Variables — navy shell + #2D5CFE brand
 :root {
-  --bg: #0b0e14;
-  --surface: #161b22;
-  --card: #1c2128;
-  --card-hov: #30363d;
-  --ember: #e91e63;
-  --amber: #f02849;
-  --amber-lt: #ff6b9a;
-  --accent-rgb: 233, 30, 99;
+  --bg: #0a0f1a;
+  --surface: #111827;
+  --card: #1a2332;
+  --card-hov: #243044;
+  --ember: #2d5cfe;
+  --amber: #1e4fd4;
+  --amber-lt: #5b7cff;
+  --accent-rgb: 45, 92, 254;
   --cream: #ffffff;
   --muted: #94a3b8;
   --border: rgba(255, 255, 255, 0.08);
   --border-h: rgba(255, 255, 255, 0.14);
-  --glow: rgba(233, 30, 99, 0.22);
+  --glow: rgba(45, 92, 254, 0.25);
 }
 
 @import "bootstrap/scss/bootstrap";

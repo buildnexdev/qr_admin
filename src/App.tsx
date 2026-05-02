@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import Login from './pages/Login/Login';
 import Register from './pages/Register/Register';
 import Landing from './pages/Landing/Landing';
-import { contentRouters } from './router/contentRouters';
+import { contentRouters } from './routes/contentRouters';
 import './App.css';
 import './styles/common.scss';
 

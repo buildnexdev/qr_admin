@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import { API_BASE_URL } from '../router/const';
+import { API_BASE_URL } from '../routes/const';
 
 // USER INTERFACE
 interface User {

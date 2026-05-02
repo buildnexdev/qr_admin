@@ -8,7 +8,7 @@ import CommonHeader from '../../components/common/CommonHeader';
 import CommonTable from '../../components/common/CommonTable';
 import { triggerToast } from '../../components/common/CommonAlert';
 import { getApiErrorMessage } from '../../utils/apiError';
-import { API_BASE_URL } from '../../router/const';
+import { API_BASE_URL } from '../../routes/const';
 
 const CATEGORY_PRESETS = [
   'Vegetables',

@@ -1,19 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Dark theme — navy surfaces + Material pink accent (same brand as light) */
-  --bg: #0b0e14;
-  --surface: #161b22;
-  --card: #1c2128;
-  --card-hov: #30363d;
+  /* Dark theme — deep navy + brand blue #2D5CFE */
+  --bg: #0a0f1a;
+  --surface: #111827;
+  --card: #1a2332;
+  --card-hov: #243044;
 
-  /* Primary: pink–magenta #e91e63 family */
-  --ember: #e91e63;
-  --amber: #f02849;
-  --amber-lt: #ff6b9a;
+  /* Primary brand blue */
+  --ember: #2d5cfe;
+  --amber: #1e4fd4;
+  --amber-lt: #5b7cff;
 
-  /* RGB = #e91e63 — used by rgba(var(--accent-rgb), α) project-wide */
-  --accent-rgb: 233, 30, 99;
+  /* RGB = #2D5CFE */
+  --accent-rgb: 45, 92, 254;
 
   /* Text */
   --cream: #ffffff;
@@ -22,7 +22,7 @@
   /* Borders */
   --border: rgba(255, 255, 255, 0.08);
   --border-h: rgba(255, 255, 255, 0.14);
-  --glow: rgba(233, 30, 99, 0.22);
+  --glow: rgba(45, 92, 254, 0.25);
 
   font-family: 'DM Sans', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -39,33 +39,33 @@
 }
 
 html[data-theme='light'] {
-  /* Light — CRAVING-style: soft pink page + pale pink panels + #e91e63 primary */
-  --bg: #fff5f8;
-  --surface: #ffeef2;
+  /* Light — cool gray page + white cards + #2D5CFE primary */
+  --bg: #f8f9fd;
+  --surface: #ffffff;
   --card: #ffffff;
-  --card-hov: #ffe4eb;
+  --card-hov: #f1f5f9;
 
-  --ember: #e91e63;
-  --amber: #f02849;
-  --amber-lt: #f06292;
+  --ember: #2d5cfe;
+  --amber: #1e4fd4;
+  --amber-lt: #5b7cff;
 
-  --accent-rgb: 233, 30, 99;
+  --accent-rgb: 45, 92, 254;
 
-  --cream: #1a1a1a;
-  --muted: #5c5c5c;
+  --cream: #1a202c;
+  --muted: #64748b;
 
-  --border: rgba(233, 30, 99, 0.12);
-  --border-h: rgba(233, 30, 99, 0.2);
-  --glow: rgba(233, 30, 99, 0.14);
+  --border: rgba(26, 32, 44, 0.08);
+  --border-h: rgba(26, 32, 44, 0.14);
+  --glow: rgba(45, 92, 254, 0.12);
 
   color-scheme: light;
 }
 
 html[data-theme='light'] body::before {
   background:
-    radial-gradient(ellipse 55% 40% at 15% 20%, rgba(var(--accent-rgb), 0.08) 0%, transparent 72%),
-    radial-gradient(ellipse 50% 50% at 85% 80%, rgba(var(--accent-rgb), 0.06) 0%, transparent 72%),
-    linear-gradient(180deg, #fff5f8 0%, #fff8fb 100%);
+    radial-gradient(ellipse 55% 40% at 15% 20%, rgba(var(--accent-rgb), 0.06) 0%, transparent 72%),
+    radial-gradient(ellipse 50% 50% at 85% 80%, rgba(30, 126, 52, 0.04) 0%, transparent 72%),
+    linear-gradient(180deg, #f8f9fd 0%, #f1f5f9 100%);
 }
 
 html[data-theme='light'] .text-white {

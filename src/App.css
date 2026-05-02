@@ -1509,6 +1509,12 @@ html[data-theme='light'] .admin-layout-root .admin-default-footer__link {
   animation: modalContentIn 0.35s ease-out;
 }
 
+/* Branch page: remove outer scroll-area padding so content is edge-to-edge */
+.admin-layout-root .page-scroll-container:has(.branch-page--flush) {
+  padding: 0 !important;
+  gap: 0;
+}
+
 /* Smooth, compact scrollbar */
 *::-webkit-scrollbar {
   width: 10px;
@@ -1800,26 +1806,35 @@ html[data-theme='light'] .admin-layout-root .branch-page .branch-table thead.pri
   padding: 10px 14px !important;
   font-size: 11px !important;
   letter-spacing: 0.06em !important;
-  border: none !important;
+  border-top: none !important;
+  border-left: none !important;
   border-bottom: 1px solid var(--sn-line) !important;
+  border-right: 1px solid rgba(233, 30, 99, 0.12) !important;
   border-radius: 0 !important;
 }
 
-html[data-theme='light'] .admin-layout-root .branch-page .branch-table thead.prim th:first-child,
 html[data-theme='light'] .admin-layout-root .branch-page .branch-table thead.prim th:last-child {
-  border-radius: 0 !important;
-  border-left: none !important;
   border-right: none !important;
+}
+
+html[data-theme='light'] .admin-layout-root .branch-page .branch-table thead.prim th:first-child {
+  border-radius: 0 !important;
 }
 
 html[data-theme='light'] .admin-layout-root .branch-page .branch-table tbody tr.data-row td {
   padding: 9px 14px !important;
   background: #ffffff !important;
-  border: none !important;
+  border-top: none !important;
+  border-left: none !important;
   border-bottom: 1px solid rgba(233, 30, 99, 0.08) !important;
+  border-right: 1px solid rgba(233, 30, 99, 0.1) !important;
   border-radius: 0 !important;
   transform: none !important;
   color: var(--sn-ink) !important;
+}
+
+html[data-theme='light'] .admin-layout-root .branch-page .branch-table tbody tr.data-row td:last-child {
+  border-right: none !important;
 }
 
 html[data-theme='light'] .admin-layout-root .branch-page .branch-table tbody tr.data-row:nth-child(even) td {
@@ -1839,6 +1854,20 @@ html[data-theme='light'] .admin-layout-root .branch-page .branch-table .code {
   color: var(--sn-blue) !important;
 }
 
+/* Branch Management: full-bleed (no page inset / card radius) */
+html[data-theme='light'] .admin-layout-root .branch-page--flush .table-wrapper {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border: 1px solid var(--sn-line) !important;
+}
+
+html[data-theme='light'] .admin-layout-root .branch-page--flush .common-sub-header {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
 html[data-theme='dark'] .admin-layout-root .sidebar-container {
   background: linear-gradient(180deg, #e91e63 0%, #880e4f 100%);
   border-right: 1px solid rgba(255, 255, 255, 0.08);
@@ -1846,6 +1875,11 @@ html[data-theme='dark'] .admin-layout-root .sidebar-container {
 
 html[data-theme='dark'] .admin-layout-root .branch-page .table-wrapper {
   border-radius: 14px;
+}
+
+html[data-theme='dark'] .admin-layout-root .branch-page--flush .table-wrapper {
+  border-radius: 0 !important;
+  border: 1px solid rgba(var(--accent-rgb), 0.28) !important;
 }
 
 html[data-theme='dark'] .admin-layout-root .branch-page .branch-table {
@@ -1856,12 +1890,24 @@ html[data-theme='dark'] .admin-layout-root .branch-page .branch-table {
 html[data-theme='dark'] .admin-layout-root .branch-page .branch-table thead.prim th {
   padding: 10px 14px !important;
   border-radius: 0 !important;
+  border-right: 1px solid rgba(var(--accent-rgb), 0.14) !important;
+  border-bottom: 1px solid rgba(var(--accent-rgb), 0.2) !important;
+}
+
+html[data-theme='dark'] .admin-layout-root .branch-page .branch-table thead.prim th:last-child {
+  border-right: none !important;
 }
 
 html[data-theme='dark'] .admin-layout-root .branch-page .branch-table tbody tr.data-row td {
   padding: 9px 14px !important;
   border-radius: 0 !important;
   transform: none !important;
+  border-right: 1px solid rgba(var(--accent-rgb), 0.12) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+html[data-theme='dark'] .admin-layout-root .branch-page .branch-table tbody tr.data-row td:last-child {
+  border-right: none !important;
 }
 
 html[data-theme='dark'] .admin-layout-root .branch-page .branch-table tbody tr.data-row:nth-child(even) td {

@@ -14,10 +14,27 @@
   max-width: 100%;
   box-sizing: border-box;
 
-  &--full {
-    padding-left: 8px;
-    padding-right: 8px;
+  /**
+   * Full-bleed: parent `.page-scroll-container` padding is removed via `:has()` in App.css.
+   */
+  &--flush {
+    flex: 1;
+    min-height: 0;
+    padding: 0;
     width: 100%;
+    max-width: none;
+
+    .common-sub-header {
+      margin-bottom: 0;
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+      box-shadow: none;
+    }
+
+    .table-wrapper {
+      border-radius: 0;
+    }
   }
 
   /* Pull table up to the sub-header — CommonSubHeader defaults to margin-bottom: 24px */
@@ -132,6 +149,8 @@
     overflow: visible;
     margin-top: 0;
     width: 100%;
+    border: 1px solid rgba(var(--accent-rgb), 0.28);
+    box-sizing: border-box;
 
     &--full {
       overflow-x: auto;

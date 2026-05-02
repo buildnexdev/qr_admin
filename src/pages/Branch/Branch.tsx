@@ -189,7 +189,7 @@ const Branch: React.FC = () => {
   }, [branches, searchTerm]);
 
   return (
-    <div className="branch-page branch-page--full">
+    <div className="branch-page branch-page--flush">
       {/* HEADER SECTION */}
       <CommonSubHeader
         icon={Building2}

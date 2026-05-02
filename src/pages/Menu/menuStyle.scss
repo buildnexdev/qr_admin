@@ -65,7 +65,7 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--amber);
-  background: rgba(99, 102, 241,0.1);
+  background: rgba(var(--accent-rgb),0.1);
   padding: 4px 10px;
   border-radius: 6px;
   align-self: flex-start;
@@ -92,9 +92,9 @@
 
 .btn-icon-edit {
   flex: 1;
-  background: rgba(99, 102, 241,0.1);
+  background: rgba(var(--accent-rgb),0.1);
   color: var(--amber);
-  border: 1px solid rgba(99, 102, 241,0.2);
+  border: 1px solid rgba(var(--accent-rgb),0.2);
   padding: 8px;
   border-radius: 8px;
   cursor: pointer;
@@ -102,7 +102,7 @@
   display: flex; align-items: center; justify-content: center;
 
   &:hover {
-    background: rgba(99, 102, 241,0.2);
+    background: rgba(var(--accent-rgb),0.2);
     border-color: var(--amber);
   }
 }
@@ -149,7 +149,7 @@
 
   &.active {
     border-color: var(--amber);
-    background: rgba(99, 102, 241,0.1);
+    background: rgba(var(--accent-rgb),0.1);
     color: var(--amber);
   }
 
@@ -177,7 +177,7 @@
   &:hover {
     border-color: var(--amber);
     color: var(--amber);
-    background: rgba(99, 102, 241,0.05);
+    background: rgba(var(--accent-rgb),0.05);
   }
 }
 

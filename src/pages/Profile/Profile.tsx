@@ -23,7 +23,7 @@ const Profile: React.FC = () => {
             </div>
             <p style={{ margin: 0, fontSize: '12px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '1.5px', fontWeight: 600 }}>Registered Company</p>
             <h4 style={{ margin: '8px 0 8px', color: 'var(--cream)', fontSize: '26px', fontFamily: "'Playfair Display', serif" }}>{user?.company_name || 'Nammaqr Workspace'}</h4>
-            <span style={{ display: 'inline-block', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--amber)', padding: '6px 16px', borderRadius: '20px', fontSize: '14px', fontWeight: 600 }}>
+            <span style={{ display: 'inline-block', background: 'rgba(var(--accent-rgb), 0.1)', color: 'var(--amber)', padding: '6px 16px', borderRadius: '20px', fontSize: '14px', fontWeight: 600 }}>
               Company ID: #{user?.companyid}
             </span>
           </div>

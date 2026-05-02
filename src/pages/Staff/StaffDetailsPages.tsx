@@ -2,9 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import { Users, Edit3, Save, Trash2 } from 'lucide-react';
-import type { RootState } from '../../store';
+import type { AppDispatch, RootState } from '../../store';
 import { setStaff, setStaffLoading, type StaffMember } from '../../store/staffSlice';
-import { setBranches, setLoading as setBranchesLoading } from '../../store/branchSlice';
+import { fetchBranches } from '../../store/branchSlice';
 import CommonHeader from '../../components/common/CommonHeader';
 import CommonTable from '../../components/common/CommonTable';
 import CommonOffcanvas from '../../components/common/CommonOffcanvas';
@@ -16,7 +16,7 @@ import { API_BASE_URL } from '../../router/const';
 
 
 const StaffDetailsPages: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { staff: staffData, loading } = useSelector((state: RootState) => state.staff);
   const { branches } = useSelector((state: RootState) => state.branches);
 
@@ -45,16 +45,9 @@ const StaffDetailsPages: React.FC = () => {
     dispatch(setStaffLoading(false));
   };
 
-  const fetchBranchesIfNeeded = async () => {
+  const fetchBranchesIfNeeded = () => {
     if (branches.length > 0) return;
-    dispatch(setBranchesLoading(true));
-    try {
-      const res = await axios.get(`${API_BASE_URL}/branches`);
-      dispatch(setBranches(res.data));
-    } catch {
-      /* optional for dropdown */
-    }
-    dispatch(setBranchesLoading(false));
+    void dispatch(fetchBranches());
   };
 
   useEffect(() => {

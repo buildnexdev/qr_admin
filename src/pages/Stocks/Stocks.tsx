@@ -243,7 +243,7 @@ const Stocks: React.FC = () => {
         ) : (
           <div
             className="bg-dark rounded-4 p-2 shadow-sm border"
-            style={{ borderColor: 'rgba(99, 102, 241, 0.1)' }}
+            style={{ borderColor: 'rgba(var(--accent-rgb), 0.1)' }}
           >
             <CommonTable
               columns={columns}
@@ -314,7 +314,7 @@ const Stocks: React.FC = () => {
             type="button"
             onClick={closeModal}
             style={{
-              background: 'rgba(99, 102, 241,0.1)',
+              background: 'rgba(var(--accent-rgb),0.1)',
               border: 'none',
               width: 36,
               height: 36,

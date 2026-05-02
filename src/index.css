@@ -1,34 +1,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Dark Mode Default (Premium Slate) */
-  --bg: #020617;
-  /* Slate 950 */
-  --surface: #0f172a;
-  /* Slate 900 */
-  --card: #1e293b;
-  /* Slate 800 */
-  --card-hov: #334155;
-  /* Slate 700 */
+  /* Dark theme — navy surfaces + Material pink accent (same brand as light) */
+  --bg: #0b0e14;
+  --surface: #161b22;
+  --card: #1c2128;
+  --card-hov: #30363d;
 
-  /* Brand Accents (Light Red / Coral) */
-  --amber: #f43f5e;
-  /* Rose 500 */
-  --amber-lt: #fb7185;
-  /* Rose 400 */
-  --ember: #e11d48;
-  /* Rose 600 */
+  /* Primary: pink–magenta #e91e63 family */
+  --ember: #e91e63;
+  --amber: #f02849;
+  --amber-lt: #ff6b9a;
+
+  /* RGB = #e91e63 — used by rgba(var(--accent-rgb), α) project-wide */
+  --accent-rgb: 233, 30, 99;
 
   /* Text */
-  --cream: #f8fafc;
-  /* Slate 50 */
+  --cream: #ffffff;
   --muted: #94a3b8;
-  /* Slate 400 */
 
   /* Borders */
   --border: rgba(255, 255, 255, 0.08);
-  --border-h: rgba(255, 255, 255, 0.15);
-  --glow: rgba(244, 63, 94, 0.15);
+  --border-h: rgba(255, 255, 255, 0.14);
+  --glow: rgba(233, 30, 99, 0.22);
 
   font-family: 'DM Sans', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -45,38 +39,33 @@
 }
 
 html[data-theme='light'] {
-  --bg: #f8fafc;
-  /* Slate 50 */
-  --surface: #f1f5f9;
-  /* Slate 100 */
+  /* Light — CRAVING-style: soft pink page + pale pink panels + #e91e63 primary */
+  --bg: #fff5f8;
+  --surface: #ffeef2;
   --card: #ffffff;
-  /* White */
-  --card-hov: #e2e8f0;
-  /* Slate 200 */
+  --card-hov: #ffe4eb;
 
-  --amber: #f43f5e;
-  /* Rose 500 */
-  --amber-lt: #fb7185;
-  /* Rose 400 */
-  --ember: #e11d48;
-  /* Rose 600 */
+  --ember: #e91e63;
+  --amber: #f02849;
+  --amber-lt: #f06292;
 
-  --cream: #0f172a;
-  /* Slate 900 */
-  --muted: #475569;
-  /* Slate 600 */
+  --accent-rgb: 233, 30, 99;
 
-  --border: rgba(0, 0, 0, 0.08);
-  --border-h: rgba(0, 0, 0, 0.15);
-  --glow: rgba(244, 63, 94, 0.1);
+  --cream: #1a1a1a;
+  --muted: #5c5c5c;
+
+  --border: rgba(233, 30, 99, 0.12);
+  --border-h: rgba(233, 30, 99, 0.2);
+  --glow: rgba(233, 30, 99, 0.14);
 
   color-scheme: light;
 }
 
 html[data-theme='light'] body::before {
   background:
-    radial-gradient(ellipse 55% 40% at 15% 20%, rgba(244, 63, 94, 0.04) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 50% at 85% 80%, rgba(244, 63, 94, 0.04) 0%, transparent 70%);
+    radial-gradient(ellipse 55% 40% at 15% 20%, rgba(var(--accent-rgb), 0.08) 0%, transparent 72%),
+    radial-gradient(ellipse 50% 50% at 85% 80%, rgba(var(--accent-rgb), 0.06) 0%, transparent 72%),
+    linear-gradient(180deg, #fff5f8 0%, #fff8fb 100%);
 }
 
 html[data-theme='light'] .text-white {
@@ -106,8 +95,8 @@ body::before {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 55% 40% at 15% 20%, rgba(244, 63, 94, 0.09) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 50% at 85% 80%, rgba(244, 63, 94, 0.07) 0%, transparent 70%);
+    radial-gradient(ellipse 55% 40% at 15% 20%, rgba(var(--accent-rgb), 0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 50% at 85% 80%, rgba(var(--accent-rgb), 0.08) 0%, transparent 70%);
   pointer-events: none;
   z-index: -1;
 }

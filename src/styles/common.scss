@@ -10,18 +10,19 @@ $light: var(--cream);
 
 // Custom Theme Variables (Craving Admin Premium Dark)
 :root {
-  --bg: #020617;
-  --surface: #0f172a;
-  --card: #1e293b;
-  --card-hov: #334155;
-  --amber: #f43f5e;
-  --amber-lt: #fb7185;
-  --ember: #e11d48;
-  --cream: #f8fafc;
+  --bg: #0b0e14;
+  --surface: #161b22;
+  --card: #1c2128;
+  --card-hov: #30363d;
+  --ember: #e91e63;
+  --amber: #f02849;
+  --amber-lt: #ff6b9a;
+  --accent-rgb: 233, 30, 99;
+  --cream: #ffffff;
   --muted: #94a3b8;
   --border: rgba(255, 255, 255, 0.08);
-  --border-h: rgba(255, 255, 255, 0.15);
-  --glow: rgba(244, 63, 94, 0.15);
+  --border-h: rgba(255, 255, 255, 0.14);
+  --glow: rgba(233, 30, 99, 0.22);
 }
 
 @import "bootstrap/scss/bootstrap";
@@ -42,8 +43,8 @@ $light: var(--cream);
   transition: border 0.2s, box-shadow 0.2s;
 
   &:focus {
-    border-color: rgba(99, 102, 241, 0.5);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    border-color: rgba(var(--accent-rgb), 0.5);
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12);
   }
   
   &::placeholder {
@@ -79,13 +80,13 @@ $light: var(--cream);
   font-size: 14px;
   font-weight: 600;
   background: linear-gradient(135deg, var(--ember) 0%, var(--amber) 100%);
-  color: #1a0a00;
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.25);
+  color: #ffffff;
+  box-shadow: 0 4px 20px rgba(var(--accent-rgb), 0.28);
   transition: transform .15s, box-shadow .15s, background .2s;
   
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 28px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 8px 28px rgba(var(--accent-rgb), 0.42);
     background: linear-gradient(135deg, var(--amber) 0%, var(--amber-lt) 100%);
   }
 }
@@ -199,9 +200,9 @@ html[data-theme='light'] .app-header {
 }
 
 .header-icon-box {
-  background: rgba(99, 102, 241,0.1);
+  background: rgba(var(--accent-rgb), 0.1);
   color: var(--amber);
-  border: 1px solid rgba(99, 102, 241,0.18);
+  border: 1px solid rgba(var(--accent-rgb), 0.18);
   width: 42px; height: 42px;
   border-radius: 10px;
 }
@@ -248,7 +249,7 @@ html[data-theme='light'] .app-header__search .dark-input {
 
   &:focus {
     border-color: rgba(217, 119, 6, 0.55);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.15);
   }
 
   &::placeholder {
@@ -604,7 +605,7 @@ html[data-theme='light'] .admin-layout-root .empty-table-state__hint strong {
 }
 
 .offcanvas-close-btn {
-  background: rgba(99, 102, 241,0.1);
+  background: rgba(var(--accent-rgb), 0.1);
   border: none;
   width: 36px; height: 36px;
   border-radius: 50%;
@@ -612,7 +613,7 @@ html[data-theme='light'] .admin-layout-root .empty-table-state__hint strong {
   color: var(--amber);
   transition: background 0.2s;
 
-  &:hover { background: rgba(99, 102, 241,0.2); }
+  &:hover { background: rgba(var(--accent-rgb), 0.2); }
 }
 
 .offcanvas-content {

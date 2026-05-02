@@ -21,10 +21,24 @@ interface AuthState {
   error: string | null;
 }
 
-// AUTH SLICE 
+function readStoredUser(): User | null {
+  try {
+    const raw = localStorage.getItem('user');
+    if (!raw) return null;
+    return JSON.parse(raw) as User;
+  } catch {
+    return null;
+  }
+}
+
+const storedToken = localStorage.getItem('token');
+const storedUser = readStoredUser();
+
+// Require both user snapshot and token so the UI does not look "logged in" without credentials.
+// Expired tokens stay until the first API 401; axios interceptor then clears session.
 const initialState: AuthState = {
-  user: JSON.parse(localStorage.getItem('user') || 'null'),
-  isAuthenticated: !!localStorage.getItem('user'),
+  user: storedUser,
+  isAuthenticated: !!(storedToken && storedUser),
   status: 'idle',
   error: null,
 };

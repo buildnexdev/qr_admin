@@ -89,9 +89,9 @@ const Orders: React.FC = () => {
                     <span 
                       className="badge rounded-pill px-3 py-2 fw-semibold"
                       style={{ 
-                        background: order.status.toLowerCase() === 'served' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(99, 102, 241, 0.15)',
+                        background: order.status.toLowerCase() === 'served' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(var(--accent-rgb), 0.15)',
                         color: order.status.toLowerCase() === 'served' ? '#10B981' : 'var(--amber)',
-                        border: `1px solid ${order.status.toLowerCase() === 'served' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(99, 102, 241, 0.3)'}`
+                        border: `1px solid ${order.status.toLowerCase() === 'served' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(var(--accent-rgb), 0.3)'}`
                       }}
                     >
                       {order.status}

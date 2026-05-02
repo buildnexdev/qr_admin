@@ -15,16 +15,16 @@
 
 // Action Button inside Table
 .staff-action-edit {
-  background: rgba(99, 102, 241,0.1);
+  background: rgba(var(--accent-rgb),0.1);
   color: var(--amber);
-  border: 1px solid rgba(99, 102, 241,0.2);
+  border: 1px solid rgba(var(--accent-rgb),0.2);
   padding: 6px 14px;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
   
   &:hover {
-    background: rgba(99, 102, 241,0.2);
+    background: rgba(var(--accent-rgb),0.2);
     border-color: var(--amber);
   }
 }
@@ -41,7 +41,7 @@
 .staff-role-badge {
   font-size: 0.85rem; 
   color: var(--amber-lt); 
-  background: rgba(99, 102, 241,0.1); 
+  background: rgba(var(--accent-rgb),0.1); 
   padding: 4px 10px; 
   border-radius: 20px; 
   font-weight: 600;

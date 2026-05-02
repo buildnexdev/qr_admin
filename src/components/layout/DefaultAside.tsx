@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { X } from 'lucide-react';
 import { ADMIN_MENU } from '../../const/menu';
 
 type AsideProps = {
@@ -12,9 +13,20 @@ const DefaultAside: React.FC<AsideProps> = ({ isOpen = false, onClose }) => {
   return (
     <aside
       className={`sidebar-container ${isOpen ? 'is-open' : 'is-collapsed'}`}
+      aria-hidden={!isOpen}
     >
+      <div className="sidebar-drawer-header">
+        <span className="sidebar-drawer-title">Menu</span>
+        <button
+          type="button"
+          className="sidebar-close-btn"
+          onClick={() => onClose?.()}
+          aria-label="Close menu"
+        >
+          <X size={20} strokeWidth={2.5} />
+        </button>
+      </div>
       <nav className="sidebar-nav">
-        <div className="nav-label" style={{ marginTop: '0' }}>Menu</div>
         {ADMIN_MENU.map((item) => {
           const Icon = item.icon;
           return (
@@ -22,8 +34,9 @@ const DefaultAside: React.FC<AsideProps> = ({ isOpen = false, onClose }) => {
               key={item.path}
               to={item.path}
               end={item.path === '/admin'}
-              className={({ isActive }) => isActive ? 'active' : ''}
-              style={{ padding: '10px 14px', fontSize: '0.9rem' }}
+              className={({ isActive }) =>
+                `sidebar-nav-link${isActive ? ' sidebar-nav-link--active' : ''}`
+              }
               onClick={() => onClose?.()}
             >
               <Icon size={18} />

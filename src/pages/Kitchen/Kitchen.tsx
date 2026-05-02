@@ -152,8 +152,8 @@ const Kitchen: React.FC = () => {
         {/* === PREPARING COLUMN === */}
         <div className="kds-column">
           <div className="kds-column-header">
-            <h3 className="kds-column-title" style={{ color: '#ea580c' }}>
-              Preparing <span className="kds-count-badge" style={{ color: '#ea580c', background: 'rgba(234, 88, 12, 0.15)' }}>{preparingOrders.length}</span>
+            <h3 className="kds-column-title" style={{ color: 'var(--ember)' }}>
+              Preparing <span className="kds-count-badge" style={{ color: 'var(--ember)', background: 'rgba(234, 88, 12, 0.15)' }}>{preparingOrders.length}</span>
             </h3>
           </div>
           {preparingOrders.length === 0 ? (
@@ -188,3 +188,4 @@ const Kitchen: React.FC = () => {
 };
 
 export default Kitchen;
+

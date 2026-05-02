@@ -1,5 +1,6 @@
 import {
   UserCircle,
+  Shield,
   Building2,
   Tags,
   Utensils,
@@ -8,11 +9,16 @@ import {
   ClipboardList,
   Receipt,
   Package,
-  BarChart3
+  BarChart3,
+  Layout
 } from 'lucide-react';
 
 export const ADMIN_MENU = [
-  
+  {
+    path: '/admin/company',
+    name: 'Company',
+    icon: Layout,
+  },
   {
     path: '/admin/branch',
     name: 'Branch',
@@ -22,6 +28,11 @@ export const ADMIN_MENU = [
     path: '/admin/staff',
     name: 'Staff',
     icon: UserCircle,
+  },
+  {
+    path: '/admin/roles',
+    name: 'Roles',
+    icon: Shield,
   },
   {
     path: '/admin/categories',

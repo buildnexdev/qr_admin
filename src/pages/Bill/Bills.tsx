@@ -44,7 +44,7 @@ const Bills: React.FC = () => {
   };
 
   const columns = [
-    { key: 'id', header: 'Bill No.', render: (row: Bill) => <span className="fw-bold" style={{ color: '#f59e0b' }}>{row.id}</span> },
+    { key: 'id', header: 'Bill No.', render: (row: Bill) => <span className="fw-bold" style={{ color: 'var(--amber)' }}>{row.id}</span> },
     { key: 'tableName', header: 'Table' },
     { key: 'customerName', header: 'Customer' },
     { 
@@ -115,3 +115,4 @@ const Bills: React.FC = () => {
 };
 
 export default Bills;
+

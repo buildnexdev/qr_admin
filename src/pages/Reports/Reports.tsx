@@ -43,8 +43,8 @@ const Reports: React.FC = () => {
               <div className="col-md-4" key={idx}>
                 <div className="p-4 rounded-4" style={{ background: 'var(--card)', border: '1px solid var(--border)', boxShadow: '0 8px 24px rgba(0,0,0,0.1)'}}>
                   <div className="d-flex justify-content-between align-items-start mb-3">
-                    <div className="p-2 rounded-3" style={{ background: 'rgba(245, 158, 11, 0.1)' }}>
-                      <Icon size={24} color="#f59e0b" />
+                    <div className="p-2 rounded-3" style={{ background: 'rgba(99, 102, 241, 0.1)' }}>
+                      <Icon size={24} color="var(--amber)" />
                     </div>
                     <span className="badge rounded-pill d-flex align-items-center gap-1" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10B981' }}>
                       <ArrowUpRight size={12} /> {kpi.trend}
@@ -81,3 +81,4 @@ const Reports: React.FC = () => {
 };
 
 export default Reports;
+

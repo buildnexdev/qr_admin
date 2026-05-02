@@ -1,7 +1,7 @@
 .kitchen-board {
   padding: 24px 28px;
   min-height: 100%;
-  background: var(--bg, #0e0b08);
+  background: var(--bg, var(--bg));
   font-family: 'DM Sans', sans-serif;
   display: flex;
   flex-direction: column;
@@ -19,7 +19,7 @@
 .kds-column {
   flex: 0 0 340px;
   background: rgba(255, 255, 255, 0.02);
-  border: 1px dashed rgba(245, 158, 11, 0.15);
+  border: 1px dashed rgba(99, 102, 241, 0.15);
   border-radius: 16px;
   padding: 16px;
   display: flex;
@@ -33,21 +33,21 @@
   align-items: center;
   margin-bottom: 8px;
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(245, 158, 11, 0.1);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.1);
 }
 
 .kds-column-title {
   font-family: 'Playfair Display', serif;
   font-size: 20px;
-  color: var(--amber, #f59e0b);
+  color: var(--amber, var(--amber));
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 .kds-count-badge {
-  background: rgba(245, 158, 11, 0.15);
-  color: var(--amber, #f59e0b);
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--amber, var(--amber));
   padding: 2px 10px;
   border-radius: 20px;
   font-size: 13px;
@@ -55,8 +55,8 @@
 }
 
 .ticket-card {
-  background: var(--card, #1f1810);
-  border: 1px solid rgba(245, 158, 11, 0.15);
+  background: var(--card, var(--card));
+  border: 1px solid rgba(99, 102, 241, 0.15);
   border-radius: 12px;
   padding: 16px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
@@ -68,7 +68,7 @@
 
 .ticket-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(245, 158, 11, 0.25);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(99, 102, 241, 0.25);
 }
 
 @keyframes ticketPop {
@@ -86,7 +86,7 @@
 .ticket-id {
   font-size: 18px;
   font-weight: 700;
-  color: var(--cream, #fef3c7);
+  color: var(--cream, var(--cream));
   letter-spacing: 0.05em;
   display: flex;
   flex-direction: column;
@@ -94,7 +94,7 @@
 
 .ticket-id .table-badge {
   font-size: 12px;
-  color: var(--ember, #ea580c);
+  color: var(--ember, var(--ember));
   font-weight: 600;
   margin-top: 2px;
   background: rgba(234, 88, 12, 0.1);
@@ -114,7 +114,7 @@
 }
 
 .ticket-time.normal { color: #10B981; background: rgba(16, 185, 129, 0.1); }
-.ticket-time.warning { color: #F59E0B; background: rgba(245, 158, 11, 0.1); }
+.ticket-time.warning { color: var(--amber); background: rgba(99, 102, 241, 0.1); }
 .ticket-time.danger { color: #EF4444; background: rgba(239, 68, 68, 0.1); animation: pulseRed 2s infinite; }
 
 @keyframes pulseRed {
@@ -140,7 +140,7 @@
 }
 
 .item-qty {
-  background: var(--amber, #f59e0b);
+  background: var(--amber, var(--amber));
   color: #1a0a00;
   font-size: 13px;
   font-weight: 700;
@@ -153,7 +153,7 @@
 }
 
 .item-name {
-  color: var(--cream, #fef3c7);
+  color: var(--cream, var(--cream));
   font-size: 15px;
   line-height: 1.4;
   flex: 1;
@@ -186,9 +186,9 @@
 }
 
 .btn-prepare {
-  background: rgba(245, 158, 11, 0.15);
-  color: var(--amber, #f59e0b);
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--amber, var(--amber));
+  border: 1px solid rgba(99, 102, 241, 0.3);
 }
 
 .btn-ready {
@@ -198,7 +198,7 @@
 }
 
 .btn-serve {
-  background: var(--ember, #ea580c);
+  background: var(--ember, var(--ember));
   color: #fff;
   box-shadow: 0 4px 12px rgba(234, 88, 12, 0.2);
 }
@@ -211,7 +211,7 @@
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
-  color: var(--muted, #a8956e);
+  color: var(--muted, var(--muted));
   text-align: center;
   gap: 12px;
 }
@@ -223,3 +223,4 @@
 .kds-empty p {
   font-size: 14px;
 }
+

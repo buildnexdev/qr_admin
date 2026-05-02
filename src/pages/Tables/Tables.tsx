@@ -99,7 +99,7 @@ const Tables: React.FC = () => {
           inset: 0;
           background:
             radial-gradient(ellipse 55% 40% at 15% 20%, rgba(234,88,12,0.09) 0%, transparent 70%),
-            radial-gradient(ellipse 50% 50% at 85% 80%, rgba(245,158,11,0.07) 0%, transparent 70%);
+            radial-gradient(ellipse 50% 50% at 85% 80%, rgba(99, 102, 241,0.07) 0%, transparent 70%);
           pointer-events: none;
           z-index: 0;
         }
@@ -176,7 +176,7 @@ const Tables: React.FC = () => {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          background: rgba(245,158,11,0.08);
+          background: rgba(99, 102, 241,0.08);
           border: 1px solid var(--border);
           border-radius: 40px;
           padding: 6px 16px;
@@ -211,7 +211,7 @@ const Tables: React.FC = () => {
           font-weight: 600;
           background: linear-gradient(135deg, var(--ember) 0%, var(--amber) 100%);
           color: #1a0a00;
-          box-shadow: 0 4px 20px rgba(245,158,11,0.25);
+          box-shadow: 0 4px 20px rgba(99, 102, 241,0.25);
           transition: transform .15s, box-shadow .15s;
           position: relative;
           overflow: hidden;
@@ -225,7 +225,7 @@ const Tables: React.FC = () => {
           transition: opacity .2s;
         }
         .btn-add:hover::before { opacity: 1; }
-        .btn-add:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(245,158,11,0.4); }
+        .btn-add:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(99, 102, 241,0.4); }
         .btn-add:active { transform: translateY(0); }
         .btn-add > * { position: relative; z-index: 1; }
 
@@ -261,9 +261,9 @@ const Tables: React.FC = () => {
           padding: 80px 20px;
           gap: 16px;
           text-align: center;
-          border: 1px dashed rgba(245,158,11,0.2);
+          border: 1px dashed rgba(99, 102, 241,0.2);
           border-radius: 18px;
-          background: rgba(245,158,11,0.03);
+          background: rgba(99, 102, 241,0.03);
           animation: fadeUp 0.5s ease both;
         }
         .empty-icon { font-size: 52px; opacity: 0.5; }
@@ -313,7 +313,7 @@ const Tables: React.FC = () => {
           border-color: var(--border-h);
           background: var(--card-hov);
           transform: translateY(-3px);
-          box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(245,158,11,0.1);
+          box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(99, 102, 241,0.1);
         }
 
         @keyframes cardIn {
@@ -335,8 +335,8 @@ const Tables: React.FC = () => {
         .table-icon-wrap {
           width: 36px; height: 36px;
           border-radius: 10px;
-          background: rgba(245,158,11,0.1);
-          border: 1px solid rgba(245,158,11,0.18);
+          background: rgba(99, 102, 241,0.1);
+          border: 1px solid rgba(99, 102, 241,0.18);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -377,7 +377,7 @@ const Tables: React.FC = () => {
           background: #ffffff;
           border-radius: 12px;
           padding: 16px;
-          border: 1px solid rgba(245,158,11,0.1);
+          border: 1px solid rgba(99, 102, 241,0.1);
         }
 
         /* QR hint */
@@ -409,9 +409,9 @@ const Tables: React.FC = () => {
           letter-spacing: 0.03em;
         }
         .btn-print:hover {
-          background: rgba(245,158,11,0.08);
+          background: rgba(99, 102, 241,0.08);
           border-color: var(--amber);
-          box-shadow: 0 0 0 3px rgba(245,158,11,0.08);
+          box-shadow: 0 0 0 3px rgba(99, 102, 241,0.08);
         }
 
         /* ── Modal override ─────────────────────────────────── */
@@ -431,7 +431,7 @@ const Tables: React.FC = () => {
           align-items: center;
           gap: 10px;
           background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(245,158,11,0.15);
+          border: 1px solid rgba(99, 102, 241,0.15);
           border-radius: 12px;
           padding: 0 14px;
           height: 48px;
@@ -439,8 +439,8 @@ const Tables: React.FC = () => {
           margin-bottom: 20px;
         }
         .modal-input-wrap:focus-within {
-          border-color: rgba(245,158,11,0.5);
-          box-shadow: 0 0 0 3px rgba(245,158,11,0.1);
+          border-color: rgba(99, 102, 241,0.5);
+          box-shadow: 0 0 0 3px rgba(99, 102, 241,0.1);
         }
         .modal-input-wrap input {
           flex: 1;
@@ -673,3 +673,4 @@ const Tables: React.FC = () => {
 };
 
 export default Tables;
+

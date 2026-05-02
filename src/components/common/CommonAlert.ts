@@ -5,9 +5,9 @@ export const triggerAlert = (title: string, text: string, icon: 'success' | 'err
     title,
     text,
     icon,
-    background: '#19140E', // var(--surface) equivalent
-    color: '#fef3c7', // var(--cream) equivalent
-    confirmButtonColor: '#ea580c', // var(--ember) equivalent
+    background: 'var(--surface)', // var(--surface) equivalent
+    color: 'var(--cream)', // var(--cream) equivalent
+    confirmButtonColor: 'var(--ember)', // var(--ember) equivalent
     customClass: {
       popup: 'glass-container'
     }
@@ -25,9 +25,9 @@ export const triggerToast = (
     showConfirmButton: false,
     timer: icon === 'error' ? 4500 : 3200,
     timerProgressBar: true,
-    background: '#1f1810',
-    color: '#fef3c7',
-    iconColor: icon === 'error' ? '#f87171' : '#f59e0b',
+    background: 'var(--card)',
+    color: 'var(--cream)',
+    iconColor: icon === 'error' ? '#f87171' : 'var(--amber)',
     didOpen: (toast) => {
       toast.addEventListener('mouseenter', Swal.stopTimer);
       toast.addEventListener('mouseleave', Swal.resumeTimer);
@@ -47,10 +47,11 @@ export const confirmAlert = async (title: string, text: string) => {
     text,
     icon: 'warning',
     showCancelButton: true,
-    background: '#19140E',
-    color: '#fef3c7',
-    confirmButtonColor: '#ea580c',
+    background: 'var(--surface)',
+    color: 'var(--cream)',
+    confirmButtonColor: 'var(--ember)',
     cancelButtonColor: 'rgba(255,255,255,0.1)',
     confirmButtonText: 'Yes, proceed!'
   });
 };
+

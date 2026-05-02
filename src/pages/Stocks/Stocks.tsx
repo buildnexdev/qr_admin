@@ -8,8 +8,7 @@ import CommonHeader from '../../components/common/CommonHeader';
 import CommonTable from '../../components/common/CommonTable';
 import { triggerToast } from '../../components/common/CommonAlert';
 import { getApiErrorMessage } from '../../utils/apiError';
-
-const API_BASE_URL = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../../router/const';
 
 const CATEGORY_PRESETS = [
   'Vegetables',
@@ -244,7 +243,7 @@ const Stocks: React.FC = () => {
         ) : (
           <div
             className="bg-dark rounded-4 p-2 shadow-sm border"
-            style={{ borderColor: 'rgba(245, 158, 11, 0.1)' }}
+            style={{ borderColor: 'rgba(99, 102, 241, 0.1)' }}
           >
             <CommonTable
               columns={columns}
@@ -315,7 +314,7 @@ const Stocks: React.FC = () => {
             type="button"
             onClick={closeModal}
             style={{
-              background: 'rgba(245,158,11,0.1)',
+              background: 'rgba(99, 102, 241,0.1)',
               border: 'none',
               width: 36,
               height: 36,
@@ -536,3 +535,4 @@ const Stocks: React.FC = () => {
 };
 
 export default Stocks;
+

@@ -1,25 +1,39 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import {
-  Building2,
-  Search,
-  Plus,
-  Edit3,
-  ChevronLeft,
-  ChevronRight,
-  X,
-  Save,
-  Trash2
+  Building2, Edit3, X, Trash2, MapPin,
+  Loader2, Eye, Calendar, FilePlus
 } from 'lucide-react';
 import type { RootState } from '../../store';
-import { setBranches, setLoading, type Branch as BranchType } from '../../store/branchSlice';
+import { setBranches, setLoading } from '../../store/branchSlice';
 import { triggerToast } from '../../components/common/CommonAlert';
 import { getApiErrorMessage } from '../../utils/apiError';
+import CommonSubHeader from '../../components/common/CommonSubHeader';
+import './Branch.scss';
+import { API_BASE_URL } from '../../router/const';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const EMPTY_FORM = {
+  branchName: '', branchCode: '', branchType: 'Restaurant', description: '',
+  address1: '', address2: '', area: '', city: '', state: '', pincode: '', landmark: '', latitude: '', longitude: '',
+  country: 'India',
+  startDate: '',
+  postOffice: '',
+  doorNo: '',
+  isSubBranch: false,
+  isHeadOffice: false,
+  phone: '', alternateNumber: '', email: '', whatsappNumber: '',
+  managerName: '', managerMobile: '', managerEmail: '', managerUser: '',
+  orderSettings: { dineIn: true, takeaway: true, delivery: true },
+  kitchenSettings: { displayEnabled: true, multipleSections: false },
+  billingSettings: { taxType: 'Exclusive', gstPercent: '5', serviceCharge: '0' },
+  paymentSetup: { cashEnabled: true, upiEnabled: true, razorpayKeys: '', autoConfirm: false },
+  branding: { logo: '', prefix: 'INV', themeColor: '#000000' },
+  workingHours: { openTime: '09:00', closeTime: '23:00', weeklyOff: 'None' },
+  allowOnlineOrders: true, allowQROrdering: true, isActive: true
+};
 
-const isActive = (b: BranchType) => Boolean(b.status);
+const isActiveBranch = (b: any) => Boolean(b.isActive || b.status);
 
 const Branch: React.FC = () => {
   const dispatch = useDispatch();
@@ -27,23 +41,16 @@ const Branch: React.FC = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isOffcanvasOpen, setIsOffcanvasOpen] = useState(false);
-  const [editingBranch, setEditingBranch] = useState<BranchType | null>(null);
+  const [editingBranch, setEditingBranch] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
-
-  const [formData, setFormData] = useState({
-    name: '',
-    code: '',
-    location: '',
-    pincode: '',
-    manager: '',
-    phone: '',
-    status: true
-  });
+  const [formData, setFormData] = useState<any>({ ...EMPTY_FORM });
 
   const fetchBranches = async () => {
     dispatch(setLoading(true));
     try {
-      const res = await axios.get<BranchType[]>(`${API_BASE_URL}/branches`);
+      const res = await axios.get(`${API_BASE_URL}/branches`); // Wait, earlier I wrote api/branch. Need to check what backend uses. Let's use standard /branches
+      // Oh, wait, branchRoutes uses what? I didn't change routes. Let me use /branches which is what was there.
+      // Ah, earlier I saw it was /branches in the original code. Let's stick to /branches.
       dispatch(setBranches(res.data));
     } catch (error) {
       console.error('Error fetching branches:', error);
@@ -56,23 +63,32 @@ const Branch: React.FC = () => {
     fetchBranches();
   }, []);
 
-  const handleOpenOffcanvas = (branch?: BranchType) => {
+  const handleOpenOffcanvas = async (branch?: any) => {
     if (branch) {
       setEditingBranch(branch);
-      setFormData({
-        name: branch.name || '',
-        code: branch.code || '',
-        location: branch.location || '',
-        pincode: branch.pincode || '',
-        manager: branch.manager || '',
-        phone: branch.phone || '',
-        status: isActive(branch)
-      });
+      try {
+        const res = await axios.get(`${API_BASE_URL}/branches/${branch.branchID || branch.id}`);
+        const data = res.data;
+        const parsedData = { ...data };
+        ['orderSettings', 'kitchenSettings', 'billingSettings', 'paymentSetup', 'branding', 'workingHours'].forEach(key => {
+          if (typeof parsedData[key] === 'string') {
+            try { parsedData[key] = JSON.parse(parsedData[key]); } catch (e) {}
+          }
+        });
+        if (typeof parsedData.startDate === 'string' && parsedData.startDate.includes('T')) {
+          parsedData.startDate = parsedData.startDate.slice(0, 10);
+        }
+        if (!parsedData.startDate && parsedData.createdAt) {
+          const ca = parsedData.createdAt;
+          parsedData.startDate = typeof ca === 'string' && ca.includes('T') ? ca.slice(0, 10) : '';
+        }
+        setFormData({ ...EMPTY_FORM, ...parsedData });
+      } catch (err) {
+        setFormData({ ...EMPTY_FORM, ...branch });
+      }
     } else {
       setEditingBranch(null);
-      setFormData({
-        name: '', code: '', location: '', pincode: '', manager: '', phone: '', status: true
-      });
+      setFormData({ ...EMPTY_FORM });
     }
     setIsOffcanvasOpen(true);
   };
@@ -80,35 +96,42 @@ const Branch: React.FC = () => {
   const handleCloseOffcanvas = () => setIsOffcanvasOpen(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleStatusChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({ ...prev, status: e.target.checked }));
+    const { name, value, type } = e.target;
+    let finalValue: any = value;
+    if (type === 'checkbox') {
+      finalValue = (e.target as HTMLInputElement).checked;
+    }
+    setFormData((prev: any) => ({ ...prev, [name]: finalValue }));
   };
 
   const handleSave = async () => {
-    if (!formData.name.trim() || !formData.code.trim()) {
-      triggerToast('Validation', 'error', 'Branch name and code are required');
+    if (!formData.branchName?.trim() || !formData.branchCode?.trim()) {
+      triggerToast('Validation', 'error', 'Branch name and unique ID / code are required');
+      return;
+    }
+    if (!formData.pincode?.trim() || !formData.state?.trim() || !formData.city?.trim()) {
+      triggerToast('Validation', 'error', 'Pincode, state, and district are required');
+      return;
+    }
+    if (!formData.area?.trim()) {
+      triggerToast('Validation', 'error', 'Village / area is required');
+      return;
+    }
+    if (!formData.address1?.trim()) {
+      triggerToast('Validation', 'error', 'Branch address is required');
+      return;
+    }
+    if (!formData.startDate?.trim()) {
+      triggerToast('Validation', 'error', 'Start date is required');
       return;
     }
     setSaving(true);
     try {
-      const payload = {
-        name: formData.name.trim(),
-        code: formData.code.trim(),
-        location: formData.location.trim() || null,
-        pincode: formData.pincode.trim() || null,
-        manager: formData.manager.trim() || null,
-        phone: formData.phone.trim() || null,
-        status: formData.status
-      };
       if (editingBranch) {
-        await axios.put(`${API_BASE_URL}/branches/${editingBranch.id}`, payload);
+        await axios.put(`${API_BASE_URL}/branches/${editingBranch.branchID || editingBranch.id}`, formData);
         triggerToast('Branch updated', 'success', 'Changes were saved successfully.');
       } else {
-        await axios.post(`${API_BASE_URL}/branches`, payload);
+        await axios.post(`${API_BASE_URL}/branches`, formData);
         triggerToast('Branch added', 'success', 'The new branch was created successfully.');
       }
       await fetchBranches();
@@ -119,16 +142,12 @@ const Branch: React.FC = () => {
     setSaving(false);
   };
 
-  const toggleBranchStatus = async (branch: BranchType) => {
+  const toggleBranchStatus = async (branch: any) => {
     try {
-      await axios.put(`${API_BASE_URL}/branches/${branch.id}`, {
-        name: branch.name,
-        code: branch.code,
-        location: branch.location,
-        pincode: branch.pincode,
-        manager: branch.manager,
-        phone: branch.phone,
-        status: !isActive(branch)
+      const currentStatus = isActiveBranch(branch);
+      await axios.put(`${API_BASE_URL}/branches/${branch.branchID || branch.id}`, {
+        ...branch,
+        isActive: !currentStatus
       });
       await fetchBranches();
       triggerToast('Status updated', 'success', 'Branch active status was saved.');
@@ -137,10 +156,10 @@ const Branch: React.FC = () => {
     }
   };
 
-  const handleDelete = async (branch: BranchType) => {
-    if (!window.confirm(`Delete branch "${branch.name}"?`)) return;
+  const handleDelete = async (branch: any) => {
+    if (!window.confirm(`Delete branch "${branch.branchName || branch.name}"?`)) return;
     try {
-      await axios.delete(`${API_BASE_URL}/branches/${branch.id}`);
+      await axios.delete(`${API_BASE_URL}/branches/${branch.branchID || branch.id}`);
       await fetchBranches();
       triggerToast('Branch deleted', 'success', 'The branch was removed successfully.');
     } catch (err: unknown) {
@@ -148,310 +167,235 @@ const Branch: React.FC = () => {
     }
   };
 
-  const filteredData = branches.filter(branch =>
-    branch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    branch.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (branch.location || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (branch.manager || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredData = useMemo(() => {
+    return branches.filter((branch: any) =>
+      (branch.branchName || branch.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (branch.branchCode || branch.code || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (branch.city || branch.location || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (branch.managerName || branch.manager || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [branches, searchTerm]);
 
   return (
-    <div className="page-container" style={{
-      animation: 'modalContentIn 0.5s ease-out',
-      background: 'transparent',
-      display: 'flex',
-      flexDirection: 'column',
-      position: 'relative',
-      color: 'var(--cream)',
-      fontFamily: "'DM Sans', sans-serif"
-    }}>
-      <style>{`
-        .btn-add {
-          display: inline-flex;
-          align-items: center;
-          gap: 9px;
-          height: 48px;
-          padding: 0 22px;
-          border-radius: 12px;
-          border: none;
-          cursor: pointer;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 14px;
-          font-weight: 600;
-          background: linear-gradient(135deg, var(--ember) 0%, var(--amber) 100%);
-          color: #1a0a00;
-          box-shadow: 0 4px 20px rgba(245,158,11,0.25);
-          transition: transform .15s, box-shadow .15s;
-          position: relative;
-          overflow: hidden;
-          white-space: nowrap;
-        }
-        .btn-add::before {
-          content: '';
-          position: absolute; inset: 0;
-          background: linear-gradient(135deg, var(--amber) 0%, var(--amber-lt) 100%);
-          opacity: 0;
-          transition: opacity .2s;
-        }
-        .btn-add:hover::before { opacity: 1; }
-        .btn-add:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(245,158,11,0.4); }
-        .btn-add:active { transform: translateY(0); }
-        .btn-add > * { position: relative; z-index: 1; }
+    <div className="branch-page">
+      {/* HEADER SECTION */}
+      <CommonSubHeader
+        icon={Building2}
+        title={<><span>Branch</span> Management</>}
+        totalLabel="Total Branch"
+        totalCount={branches.length}
+        stats={[
+          { label: 'Active Branches', value: branches.filter(b => isActiveBranch(b)).length, color: 'green' },
+          { label: 'Inactive Branches', value: branches.filter(b => !isActiveBranch(b)).length, color: 'red' }
+        ]}
+        searchPlaceholder="Search branches..."
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        addButtonText="Add New Branch"
+        onAddClick={() => handleOpenOffcanvas()}
+      />
 
-        .dark-input {
-          width: 100%;
-          padding: 12px 16px;
-          border-radius: 12px;
-          border: 1px solid rgba(245,158,11,0.15);
-          background: rgba(255,255,255,0.03);
-          color: var(--cream);
-          font-family: 'DM Sans', sans-serif;
-          font-size: 0.95rem;
-          outline: none;
-          transition: border 0.2s, box-shadow 0.2s;
-        }
-        .dark-input:focus {
-          border-color: rgba(245,158,11,0.5);
-          box-shadow: 0 0 0 3px rgba(245,158,11,0.1);
-        }
-        .dark-input::placeholder {
-          color: rgba(255,255,255,0.3);
-        }
-
-        .premium-dark-table {
-          width: 100%;
-          border-collapse: separate;
-          border-spacing: 0;
-        }
-        .premium-dark-table th {
-          background: var(--surface);
-          padding: 18px 24px;
-          text-align: left;
-          font-size: 0.8rem;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-          color: var(--muted);
-          border-bottom: 1px solid var(--border);
-        }
-        .premium-dark-table td {
-          padding: 16px 24px;
-          vertical-align: middle;
-          border-bottom: 1px solid var(--border);
-          font-size: 0.95rem;
-          color: var(--cream);
-          background: var(--card);
-          transition: background 0.2s;
-        }
-        .premium-dark-table tr:hover td {
-          background: var(--card-hov);
-        }
-      `}</style>
-      
-      {/* GLOBAL HEADER SECTION */}
-      <header className="app-header" style={{
-        padding: '12px 24px',
-        background: 'transparent',
-        borderBottom: '1px solid var(--border)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexShrink: 0,
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-      }}>
-        {/* Left Side: Title & Counter */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ 
-            background: 'rgba(245,158,11,0.1)', 
-            color: 'var(--amber)', 
-            border: '1px solid rgba(245,158,11,0.18)',
-            width: '42px', height: '42px', 
-            borderRadius: '10px', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center' 
-          }}>
-            <Building2 size={20} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '26px', fontWeight: 700, margin: 0, color: 'var(--cream)', lineHeight: 1.1 }}>
-              <em style={{ fontStyle: 'italic', color: 'var(--amber-lt)' }}>Branch</em> Management
-            </h2>
-          </div>
-        </div>
-
-        {/* Global/Local Search Bar */}
-        <div className="header-search" style={{ flex: 1, maxWidth: '450px', margin: '0 40px' }}>
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <Search size={16} style={{ position: 'absolute', left: '16px', color: 'var(--muted)' }} />
-            <input
-              type="text"
-              placeholder="Search branch by name, code or location..."
-              className="dark-input"
-              style={{ paddingLeft: '44px', height: '48px' }}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Right Side: Add Button */}
-        <div className="header-right" style={{ display: 'flex', alignItems: 'center' }}>
-          <button onClick={() => handleOpenOffcanvas()} className="btn-add">
-            <Plus size={18} /> Add New Branch
-          </button>
-        </div>
-      </header>
-
-      {/* BODY SECTION (Table Body) */}
-      <div style={{ padding: '0', background: 'transparent', flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <div className="table-container table-wrapper" style={{ width: '100%', borderRadius: '0', borderBottom: '1px solid var(--border)' }}>
-          <table className="premium-dark-table">
-            <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-              <tr className='text-nowrap'>
-                <th style={{ paddingLeft: '32px' }}>S.No</th>
-                <th>Branch Name</th>
-                <th>Location</th>
-                <th style={{ textAlign: 'center' }}>No of Staff</th>
-                <th style={{ textAlign: 'center' }}>Edit</th>
-                <th style={{ textAlign: 'center' }}>Delete</th>
-                <th style={{ textAlign: 'center' }}>Publish</th>
+      {/* TABLE SECTION */}
+      <div className="table-wrapper">
+        <table className="branch-table">
+          <thead className='prim'>
+            <tr>
+              <th className="col-sno">Branch Name</th>
+              <th>Branch Code</th>
+              <th>City</th>
+              <th>Contact Number</th>
+              <th>Manager Name</th>
+              <th>Created Date</th>
+              <th className="text-center">Status</th>
+              <th className="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={8} className="loading-state">
+                  <div className="heartbeat loader-icon"><Building2 size={32} /></div>
+                  <p>Loading branches...</p>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={7} style={{ background: 'var(--card)', textAlign: 'center', padding: '40px', color: 'var(--muted)', borderBottom: '1px solid var(--border)' }}>Loading branches…</td>
-                </tr>
-              ) : filteredData.length > 0 ? filteredData.map((branch, index) => (
-                <tr key={branch.id}>
-                  <td style={{ paddingLeft: '32px', fontWeight: 600, color: 'var(--muted)' }}>{index + 1}</td>
-                  <td style={{ fontWeight: 600 }}>{branch.name}</td>
-                  <td><span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>{branch.location || '—'}</span></td>
-                  <td style={{ textAlign: 'center', fontWeight: 600, color: 'var(--amber-lt)' }}>{branch.staffCount ?? 0}</td>
-                  <td style={{ textAlign: 'center' }}>
-                    <button onClick={() => handleOpenOffcanvas(branch)} style={{ background: 'rgba(245,158,11,0.1)', color: 'var(--amber)', border: '1px solid rgba(245,158,11,0.2)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', margin: '0 auto' }} onMouseOver={(e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = 'rgba(245,158,11,0.2)'; e.currentTarget.style.borderColor = 'var(--amber)'; }} onMouseOut={(e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = 'rgba(245,158,11,0.1)'; e.currentTarget.style.borderColor = 'rgba(245,158,11,0.2)'; }}>
+            ) : filteredData.length > 0 ? filteredData.map((branch: any) => (
+              <tr key={branch.branchID || branch.id} className="data-row">
+                <td>
+                  <span className="name" style={{fontWeight: 600, color: 'var(--cream)'}}>{branch.branchName || branch.name}</span>
+                </td>
+                <td>
+                  <span className="code" style={{color: 'var(--amber)', fontSize: '13px'}}>{branch.branchCode || branch.code}</span>
+                </td>
+                <td>
+                  <div className="location-box">
+                    <MapPin size={14} />
+                    <span className="loc-text">{branch.city || branch.location || '—'}</span>
+                  </div>
+                </td>
+                <td>
+                  <span className="manager-text">{branch.phone || '—'}</span>
+                </td>
+                <td>
+                  <span className="manager-text">{branch.managerName || branch.manager || '—'}</span>
+                </td>
+                <td>
+                  <span className="manager-text">{new Date(branch.createdAt || branch.created_at).toLocaleDateString() || '—'}</span>
+                </td>
+                <td className="text-center">
+                  <button
+                    onClick={() => toggleBranchStatus(branch)}
+                    className="status-btn"
+                  >
+                    <div className={`status-badge ${isActiveBranch(branch) ? 'active' : 'inactive'}`}>
+                      <div className="dot" />
+                      {isActiveBranch(branch) ? 'Active' : 'Inactive'}
+                    </div>
+                  </button>
+                </td>
+                <td>
+                  <div className="actions-wrap">
+                    <button onClick={() => {}} className="action-btn view" title="View">
+                      <Eye size={16} />
+                    </button>
+                    <button onClick={() => handleOpenOffcanvas(branch)} className="action-btn edit" title="Edit">
                       <Edit3 size={16} />
                     </button>
-                  </td>
-                  <td style={{ textAlign: 'center' }}>
-                    <button type="button" onClick={() => handleDelete(branch)} style={{ background: 'rgba(239,68,68,0.12)', color: '#f87171', border: '1px solid rgba(239,68,68,0.25)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', margin: '0 auto' }} title="Delete branch">
+                    <button onClick={() => handleDelete(branch)} className="action-btn delete" title="Delete">
                       <Trash2 size={16} />
                     </button>
-                  </td>
-                  <td style={{ textAlign: 'center' }}>
-                    <label className="toggle-switch" style={{ margin: '0 auto' }}>
-                      <input type="checkbox" checked={isActive(branch)} onChange={() => toggleBranchStatus(branch)} />
-                      <span className="toggle-switch-slider" style={{ background: isActive(branch) ? 'var(--amber)' : 'rgba(255,255,255,0.1)' }}></span>
-                    </label>
-                  </td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan={7} style={{ background: 'var(--card)', textAlign: 'center', padding: '40px', color: 'var(--muted)', borderBottom: '1px solid var(--border)' }}>No branches found.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-
-          {/* PAGINATION */}
-          <div className="pagination" style={{ padding: '20px 32px', background: 'var(--surface)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div className="page-info" style={{ fontWeight: 600, color: 'var(--muted)' }}>Showing 1 to {filteredData.length} of {branches.length} entries</div>
-            <div className="page-controls" style={{ display: 'flex', gap: '8px' }}>
-              <button style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--cream)', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><ChevronLeft size={18} /></button>
-              <button style={{ background: 'var(--amber)', color: '#000', border: 'none', width: '32px', height: '32px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>1</button>
-              <button style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--cream)', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><ChevronRight size={18} /></button>
-            </div>
-          </div>
-        </div>
+                  </div>
+                </td>
+              </tr>
+            )) : (
+              <tr>
+                <td colSpan={8} className="empty-state">
+                  <Building2 size={48} className="empty-icon" />
+                  <h3>No Branches Found</h3>
+                  <p>Try adjusting your search or add a new branch to get started.</p>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
-      {/* OFFCANVAS BACKDROP */}
-      {isOffcanvasOpen && (
-        <div 
-          onClick={handleCloseOffcanvas}
-          style={{
-            position: 'fixed', inset: 0, background: 'rgba(14, 11, 8, 0.6)', backdropFilter: 'blur(4px)', zIndex: 1040, transition: 'all 0.3s ease'
-          }} 
-        />
-      )}
-
-      {/* OFFCANVAS PANEL */}
-      <div style={{
-        position: 'fixed', top: 0, right: 0, bottom: 0, width: '450px', maxWidth: '100%', 
-        background: 'var(--surface)', borderLeft: '1px solid var(--border)', zIndex: 1050,
-        transform: isOffcanvasOpen ? 'translateX(0)' : 'translateX(100%)',
-        transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-        boxShadow: '-10px 0 40px rgba(0,0,0,0.5)',
-        display: 'flex', flexDirection: 'column'
-      }}>
-        <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ margin: 0, fontFamily: "'Playfair Display', serif", fontSize: '1.4rem', fontWeight: 700, color: 'var(--cream)' }}>{editingBranch ? 'Edit Branch' : 'Add New Branch'}</h2>
-          <button onClick={handleCloseOffcanvas} style={{ background: 'rgba(245,158,11,0.1)', border: 'none', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--amber)', transition: 'background 0.2s' }} onMouseOver={(e: any) => e.currentTarget.style.background = 'rgba(245,158,11,0.2)'} onMouseOut={(e: any) => e.currentTarget.style.background = 'rgba(245,158,11,0.1)'}>
-            <X size={20} />
-          </button>
-        </div>
-
-        <div style={{ flex: 1, overflowY: 'auto', padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          
-          <div className="input-group">
-            <label style={{ fontSize: '11px', letterSpacing: '0.1em', fontWeight: 500, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px', display: 'block' }}>Branch Name *</label>
-            <input name="name" value={formData.name} onChange={handleInputChange} type="text" placeholder="Enter branch name" className="dark-input" />
+      <div
+        className={`branch-modal-backdrop ${isOffcanvasOpen ? 'is-visible' : ''}`}
+        onClick={handleCloseOffcanvas}
+        aria-hidden={!isOffcanvasOpen}
+      />
+      <div className={`branch-modal-center ${isOffcanvasOpen ? 'is-open' : ''}`} role="presentation">
+        <div
+          className="branch-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="branch-modal-title"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="branch-modal__header">
+            <div className="branch-modal__title-block">
+              <h2 id="branch-modal-title">Branch</h2>
+              <span className="branch-modal__badge">{editingBranch ? 'Edit' : 'New'}</span>
+            </div>
+            <button type="button" className="branch-modal__close" onClick={handleCloseOffcanvas} aria-label="Close">
+              <X size={22} strokeWidth={2} />
+            </button>
           </div>
 
-          <div className="input-group">
-            <label style={{ fontSize: '11px', letterSpacing: '0.1em', fontWeight: 500, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px', display: 'block' }}>Branch Code *</label>
-            <input name="code" value={formData.code} onChange={handleInputChange} type="text" placeholder="e.g. BR-001" className="dark-input" />
-          </div>
-
-          <div className="input-group">
-            <label style={{ fontSize: '11px', letterSpacing: '0.1em', fontWeight: 500, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px', display: 'block' }}>Location / Address</label>
-            <textarea name="location" value={formData.location} onChange={handleInputChange} placeholder="Enter full address" rows={2} className="dark-input" style={{ resize: 'vertical' }} />
-          </div>
-
-          <div className="input-group">
-            <label style={{ fontSize: '11px', letterSpacing: '0.1em', fontWeight: 500, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px', display: 'block' }}>Pincode *</label>
-            <input name="pincode" value={formData.pincode} onChange={handleInputChange} type="text" placeholder="e.g. 600001" className="dark-input" />
-          </div>
-
-          <div className="input-group">
-            <label style={{ fontSize: '11px', letterSpacing: '0.1em', fontWeight: 500, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px', display: 'block' }}>Manager Name</label>
-            <input name="manager" value={formData.manager} onChange={handleInputChange} type="text" placeholder="Enter manager name" className="dark-input" />
-          </div>
-
-          <div className="input-group">
-            <label style={{ fontSize: '11px', letterSpacing: '0.1em', fontWeight: 500, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px', display: 'block' }}>Contact Phone *</label>
-            <input name="phone" value={formData.phone} onChange={handleInputChange} type="tel" placeholder="e.g. 9876543210" className="dark-input" />
-          </div>
-          
-          <div className="input-group" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
-            <label style={{ fontSize: '11px', letterSpacing: '0.1em', fontWeight: 500, textTransform: 'uppercase', color: 'var(--muted)' }}>Active Status</label>
-            <label className="toggle-switch">
-              <input type="checkbox" checked={formData.status} onChange={handleStatusChange} />
-              <span className="toggle-switch-slider" style={{ background: formData.status ? 'var(--amber)' : 'rgba(255,255,255,0.1)' }}></span>
+          <div className="branch-modal__top-toggle">
+            <span />
+            <label className="branch-modal__switch">
+              <span className="branch-modal__switch-label">Sub Branch</span>
+              <span className="toggle-switch toggle-switch--modal">
+                <input type="checkbox" name="isSubBranch" checked={!!formData.isSubBranch} onChange={handleInputChange} />
+                <span className="toggle-switch-slider" />
+              </span>
             </label>
           </div>
 
-        </div>
+          <div className="branch-modal__body">
+            <div className="branch-modal__grid">
+              <ModalField label="Branch Name" required>
+                <input name="branchName" value={formData.branchName || ''} onChange={handleInputChange} className="branch-modal-input" placeholder="Branch name" />
+              </ModalField>
+              <ModalField label="Pincode" required>
+                <input name="pincode" value={formData.pincode || ''} onChange={handleInputChange} className="branch-modal-input" placeholder="Pincode" />
+              </ModalField>
+              <ModalField label="Unique ID">
+                <input
+                  name="branchCode"
+                  value={formData.branchCode || ''}
+                  onChange={handleInputChange}
+                  className="branch-modal-input"
+                  placeholder="e.g. BR-01"
+                  readOnly={!!editingBranch}
+                />
+              </ModalField>
+              <ModalField label="State Name" required>
+                <input name="state" value={formData.state || ''} onChange={handleInputChange} className="branch-modal-input" placeholder="State" />
+              </ModalField>
+              <ModalField label="District Name" required>
+                <input name="city" value={formData.city || ''} onChange={handleInputChange} className="branch-modal-input" placeholder="District" />
+              </ModalField>
+              <ModalField label="Village / Area Name" required>
+                <input name="area" value={formData.area || ''} onChange={handleInputChange} className="branch-modal-input" placeholder="Village or area" />
+              </ModalField>
+              <ModalField label="Country">
+                <input name="country" value={formData.country || ''} onChange={handleInputChange} className="branch-modal-input" placeholder="Country" />
+              </ModalField>
+              <ModalField label="Start Date" required>
+                <div className="branch-modal-input-wrap">
+                  <Calendar size={18} className="branch-modal-input-icon" aria-hidden />
+                  <input name="startDate" type="date" value={formData.startDate || ''} onChange={handleInputChange} className="branch-modal-input branch-modal-input--date" />
+                </div>
+              </ModalField>
+            </div>
 
-        {/* FOOTER ACTIONS */}
-        <div style={{ padding: '24px 32px', borderTop: '1px solid var(--border)', display: 'flex', gap: '16px', background: 'var(--surface)' }}>
-          <button 
-            onClick={handleCloseOffcanvas} 
-            style={{ flex: 1, height: '42px', borderRadius: '10px', background: 'transparent', border: '1px solid var(--border)', color: 'var(--muted)', fontWeight: 500, cursor: 'pointer', transition: 'all 0.2s', fontFamily: "'DM Sans', sans-serif" }}
-            onMouseOver={(e: any) => { e.currentTarget.style.borderColor = 'var(--border-h)'; e.currentTarget.style.color = 'var(--cream)'; }} 
-            onMouseOut={(e: any) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--muted)'; }} 
-          >
-            Cancel
-          </button>
-          <button type="button" disabled={saving} onClick={handleSave} className="btn-add" style={{ flex: 2, height: '42px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: 0, opacity: saving ? 0.7 : 1 }}>
-            <Save size={18} /> {saving ? 'Saving…' : editingBranch ? 'Save Changes' : 'Add Branch'}
-          </button>
+            <ModalField label="Branch Address" required full>
+              <textarea
+                name="address1"
+                value={formData.address1 || ''}
+                onChange={handleInputChange}
+                className="branch-modal-input branch-modal-textarea"
+                placeholder="Full branch address"
+                rows={3}
+              />
+            </ModalField>
+          </div>
+
+          <div className="branch-modal__footer">
+            <label className="branch-modal__switch">
+              <span className="branch-modal__switch-label">Head Office</span>
+              <span className="toggle-switch toggle-switch--modal">
+                <input type="checkbox" name="isHeadOffice" checked={!!formData.isHeadOffice} onChange={handleInputChange} />
+                <span className="toggle-switch-slider" />
+              </span>
+            </label>
+            <button type="button" className="branch-modal__submit" onClick={handleSave} disabled={saving}>
+              {saving ? <Loader2 className="spin" size={18} /> : <FilePlus size={18} strokeWidth={2} />}
+              {saving ? 'Saving…' : editingBranch ? 'Update Branch' : 'Add Branch'}
+            </button>
+          </div>
         </div>
       </div>
-
     </div>
   );
 };
+
+/* Helper Components */
+const ModalField: React.FC<{ label: string; children: React.ReactNode; required?: boolean; full?: boolean }> = ({
+  label,
+  children,
+  required,
+  full
+}) => (
+  <div className={`branch-modal-field${full ? ' branch-modal-field--full' : ''}`}>
+    <span className="branch-modal-field__label">
+      {label}
+      {required ? <span className="branch-modal-field__req"> *</span> : null}
+    </span>
+    {children}
+  </div>
+);
 
 export default Branch;

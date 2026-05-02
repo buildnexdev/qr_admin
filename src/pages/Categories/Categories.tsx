@@ -6,8 +6,8 @@ import type { RootState } from '../../store';
 import { setCategories, setCategoriesLoading, type MenuCategory } from '../../store/categorySlice';
 import { triggerToast } from '../../components/common/CommonAlert';
 import { getApiErrorMessage } from '../../utils/apiError';
+import { API_BASE_URL } from '../../router/const';
 
-const API_BASE_URL = 'http://localhost:5000/api';
 
 const Categories: React.FC = () => {
   const dispatch = useDispatch();
@@ -144,7 +144,7 @@ const Categories: React.FC = () => {
           font-weight: 600;
           background: linear-gradient(135deg, var(--ember) 0%, var(--amber) 100%);
           color: #1a0a00;
-          box-shadow: 0 4px 20px rgba(245,158,11,0.25);
+          box-shadow: 0 4px 20px rgba(99, 102, 241,0.25);
           transition: transform .15s, box-shadow .15s;
           position: relative;
           overflow: hidden;
@@ -158,7 +158,7 @@ const Categories: React.FC = () => {
           transition: opacity .2s;
         }
         .btn-add:hover::before { opacity: 1; }
-        .btn-add:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(245,158,11,0.4); }
+        .btn-add:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(99, 102, 241,0.4); }
         .btn-add:active { transform: translateY(0); }
         .btn-add > * { position: relative; z-index: 1; }
 
@@ -201,14 +201,14 @@ const Categories: React.FC = () => {
           border-color: var(--border-h);
           background: var(--card-hov);
           transform: translateY(-3px);
-          box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(245,158,11,0.1);
+          box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(99, 102, 241,0.1);
         }
 
         .dark-input {
           width: 100%;
           padding: 12px 16px;
           border-radius: 12px;
-          border: 1px solid rgba(245,158,11,0.15);
+          border: 1px solid rgba(99, 102, 241,0.15);
           background: rgba(255,255,255,0.03);
           color: var(--cream);
           font-family: 'DM Sans', sans-serif;
@@ -217,8 +217,8 @@ const Categories: React.FC = () => {
           transition: border 0.2s, box-shadow 0.2s;
         }
         .dark-input:focus {
-          border-color: rgba(245,158,11,0.5);
-          box-shadow: 0 0 0 3px rgba(245,158,11,0.1);
+          border-color: rgba(99, 102, 241,0.5);
+          box-shadow: 0 0 0 3px rgba(99, 102, 241,0.1);
         }
         .dark-input::placeholder {
           color: rgba(255,255,255,0.3);
@@ -236,9 +236,9 @@ const Categories: React.FC = () => {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{ 
-            background: 'rgba(245,158,11,0.1)', 
+            background: 'rgba(99, 102, 241,0.1)', 
             color: 'var(--amber)', 
-            border: '1px solid rgba(245,158,11,0.18)',
+            border: '1px solid rgba(99, 102, 241,0.18)',
             width: '42px', height: '42px', 
             borderRadius: '10px', 
             display: 'flex', alignItems: 'center', justifyContent: 'center' 
@@ -296,7 +296,7 @@ const Categories: React.FC = () => {
                 {cat.tags && cat.tags.length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: 'auto' }}>
                     {cat.tags.map((tag, tIdx) => (
-                      <span key={tIdx} style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid var(--border)', color: 'var(--amber-lt)', padding: '4px 10px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 600 }}>
+                      <span key={tIdx} style={{ background: 'rgba(99, 102, 241,0.08)', border: '1px solid var(--border)', color: 'var(--amber-lt)', padding: '4px 10px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 600 }}>
                         {tag}
                       </span>
                     ))}
@@ -360,7 +360,7 @@ const Categories: React.FC = () => {
           <h2 style={{ margin: 0, fontFamily: "'Playfair Display', serif", fontSize: '1.4rem', fontWeight: 700, color: 'var(--cream)' }}>
             {editingCategory ? 'Edit Category' : 'Add New Category'}
           </h2>
-          <button onClick={handleCloseModal} style={{ background: 'rgba(245,158,11,0.1)', border: 'none', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--amber)', transition: 'background 0.2s' }} onMouseOver={(e: any) => e.currentTarget.style.background = 'rgba(245,158,11,0.2)'} onMouseOut={(e: any) => e.currentTarget.style.background = 'rgba(245,158,11,0.1)'}>
+          <button onClick={handleCloseModal} style={{ background: 'rgba(99, 102, 241,0.1)', border: 'none', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--amber)', transition: 'background 0.2s' }} onMouseOver={(e: any) => e.currentTarget.style.background = 'rgba(99, 102, 241,0.2)'} onMouseOut={(e: any) => e.currentTarget.style.background = 'rgba(99, 102, 241,0.1)'}>
             <X size={20} />
           </button>
         </div>
@@ -415,3 +415,4 @@ const Categories: React.FC = () => {
 };
 
 export default Categories;
+

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Navigate, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Menu, QrCode, Bell, Sun, Moon, LogOut, User } from 'lucide-react';
+import { Menu, X, QrCode, Bell, Sun, Moon, LogOut } from 'lucide-react';
 import { logout } from '../../store/authSlice';
 import type { RootState, AppDispatch } from '../../store';
 import DefaultAside from './DefaultAside';
@@ -12,8 +12,11 @@ const DefaultLayout: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   
-  // Default to open on desktop, closed on mobile
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 992);
+  // Setup mode check
+  const isSetupMode = !user?.role || Number(user.role) === 0 || !user?.branchid || Number(user.branchid) === 0;
+
+  // Overlay drawer: closed by default so main area stays full width; toggle with header button
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
@@ -27,15 +30,15 @@ const DefaultLayout: React.FC = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 992) {
-        setSidebarOpen(false);
-      } else {
-        setSidebarOpen(true);
-      }
+      if (isSetupMode) setSidebarOpen(false);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [isSetupMode]);
+
+  useEffect(() => {
+    if (isSetupMode) setSidebarOpen(false);
+  }, [isSetupMode]);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -49,17 +52,29 @@ const DefaultLayout: React.FC = () => {
   }
 
   return (
-    <div className={`admin-layout-root ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+    <div className={`admin-layout-root ${sidebarOpen && !isSetupMode ? 'sidebar-open' : 'sidebar-closed'} ${isSetupMode ? 'setup-mode' : ''}`}>
+      <style>{`
+        .setup-mode .admin-content-area {
+          margin-left: 0 !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          padding-left: 1rem !important;
+        }
+      `}</style>
       <header className="admin-top-header">
         <div className="header-brand-group">
-          <button 
-            className="nav-toggle-btn" 
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            aria-label="Toggle Sidebar"
-          >
-            <Menu size={22} strokeWidth={2.5} />
-          </button>
-          <div className="header-logo" onClick={() => navigate('/admin')} style={{ cursor: 'pointer' }}>
+          {!isSetupMode && (
+            <button
+              type="button"
+              className="nav-toggle-btn"
+              onClick={() => setSidebarOpen((open) => !open)}
+              aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={sidebarOpen}
+            >
+              {sidebarOpen ? <X size={22} strokeWidth={2.5} /> : <Menu size={22} strokeWidth={2.5} />}
+            </button>
+          )}
+          <div className="header-logo" onClick={() => navigate(isSetupMode ? '/admin/company' : '/admin')} style={{ cursor: 'pointer' }}>
             <QrCode size={26} strokeWidth={2.5} className="logo-icon" />
             <span className="logo-text">Namma<span>Qr</span></span>
           </div>
@@ -97,16 +112,22 @@ const DefaultLayout: React.FC = () => {
       </header>
 
       <div className="admin-main-view">
-        <DefaultAside isOpen={sidebarOpen} onClose={() => { if(window.innerWidth < 992) setSidebarOpen(false); }} />
+        {!isSetupMode && (
+          <DefaultAside isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        )}
         
         <main className="admin-content-area">
-          {window.innerWidth < 992 && sidebarOpen && (
-            <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+          {sidebarOpen && !isSetupMode && (
+            <div
+              className="sidebar-overlay"
+              onClick={() => setSidebarOpen(false)}
+              aria-hidden="true"
+            />
           )}
           <div className="page-scroll-container">
             <Outlet />
-            <Footer />
           </div>
+          <Footer />
         </main>
       </div>
     </div>

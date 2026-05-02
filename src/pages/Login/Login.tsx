@@ -28,15 +28,23 @@ const Login: React.FC = () => {
 
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { status, error, isAuthenticated } = useSelector(
+  const { status, error, isAuthenticated, user } = useSelector(
     (state: RootState) => state.auth
   );
 
   useEffect(() => {
-
-    if (isAuthenticated) navigate('/admin');
+    if (isAuthenticated && user) {
+      const isRoleEmpty = !user.role || Number(user.role) === 0;
+      const isBranchEmpty = !user.branchid || Number(user.branchid) === 0;
+      
+      if (isRoleEmpty || isBranchEmpty) {
+        navigate('/admin/company');
+      } else {
+        navigate('/admin');
+      }
+    }
     return () => { dispatch(clearError()); };
-  }, [isAuthenticated, navigate, dispatch]);
+  }, [isAuthenticated, user, navigate, dispatch]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();

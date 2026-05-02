@@ -11,8 +11,8 @@ import { confirmAlert, triggerToast } from '../../components/common/CommonAlert'
 import AddMenu from './addMenu';
 import { getApiErrorMessage } from '../../utils/apiError';
 import './menuStyle.scss';
+import { API_BASE_URL } from '../../router/const';
 
-const API_BASE_URL = 'http://localhost:5000/api';
 
 const Menu: React.FC = () => {
   const dispatch = useDispatch();

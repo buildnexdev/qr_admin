@@ -5,8 +5,9 @@ import { Building2, User, Mail, Phone, MapPin, FileText, Loader2, ArrowLeft, QrC
 import { triggerToast } from '../../components/common/CommonAlert';
 import { getApiErrorMessage } from '../../utils/apiError';
 import '../Login/loginAuth.scss';
+import { API_BASE_URL } from '../../router/const';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+
 
 /** Matches backend `registerController` email check */
 const EMAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

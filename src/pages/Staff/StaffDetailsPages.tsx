@@ -12,8 +12,8 @@ import AddStaffDetails from './addStaffDetails/addStaffDetails';
 import { triggerToast } from '../../components/common/CommonAlert';
 import { getApiErrorMessage } from '../../utils/apiError';
 import './staffStyle.scss';
+import { API_BASE_URL } from '../../router/const';
 
-const API_BASE_URL = 'http://localhost:5000/api';
 
 const StaffDetailsPages: React.FC = () => {
   const dispatch = useDispatch();

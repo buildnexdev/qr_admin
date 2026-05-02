@@ -13,6 +13,8 @@ import Bills from '../pages/Bill/Bills';
 import Stocks from '../pages/Stocks/Stocks';
 import Reports from '../pages/Reports/Reports';
 import Profile from '../pages/Profile/Profile';
+import Company from '../pages/Company/Company';
+import RolePage from '../pages/Role/Role';
 
 export const contentRouters: RouteObject[] = [
   {
@@ -20,7 +22,9 @@ export const contentRouters: RouteObject[] = [
     element: <DefaultLayout />,
     children: [
       { index: true, element: <Dashboard /> },
+      { path: 'company', element: <Company /> },
       { path: 'staff', element: <Staff /> },
+      { path: 'roles', element: <RolePage /> },
       { path: 'branch', element: <Branch /> },
       { path: 'categories', element: <Categories /> },
       { path: 'menu', element: <Menu /> },

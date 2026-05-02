@@ -13,10 +13,18 @@ interface CommonTableProps {
   columns: Column[];
   data: any[];
   emptyMessage?: string;
+  /** When set, replaces the plain empty message (e.g. illustration + caption). */
+  emptySlot?: React.ReactNode;
   pagination?: CommonPaginationProps;
 }
 
-const CommonTable: React.FC<CommonTableProps> = ({ columns, data, emptyMessage = "No records found.", pagination }) => {
+const CommonTable: React.FC<CommonTableProps> = ({
+  columns,
+  data,
+  emptyMessage = 'No records found.',
+  emptySlot,
+  pagination,
+}) => {
   return (
     <div className="table-wrapper">
       <table className="premium-dark-table m-0">
@@ -47,7 +55,7 @@ const CommonTable: React.FC<CommonTableProps> = ({ columns, data, emptyMessage =
           )) : (
             <tr className="empty-row">
               <td colSpan={columns.length}>
-                {emptyMessage}
+                {emptySlot ?? emptyMessage}
               </td>
             </tr>
           )}

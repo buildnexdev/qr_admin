@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { QrCode, MonitorSmartphone, Layers, Printer, Users, CreditCard, FileText, Share2, LineChart, Check, Mail, Phone, MapPin, Globe, Camera, MessageCircle, Send, Play } from 'lucide-react';
+import { QrCode, MonitorSmartphone, Layers, Printer, Users, CreditCard, FileText, LineChart, Check, Mail, Phone, MapPin, Camera, MessageCircle } from 'lucide-react';
 import LandingNavbar from '../../components/LandingNavbar/LandingNavbar';
 import './Landing.scss';
 

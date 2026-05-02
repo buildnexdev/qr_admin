@@ -1,15 +1,19 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
+import { API_BASE_URL } from '../router/const';
 
+// USER INTERFACE
 interface User {
   userid: number;
   username: string;
   companyid: number;
   company_name?: string;
   name?: string;
-  role?: string;
+  role?: string | number | null;
+  branchid?: number | null;
 }
 
+// AUTH SLICE
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
@@ -17,6 +21,7 @@ interface AuthState {
   error: string | null;
 }
 
+// AUTH SLICE 
 const initialState: AuthState = {
   user: JSON.parse(localStorage.getItem('user') || 'null'),
   isAuthenticated: !!localStorage.getItem('user'),
@@ -29,7 +34,7 @@ export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (credentials: { username: string; password?: string }, { rejectWithValue }) => {
     try {
-      const response = await fetch('http://localhost:5000/api/login', {
+      const response = await fetch(`${API_BASE_URL}api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),
@@ -39,6 +44,10 @@ export const loginUser = createAsyncThunk(
 
       if (!response.ok) {
         return rejectWithValue(data.error || 'Login failed');
+      }
+
+      if (data.token) {
+        localStorage.setItem('token', data.token);
       }
 
       return data.user;
@@ -58,6 +67,7 @@ const authSlice = createSlice({
       state.status = 'idle';
       state.error = null;
       localStorage.removeItem('user');
+      localStorage.removeItem('token');
     },
     clearError: (state) => {
       state.error = null;

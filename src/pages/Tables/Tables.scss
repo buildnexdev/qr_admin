@@ -7,22 +7,30 @@
 
   &__toolbar {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-    gap: 12px 16px;
+    gap: 8px 12px;
     flex-wrap: wrap;
-    padding: 6px 0 10px;
+    padding: 2px 0 8px;
     border-bottom: 1px solid var(--border);
-    margin-bottom: 10px;
+    margin-bottom: 6px;
   }
 
   &__toolbar-main {
     display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
     min-width: 0;
     flex: 1;
+  }
+
+  &__heading {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    min-width: 0;
   }
 
   &__toolbar-action {
@@ -44,13 +52,12 @@
 
   &__title {
     font-family: 'Playfair Display', Georgia, serif;
-    font-size: 1.125rem;
+    font-size: 1.05rem;
     font-weight: 700;
     margin: 0;
-    line-height: 1.2;
+    line-height: 1.15;
     color: var(--cream);
     flex-shrink: 0;
-    white-space: nowrap;
 
     em {
       font-style: italic;
@@ -59,31 +66,27 @@
   }
 
   &__sub {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--muted);
     margin: 0;
-    flex: 1;
-    min-width: min(200px, 100%);
-    max-width: min(420px, 100%);
+    max-width: 36rem;
     line-height: 1.35;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   &__stat {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     margin: 0;
-    padding: 4px 10px;
+    padding: 3px 9px;
     border-radius: 999px;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 600;
     background: rgba(37, 99, 235, 0.08);
     border: 1px solid rgba(37, 99, 235, 0.2);
     color: var(--sn-blue, #2563eb);
     flex-shrink: 0;
+    white-space: nowrap;
   }
 
   &__stat-dot {
@@ -93,30 +96,15 @@
     background: #22c55e;
   }
 
-  @media (max-width: 900px) {
-    &__toolbar-main {
-      row-gap: 6px;
-    }
-
-    &__title {
-      white-space: normal;
-    }
-
-    &__sub {
-      white-space: normal;
-      max-width: 100%;
-    }
-  }
-
   &__filters {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 6px;
+    margin-bottom: 8px;
   }
 
   &__filter-btn {
-    padding: 6px 14px;
+    padding: 5px 12px;
     border-radius: 999px;
     border: 1px solid var(--border);
     background: transparent;
@@ -140,8 +128,22 @@
 
   &__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 10px;
+  }
+
+  @media (max-width: 900px) {
+    &__toolbar {
+      align-items: stretch;
+    }
+
+    &__title {
+      white-space: normal;
+    }
+
+    &__sub {
+      max-width: 100%;
+    }
   }
 
   &__empty {
@@ -173,8 +175,8 @@
 
 .tables-card {
   background: var(--card);
-  border: 1px solid rgba(59, 130, 246, 0.32);
-  border-radius: 14px;
+  border: 1px solid rgba(59, 130, 246, 0.28);
+  border-radius: 12px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -182,9 +184,9 @@
   box-shadow: 0 1px 0 rgba(59, 130, 246, 0.06);
 
   &:hover {
-    border-color: rgba(59, 130, 246, 0.5);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    border-color: rgba(59, 130, 246, 0.45);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
   }
 
   &--inactive {
@@ -192,7 +194,7 @@
   }
 
   &__bar {
-    height: 4px;
+    height: 3px;
     width: 100%;
 
     &--avail {
@@ -210,28 +212,30 @@
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 8px;
-    padding: 12px 14px 8px;
+    gap: 6px;
+    padding: 8px 10px 6px;
   }
 
   &__name {
     font-family: 'Playfair Display', Georgia, serif;
-    font-size: 1.1rem;
+    font-size: 0.98rem;
     font-weight: 700;
     margin: 0;
     color: var(--cream);
+    line-height: 1.2;
   }
 
   &__meta {
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     color: var(--muted);
-    margin-top: 2px;
+    margin-top: 1px;
+    line-height: 1.25;
   }
 
   &__badge {
     display: inline-flex;
     align-items: center;
-    padding: 3px 10px;
+    padding: 2px 8px;
     border-radius: 999px;
     font-size: 0.65rem;
     font-weight: 700;
@@ -253,11 +257,11 @@
   }
 
   &__stats {
-    padding: 0 14px 10px;
+    padding: 0 10px 6px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    font-size: 0.78rem;
+    gap: 6px;
+    font-size: 0.72rem;
   }
 
   &__stat-label {
@@ -276,32 +280,44 @@
   &__qr {
     display: flex;
     justify-content: center;
-    padding: 8px;
+    padding: 6px;
     background: #fff;
-    margin: 0 12px 8px;
-    border-radius: 10px;
+    margin: 0 8px 6px;
+    border-radius: 8px;
     border: 1px solid rgba(15, 23, 42, 0.08);
   }
 
   &__actions {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 6px;
-    padding: 10px 12px 12px;
+    padding: 8px 8px 9px;
     border-top: 1px solid var(--border);
     background: var(--surface);
   }
 
+  &__btn-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+  }
+
+  &__tool-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+  }
+
   &__btn {
     flex: 1;
-    min-width: calc(50% - 6px);
+    min-width: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    padding: 6px 8px;
-    border-radius: 8px;
-    font-size: 0.72rem;
+    gap: 3px;
+    padding: 5px 6px;
+    border-radius: 7px;
+    font-size: 0.65rem;
     font-weight: 600;
     border: 1px solid var(--border);
     background: transparent;
@@ -332,17 +348,22 @@
       border-color: rgba(37, 99, 235, 0.45);
       color: var(--sn-blue, #2563eb);
     }
+
+    &--block {
+      width: 100%;
+      flex: none;
+    }
   }
 
   &__select {
     width: 100%;
-    padding: 6px 8px;
-    border-radius: 8px;
+    padding: 5px 8px;
+    border-radius: 7px;
     border: 1px solid var(--border);
     background: var(--card);
     color: var(--cream);
-    font-size: 0.75rem;
-    margin-top: 4px;
+    font-size: 0.68rem;
+    margin-top: 0;
   }
 }
 
@@ -389,6 +410,6 @@ html[data-theme='light'] .tables-mgmt {
 }
 
 .admin-layout-root .page-scroll-container:has(.tables-mgmt) {
-  padding: 0 10px 10px;
+  padding: 0 10px 6px;
   gap: 0;
 }

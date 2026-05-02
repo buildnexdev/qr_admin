@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import {
@@ -12,6 +12,7 @@ import {
   RefreshCw,
   Pencil,
   Armchair,
+  Link as LinkIcon,
 } from 'lucide-react';
 import { setTables, setLoading } from '../../store/tableSlice';
 import Modal from '../../components/Modal';
@@ -28,6 +29,7 @@ import {
   type TableListItem,
 } from '../../api/tableApi';
 import { fetchBranches } from '../../api/branchApi';
+import type { RootState } from '../../store';
 import './Tables.scss';
 
 type Filter = 'all' | 'Available' | 'Occupied' | 'Reserved';
@@ -54,6 +56,25 @@ function menuPublicOrigin() {
   return '';
 }
 
+/** URL-safe path segment for public menu links */
+function slugifyPathSegment(raw: string, fallback: string): string {
+  const s = raw
+    .trim()
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+  return s || fallback;
+}
+
+function buildPublicTablePageUrl(companyName: string | undefined, table: TableListItem) {
+  const origin = menuPublicOrigin();
+  const company = slugifyPathSegment(companyName || 'company', 'company');
+  const tableKey = slugifyPathSegment(table.tableCode || table.name, `id-${table.id}`);
+  return `${origin}/${company}/table/${tableKey}`;
+}
+
 const defaultForm = {
   name: '',
   tableCode: '',
@@ -70,6 +91,7 @@ const defaultForm = {
 const Tables: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { user } = useSelector((s: RootState) => s.auth);
   const [rows, setRows] = useState<TableListItem[]>([]);
   const [branches, setBranches] = useState<BranchRow[]>([]);
   const [filter, setFilter] = useState<Filter>('all');
@@ -202,6 +224,16 @@ const Tables: React.FC = () => {
     }
   };
 
+  const copyTablePageLink = async (t: TableListItem) => {
+    const url = buildPublicTablePageUrl(user?.company_name, t);
+    try {
+      await navigator.clipboard.writeText(url);
+      triggerToast('Link copied', 'success', url);
+    } catch {
+      triggerToast('Link', 'info', url);
+    }
+  };
+
   const openDetail = async (id: number) => {
     try {
       const d = await fetchTableDetail(id);
@@ -212,8 +244,8 @@ const Tables: React.FC = () => {
     }
   };
 
-  const qrValue = (tableId: number) =>
-    `${menuPublicOrigin()}/?tableId=${encodeURIComponent(String(tableId))}`;
+  /** QR opens customer order flow at /{company}/table/{code-or-name} */
+  const qrOrderUrl = (t: TableListItem) => buildPublicTablePageUrl(user?.company_name, t);
 
   const statusBar = (s: TableListItem['status']) => {
     if (s === 'Occupied') return 'occ';
@@ -231,23 +263,27 @@ const Tables: React.FC = () => {
     <div className="tables-mgmt">
       <div className="tables-mgmt__toolbar">
         <div className="tables-mgmt__toolbar-main">
-          <h1 className="tables-mgmt__title">
-            <em>Table</em> Management
-          </h1>
-          <p className="tables-mgmt__sub">
-            Manage seating, QR codes, and live order totals for dine-in.
-          </p>
-          <div className="tables-mgmt__stat">
-            <span className="tables-mgmt__stat-dot" />
-            {rows.length} {rows.length === 1 ? 'table' : 'tables'} active
+          <div className="tables-mgmt__heading">
+            <h1 className="tables-mgmt__title">
+              <em>Table</em> Management
+            </h1>
+            <div className="tables-mgmt__stat">
+              <span className="tables-mgmt__stat-dot" aria-hidden />
+              <span>
+                {rows.length} {rows.length === 1 ? 'table' : 'tables'} active
+              </span>
+            </div>
           </div>
+          <p className="tables-mgmt__sub">
+            Seating, QR codes, and live order totals for dine-in.
+          </p>
         </div>
         <button
           type="button"
           className="btn-premium tables-mgmt__toolbar-action d-inline-flex align-items-center gap-2 px-3"
           onClick={() => void openAdd()}
         >
-          <Plus size={18} /> Add New Table
+          <Plus size={18} /> Add table
         </button>
       </div>
 
@@ -312,32 +348,34 @@ const Tables: React.FC = () => {
 
               {t.qrEnabled && (
                 <div className="tables-card__qr">
-                  <QRCodeSVG value={qrValue(t.id)} size={112} level="H" includeMargin={false} fgColor="#0f172a" />
+                  <QRCodeSVG value={qrOrderUrl(t)} size={76} level="H" includeMargin={false} fgColor="#0f172a" />
                 </div>
               )}
 
               <div className="tables-card__actions">
-                <button
-                  type="button"
-                  className="tables-card__btn tables-card__btn--primary"
-                  onClick={() => navigate(`/admin/orders`, { state: { highlightTableId: t.id } })}
-                  title="Open orders"
-                >
-                  <UtensilsCrossed size={14} /> Order
-                </button>
-                <button type="button" className="tables-card__btn" onClick={() => void openDetail(t.id)}>
-                  <Eye size={14} /> View
-                </button>
-                <button
-                  type="button"
-                  className="tables-card__btn"
-                  onClick={() => navigate('/admin/bills', { state: { tableId: t.id } })}
-                >
-                  <Receipt size={14} /> Bill
-                </button>
-                <button type="button" className="tables-card__btn" onClick={() => openEdit(t)}>
-                  <Pencil size={14} /> Edit
-                </button>
+                <div className="tables-card__btn-grid">
+                  <button
+                    type="button"
+                    className="tables-card__btn tables-card__btn--primary"
+                    onClick={() => navigate(`/admin/orders`, { state: { highlightTableId: t.id } })}
+                    title="Open orders"
+                  >
+                    <UtensilsCrossed size={13} /> Order
+                  </button>
+                  <button type="button" className="tables-card__btn" onClick={() => void openDetail(t.id)}>
+                    <Eye size={13} /> View
+                  </button>
+                  <button
+                    type="button"
+                    className="tables-card__btn"
+                    onClick={() => navigate('/admin/bills', { state: { tableId: t.id } })}
+                  >
+                    <Receipt size={13} /> Bill
+                  </button>
+                  <button type="button" className="tables-card__btn" onClick={() => openEdit(t)}>
+                    <Pencil size={13} /> Edit
+                  </button>
+                </div>
                 <select
                   className="tables-card__select"
                   aria-label="Change status"
@@ -348,18 +386,29 @@ const Tables: React.FC = () => {
                   <option value="Occupied">Occupied</option>
                   <option value="Reserved">Reserved</option>
                 </select>
-                <button type="button" className="tables-card__btn tables-card__btn--danger" onClick={() => void handleDelete(t)}>
-                  <Trash2 size={14} /> Delete
+                <button
+                  type="button"
+                  className="tables-card__btn tables-card__btn--danger tables-card__btn--block"
+                  onClick={() => void handleDelete(t)}
+                >
+                  <Trash2 size={13} /> Delete
                 </button>
-              </div>
-
-              <div className="tables-card__actions" style={{ borderTop: 'none', paddingTop: 0 }}>
-                <button type="button" className="tables-card__btn" onClick={() => window.print()} title="Print QR">
-                  <PrinterIcon size={14} /> Print QR
-                </button>
-                <button type="button" className="tables-card__btn" disabled title="Coming soon">
-                  <RefreshCw size={14} /> Transfer
-                </button>
+                <div className="tables-card__tool-row">
+                  <button type="button" className="tables-card__btn" onClick={() => window.print()} title="Print QR">
+                    <PrinterIcon size={13} /> Print
+                  </button>
+                  <button type="button" className="tables-card__btn" disabled title="Coming soon">
+                    <RefreshCw size={13} /> Transfer
+                  </button>
+                  <button
+                    type="button"
+                    className="tables-card__btn"
+                    title="Copy customer table URL"
+                    onClick={() => void copyTablePageLink(t)}
+                  >
+                    <LinkIcon size={13} /> Link
+                  </button>
+                </div>
               </div>
             </div>
           ))}

@@ -4,6 +4,8 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 interface Table {
   id: string;
   name: string;
+  /** Optional — used when tables API returns full rows elsewhere */
+  status?: string;
 }
 
 interface TableState {

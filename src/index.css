@@ -1,34 +1,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Dark Mode Default (Premium Slate) */
-  --bg: #020617;
-  /* Slate 950 */
-  --surface: #0f172a;
-  /* Slate 900 */
-  --card: #1e293b;
-  /* Slate 800 */
-  --card-hov: #334155;
-  /* Slate 700 */
+  /* Dark theme — deep navy + brand blue #2D5CFE */
+  --bg: #0a0f1a;
+  --surface: #111827;
+  --card: #1a2332;
+  --card-hov: #243044;
 
-  /* Brand Accents (Light Red / Coral) */
-  --amber: #f43f5e;
-  /* Rose 500 */
-  --amber-lt: #fb7185;
-  /* Rose 400 */
-  --ember: #e11d48;
-  /* Rose 600 */
+  /* Primary brand blue */
+  --ember: #2d5cfe;
+  --amber: #1e4fd4;
+  --amber-lt: #5b7cff;
+
+  /* RGB = #2D5CFE */
+  --accent-rgb: 45, 92, 254;
 
   /* Text */
-  --cream: #f8fafc;
-  /* Slate 50 */
+  --cream: #ffffff;
   --muted: #94a3b8;
-  /* Slate 400 */
 
   /* Borders */
   --border: rgba(255, 255, 255, 0.08);
-  --border-h: rgba(255, 255, 255, 0.15);
-  --glow: rgba(244, 63, 94, 0.15);
+  --border-h: rgba(255, 255, 255, 0.14);
+  --glow: rgba(45, 92, 254, 0.25);
 
   font-family: 'DM Sans', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -45,38 +39,33 @@
 }
 
 html[data-theme='light'] {
-  --bg: #f8fafc;
-  /* Slate 50 */
-  --surface: #f1f5f9;
-  /* Slate 100 */
+  /* Light — cool gray page + white cards + #2D5CFE primary */
+  --bg: #f8f9fd;
+  --surface: #ffffff;
   --card: #ffffff;
-  /* White */
-  --card-hov: #e2e8f0;
-  /* Slate 200 */
+  --card-hov: #f1f5f9;
 
-  --amber: #f43f5e;
-  /* Rose 500 */
-  --amber-lt: #fb7185;
-  /* Rose 400 */
-  --ember: #e11d48;
-  /* Rose 600 */
+  --ember: #2d5cfe;
+  --amber: #1e4fd4;
+  --amber-lt: #5b7cff;
 
-  --cream: #0f172a;
-  /* Slate 900 */
-  --muted: #475569;
-  /* Slate 600 */
+  --accent-rgb: 45, 92, 254;
 
-  --border: rgba(0, 0, 0, 0.08);
-  --border-h: rgba(0, 0, 0, 0.15);
-  --glow: rgba(244, 63, 94, 0.1);
+  --cream: #1a202c;
+  --muted: #64748b;
+
+  --border: rgba(26, 32, 44, 0.08);
+  --border-h: rgba(26, 32, 44, 0.14);
+  --glow: rgba(45, 92, 254, 0.12);
 
   color-scheme: light;
 }
 
 html[data-theme='light'] body::before {
   background:
-    radial-gradient(ellipse 55% 40% at 15% 20%, rgba(244, 63, 94, 0.04) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 50% at 85% 80%, rgba(244, 63, 94, 0.04) 0%, transparent 70%);
+    radial-gradient(ellipse 55% 40% at 15% 20%, rgba(var(--accent-rgb), 0.06) 0%, transparent 72%),
+    radial-gradient(ellipse 50% 50% at 85% 80%, rgba(30, 126, 52, 0.04) 0%, transparent 72%),
+    linear-gradient(180deg, #f8f9fd 0%, #f1f5f9 100%);
 }
 
 html[data-theme='light'] .text-white {
@@ -106,8 +95,8 @@ body::before {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 55% 40% at 15% 20%, rgba(244, 63, 94, 0.09) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 50% at 85% 80%, rgba(244, 63, 94, 0.07) 0%, transparent 70%);
+    radial-gradient(ellipse 55% 40% at 15% 20%, rgba(var(--accent-rgb), 0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 50% at 85% 80%, rgba(var(--accent-rgb), 0.08) 0%, transparent 70%);
   pointer-events: none;
   z-index: -1;
 }

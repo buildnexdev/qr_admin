@@ -1,6 +1,5 @@
 import {
   UserCircle,
-  Shield,
   Building2,
   Tags,
   Utensils,
@@ -28,11 +27,6 @@ export const ADMIN_MENU = [
     path: '/admin/staff',
     name: 'Staff',
     icon: UserCircle,
-  },
-  {
-    path: '/admin/roles',
-    name: 'Roles',
-    icon: Shield,
   },
   {
     path: '/admin/categories',

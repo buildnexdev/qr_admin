@@ -1,676 +1,572 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { Plus, Trash2, PrinterIcon } from 'lucide-react';
-import type { RootState } from '../../store';
+import {
+  Plus,
+  Trash2,
+  PrinterIcon,
+  UtensilsCrossed,
+  Eye,
+  Receipt,
+  RefreshCw,
+  Pencil,
+  Armchair,
+  Link as LinkIcon,
+} from 'lucide-react';
 import { setTables, setLoading } from '../../store/tableSlice';
-import type { Table } from '../../store/tableSlice';
 import Modal from '../../components/Modal';
-import { triggerToast } from '../../components/common/CommonAlert';
+import { confirmAlert, triggerToast } from '../../components/common/CommonAlert';
 import { getApiErrorMessage } from '../../utils/apiError';
-import { API_BASE_URL } from '../../router/const';
+import {
+  fetchTablesList,
+  fetchTableDetail,
+  fetchNextTableCode,
+  createTable,
+  updateTable,
+  patchTableStatus,
+  deleteTable,
+  type TableListItem,
+} from '../../api/tableApi';
+import { fetchBranches } from '../../api/branchApi';
+import type { RootState } from '../../store';
+import './Tables.scss';
 
+type Filter = 'all' | 'Available' | 'Occupied' | 'Reserved';
 
-/* ─── Floating food particles (subtle, fewer than login) ─── */
-const FOOD_PARTICLES = [
-  { emoji: '🍽️', size: 28, x: 3, y: 15, duration: 18, delay: 0 },
-  { emoji: '🥢', size: 22, x: 95, y: 25, duration: 22, delay: 3 },
-  { emoji: '🍜', size: 26, x: 96, y: 65, duration: 16, delay: 6 },
-  { emoji: '🥗', size: 20, x: 2, y: 70, duration: 20, delay: 9 },
-  { emoji: '🧆', size: 18, x: 50, y: 96, duration: 14, delay: 2 },
-];
+type BranchRow = { branchID: number; branchName: string; [k: string]: unknown };
+
+function formatDuration(iso: string | null | undefined) {
+  if (!iso) return '—';
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return '—';
+  const ms = Date.now() - t;
+  if (ms < 0) return '—';
+  const m = Math.floor(ms / 60000);
+  if (m < 1) return '<1m';
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  return `${h}h ${m % 60}m`;
+}
+
+function menuPublicOrigin() {
+  const v = import.meta.env.VITE_MENU_PUBLIC_URL as string | undefined;
+  if (v) return v.replace(/\/$/, '');
+  if (typeof window !== 'undefined') return window.location.origin;
+  return '';
+}
+
+/** URL-safe path segment for public menu links */
+function slugifyPathSegment(raw: string, fallback: string): string {
+  const s = raw
+    .trim()
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+  return s || fallback;
+}
+
+function buildPublicTablePageUrl(companyName: string | undefined, table: TableListItem) {
+  const origin = menuPublicOrigin();
+  const company = slugifyPathSegment(companyName || 'company', 'company');
+  const tableKey = slugifyPathSegment(table.tableCode || table.name, `id-${table.id}`);
+  return `${origin}/${company}/table/${tableKey}`;
+}
+
+const defaultForm = {
+  name: '',
+  tableCode: '',
+  useAutoCode: true,
+  capacity: 4,
+  branchId: '' as string | number,
+  floorSection: '',
+  qrEnabled: true,
+  selfOrdering: true,
+  isActive: true,
+  status: 'Available' as TableListItem['status'],
+};
 
 const Tables: React.FC = () => {
   const dispatch = useDispatch();
-  const { tables, loading } = useSelector((state: RootState) => state.tables);
+  const navigate = useNavigate();
+  const { user } = useSelector((s: RootState) => s.auth);
+  const [rows, setRows] = useState<TableListItem[]>([]);
+  const [branches, setBranches] = useState<BranchRow[]>([]);
+  const [filter, setFilter] = useState<Filter>('all');
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<TableListItem | null>(null);
+  const [form, setForm] = useState(defaultForm);
+  const [detail, setDetail] = useState<Awaited<ReturnType<typeof fetchTableDetail>> | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newTableName, setNewTableName] = useState('');
-
-  useEffect(() => { fetchTables(); }, []);
-
-  const fetchTables = async () => {
+  const load = useCallback(async () => {
     dispatch(setLoading(true));
     try {
-      const res = await axios.get<{ id: number; name: string }[]>(`${API_BASE_URL}/tables`);
-      const normalized: Table[] = res.data.map((t) => ({ id: String(t.id), name: t.name }));
-      dispatch(setTables(normalized));
-    } catch (error) {
-      console.error('Error fetching tables:', error);
-      triggerToast('Could not load tables', 'error', getApiErrorMessage(error, 'Failed to load tables'));
+      const [list, br] = await Promise.all([fetchTablesList(), fetchBranches().catch(() => [])]);
+      setRows(list);
+      setBranches(Array.isArray(br) ? (br as BranchRow[]) : []);
+      dispatch(
+        setTables(
+          list.map((t) => ({
+            id: String(t.id),
+            name: t.name,
+            status: t.status,
+          }))
+        )
+      );
+    } catch (e: unknown) {
+      triggerToast('Tables', 'error', getApiErrorMessage(e, 'Failed to load tables'));
     }
     dispatch(setLoading(false));
+  }, [dispatch]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const filtered = useMemo(() => {
+    if (filter === 'all') return rows;
+    return rows.filter((t) => t.status === filter);
+  }, [rows, filter]);
+
+  const openAdd = async () => {
+    setEditing(null);
+    setForm({ ...defaultForm });
+    try {
+      const n = await fetchNextTableCode();
+      setForm((f) => ({
+        ...f,
+        tableCode: String(n.nextCode),
+        name: n.suggestedLabel,
+      }));
+    } catch {
+      setForm(defaultForm);
+    }
+    setFormOpen(true);
   };
 
-  const handleAddTable = async (e: React.FormEvent) => {
+  const openEdit = (t: TableListItem) => {
+    setEditing(t);
+    setForm({
+      name: t.name,
+      tableCode: t.tableCode || '',
+      useAutoCode: false,
+      capacity: t.capacity,
+      branchId: t.branchId ?? '',
+      floorSection: t.floorSection || '',
+      qrEnabled: t.qrEnabled,
+      selfOrdering: t.selfOrdering,
+      isActive: t.isActive,
+      status: t.status,
+    });
+    setFormOpen(true);
+  };
+
+  const submitForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    const name = newTableName.trim();
-    if (!name) return;
-
-    try {
-      await axios.post(`${API_BASE_URL}/tables/add`, { name });
-      await fetchTables();
-      triggerToast('Table added', 'success', 'Ready for QR ordering.');
-    } catch (error) {
-      console.error('Error adding table:', error);
-      triggerToast('Could not add table', 'error', getApiErrorMessage(error, 'Failed to add table'));
+    const name = form.name.trim();
+    if (!name) {
+      triggerToast('Validation', 'error', 'Table name is required');
+      return;
     }
-    setNewTableName('');
-    setIsModalOpen(false);
+    setSaving(true);
+    try {
+      const payload = {
+        name,
+        table_code: form.tableCode.trim() || null,
+        capacity: Number(form.capacity) || 4,
+        branch_id: form.branchId === '' ? null : Number(form.branchId),
+        floor_section: form.floorSection.trim() || null,
+        qr_enabled: form.qrEnabled,
+        self_ordering: form.selfOrdering,
+        is_active: form.isActive,
+        status: form.status,
+      };
+      if (editing) {
+        await updateTable(editing.id, payload);
+        triggerToast('Saved', 'success', 'Table updated');
+      } else {
+        await createTable(payload);
+        triggerToast('Created', 'success', 'Table added');
+      }
+      setFormOpen(false);
+      await load();
+    } catch (err: unknown) {
+      triggerToast('Save failed', 'error', getApiErrorMessage(err, 'Could not save table'));
+    }
+    setSaving(false);
   };
 
-  const deleteTable = async (id: string) => {
+  const handleDelete = async (t: TableListItem) => {
+    const { isConfirmed } = await confirmAlert(
+      'Remove table?',
+      `Delete "${t.name}"? This cannot be undone.`
+    );
+    if (!isConfirmed) return;
     try {
-      await axios.delete(`${API_BASE_URL}/tables/${id}`);
-      await fetchTables();
-      triggerToast('Table removed', 'success', 'Deleted from your layout.');
-    } catch (error) {
-      console.error('Error deleting table:', error);
-      triggerToast('Delete failed', 'error', getApiErrorMessage(error, 'Failed to delete table'));
+      await deleteTable(t.id);
+      triggerToast('Removed', 'success', 'Table deleted');
+      await load();
+    } catch (err: unknown) {
+      triggerToast('Delete failed', 'error', getApiErrorMessage(err, 'Could not delete'));
     }
+  };
+
+  const changeStatus = async (t: TableListItem, status: TableListItem['status']) => {
+    try {
+      await patchTableStatus(t.id, status);
+      await load();
+    } catch (err: unknown) {
+      triggerToast('Status', 'error', getApiErrorMessage(err, 'Could not update status'));
+    }
+  };
+
+  const copyTablePageLink = async (t: TableListItem) => {
+    const url = buildPublicTablePageUrl(user?.company_name, t);
+    try {
+      await navigator.clipboard.writeText(url);
+      triggerToast('Link copied', 'success', url);
+    } catch {
+      triggerToast('Link', 'info', url);
+    }
+  };
+
+  const openDetail = async (id: number) => {
+    try {
+      const d = await fetchTableDetail(id);
+      setDetail(d);
+      setDetailOpen(true);
+    } catch (err: unknown) {
+      triggerToast('Detail', 'error', getApiErrorMessage(err, 'Could not load table'));
+    }
+  };
+
+  /** QR opens customer order flow at /{company}/table/{code-or-name} */
+  const qrOrderUrl = (t: TableListItem) => buildPublicTablePageUrl(user?.company_name, t);
+
+  const statusBar = (s: TableListItem['status']) => {
+    if (s === 'Occupied') return 'occ';
+    if (s === 'Reserved') return 'res';
+    return 'avail';
+  };
+
+  const statusLabel = (s: TableListItem['status']) => {
+    if (s === 'Occupied') return 'Occupied';
+    if (s === 'Reserved') return 'Reserved';
+    return 'Available';
   };
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap');
-
-        /* ── Reset ────────────────────────────────────────────── */
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        /* ── Variables ────────────────────────────────────────── */
-        /* Relying on global :root CSS variables in index.css */
-
-        /* ── Page wrapper ─────────────────────────────────────── */
-        .tables-page {
-          min-height: 100vh;
-          background: var(--bg);
-          font-family: 'DM Sans', sans-serif;
-          position: relative;
-          overflow-x: hidden;
-          padding: 0 0 60px;
-        }
-
-        /* Ambient background glow */
-        .tables-page::before {
-          content: '';
-          position: fixed;
-          inset: 0;
-          background:
-            radial-gradient(ellipse 55% 40% at 15% 20%, rgba(234,88,12,0.09) 0%, transparent 70%),
-            radial-gradient(ellipse 50% 50% at 85% 80%, rgba(99, 102, 241,0.07) 0%, transparent 70%);
-          pointer-events: none;
-          z-index: 0;
-        }
-
-        /* ── Food particles ───────────────────────────────────── */
-        .fp {
-          position: fixed;
-          user-select: none;
-          pointer-events: none;
-          animation: floatBob linear infinite;
-          opacity: 0.3;
-          z-index: 0;
-          filter: drop-shadow(0 3px 8px rgba(0,0,0,0.5));
-        }
-        @keyframes floatBob {
-          0%   { transform: translateY(0px)   rotate(0deg);  }
-          25%  { transform: translateY(-14px) rotate(5deg);  }
-          50%  { transform: translateY(-6px)  rotate(-3deg); }
-          75%  { transform: translateY(-18px) rotate(4deg);  }
-          100% { transform: translateY(0px)   rotate(0deg);  }
-        }
-
-        /* ── Main content (above bg layer) ───────────────────── */
-        .tables-inner {
-          position: relative;
-          z-index: 1;
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 0 28px;
-        }
-
-        /* ── Top toolbar ──────────────────────────────────────── */
-        .toolbar {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          flex-wrap: wrap;
-          gap: 16px;
-          padding: 36px 0 32px;
-          border-bottom: 1px solid var(--border);
-          margin-bottom: 36px;
-          animation: fadeUp 0.6s ease both;
-        }
-
-        .toolbar-left {}
-
-        .toolbar-eyebrow {
-          font-size: 11px;
-          letter-spacing: 0.18em;
-          color: var(--amber);
-          text-transform: uppercase;
-          font-weight: 500;
-          margin-bottom: 6px;
-        }
-        .toolbar-title {
-          font-family: 'Playfair Display', serif;
-          font-size: 32px;
-          font-weight: 700;
-          color: var(--cream);
-          line-height: 1.1;
-        }
-        .toolbar-title em {
-          font-style: italic;
-          color: var(--amber-lt);
-        }
-        .toolbar-sub {
-          font-size: 14px;
-          color: var(--muted);
-          margin-top: 6px;
-        }
-
-        /* Stat pill */
-        .stat-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          background: rgba(99, 102, 241,0.08);
-          border: 1px solid var(--border);
-          border-radius: 40px;
-          padding: 6px 16px;
-          font-size: 13px;
-          color: var(--amber);
-          font-weight: 500;
-          margin-top: 14px;
-        }
-        .stat-dot {
-          width: 7px; height: 7px;
-          border-radius: 50%;
-          background: var(--ember);
-          animation: dotPing 2s ease-in-out infinite;
-        }
-        @keyframes dotPing {
-          0%,100% { box-shadow: 0 0 0 0 rgba(234,88,12,0.7); }
-          50%      { box-shadow: 0 0 0 7px rgba(234,88,12,0); }
-        }
-
-        /* ── Add button ───────────────────────────────────────── */
-        .btn-add {
-          display: inline-flex;
-          align-items: center;
-          gap: 9px;
-          height: 48px;
-          padding: 0 22px;
-          border-radius: 12px;
-          border: none;
-          cursor: pointer;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 14px;
-          font-weight: 600;
-          background: linear-gradient(135deg, var(--ember) 0%, var(--amber) 100%);
-          color: #1a0a00;
-          box-shadow: 0 4px 20px rgba(99, 102, 241,0.25);
-          transition: transform .15s, box-shadow .15s;
-          position: relative;
-          overflow: hidden;
-          white-space: nowrap;
-        }
-        .btn-add::before {
-          content: '';
-          position: absolute; inset: 0;
-          background: linear-gradient(135deg, var(--amber) 0%, var(--amber-lt) 100%);
-          opacity: 0;
-          transition: opacity .2s;
-        }
-        .btn-add:hover::before { opacity: 1; }
-        .btn-add:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(99, 102, 241,0.4); }
-        .btn-add:active { transform: translateY(0); }
-        .btn-add > * { position: relative; z-index: 1; }
-
-        /* ── Loading ──────────────────────────────────────────── */
-        .loading-state {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 80px 0;
-          gap: 16px;
-        }
-        .loading-bowl {
-          font-size: 48px;
-          animation: bowlSpin 2s ease-in-out infinite;
-        }
-        @keyframes bowlSpin {
-          0%,100% { transform: scale(1) rotate(0deg); }
-          50%      { transform: scale(1.1) rotate(10deg); }
-        }
-        .loading-text {
-          font-size: 14px;
-          color: var(--muted);
-          letter-spacing: 0.06em;
-        }
-
-        /* ── Empty state ──────────────────────────────────────── */
-        .empty-state {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 80px 20px;
-          gap: 16px;
-          text-align: center;
-          border: 1px dashed rgba(99, 102, 241,0.2);
-          border-radius: 18px;
-          background: rgba(99, 102, 241,0.03);
-          animation: fadeUp 0.5s ease both;
-        }
-        .empty-icon { font-size: 52px; opacity: 0.5; }
-        .empty-title {
-          font-family: 'Playfair Display', serif;
-          font-size: 22px;
-          font-weight: 700;
-          color: var(--cream);
-        }
-        .empty-sub { font-size: 14px; color: var(--muted); max-width: 300px; }
-
-        /* ── Tables grid ──────────────────────────────────────── */
-        .tables-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-          gap: 20px;
-        }
-
-        /* ── Table card ───────────────────────────────────────── */
-        .table-card {
-          background: var(--card);
-          border: 1px solid var(--border);
-          border-radius: 18px;
-          padding: 24px 20px 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          transition: border-color .2s, background .2s, transform .2s, box-shadow .2s;
-          animation: cardIn 0.5s cubic-bezier(0.16,1,0.3,1) both;
-          position: relative;
-          overflow: hidden;
-        }
-        /* Subtle ember corner glow */
-        .table-card::before {
-          content: '';
-          position: absolute;
-          top: -30px; right: -30px;
-          width: 80px; height: 80px;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(234,88,12,0.15) 0%, transparent 70%);
-          pointer-events: none;
-          transition: opacity .2s;
-          opacity: 0;
-        }
-        .table-card:hover::before { opacity: 1; }
-        .table-card:hover {
-          border-color: var(--border-h);
-          background: var(--card-hov);
-          transform: translateY(-3px);
-          box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(99, 102, 241,0.1);
-        }
-
-        @keyframes cardIn {
-          from { opacity: 0; transform: translateY(20px) scale(0.97); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        /* Card header */
-        .card-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-        .card-icon-name {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        .table-icon-wrap {
-          width: 36px; height: 36px;
-          border-radius: 10px;
-          background: rgba(99, 102, 241,0.1);
-          border: 1px solid rgba(99, 102, 241,0.18);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 18px;
-          flex-shrink: 0;
-        }
-        .table-name {
-          font-family: 'Playfair Display', serif;
-          font-size: 17px;
-          font-weight: 700;
-          color: var(--cream);
-          line-height: 1.2;
-        }
-        .btn-delete {
-          width: 32px; height: 32px;
-          border-radius: 8px;
-          border: 1px solid rgba(239,68,68,0.2);
-          background: rgba(239,68,68,0.08);
-          color: rgba(239,68,68,0.6);
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: background .15s, color .15s, border-color .15s;
-          flex-shrink: 0;
-        }
-        .btn-delete:hover {
-          background: rgba(239,68,68,0.18);
-          color: #ef4444;
-          border-color: rgba(239,68,68,0.45);
-        }
-
-        /* QR area */
-        .qr-wrap {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #ffffff;
-          border-radius: 12px;
-          padding: 16px;
-          border: 1px solid rgba(99, 102, 241,0.1);
-        }
-
-        /* QR hint */
-        .qr-hint {
-          font-size: 12px;
-          color: var(--muted);
-          text-align: center;
-          line-height: 1.6;
-          letter-spacing: 0.01em;
-        }
-
-        /* Print button */
-        .btn-print {
-          width: 100%;
-          height: 40px;
-          border-radius: 10px;
-          border: 1px solid var(--border-h);
-          background: transparent;
-          color: var(--amber);
-          font-family: 'DM Sans', sans-serif;
-          font-size: 13px;
-          font-weight: 500;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 7px;
-          transition: background .15s, border-color .15s, box-shadow .15s;
-          letter-spacing: 0.03em;
-        }
-        .btn-print:hover {
-          background: rgba(99, 102, 241,0.08);
-          border-color: var(--amber);
-          box-shadow: 0 0 0 3px rgba(99, 102, 241,0.08);
-        }
-
-        /* ── Modal override ─────────────────────────────────── */
-        .craving-modal-body { }
-
-        .modal-label {
-          font-size: 11px;
-          letter-spacing: 0.1em;
-          color: var(--muted);
-          text-transform: uppercase;
-          font-weight: 500;
-          margin-bottom: 8px;
-          display: block;
-        }
-        .modal-input-wrap {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(99, 102, 241,0.15);
-          border-radius: 12px;
-          padding: 0 14px;
-          height: 48px;
-          transition: border-color .2s, box-shadow .2s;
-          margin-bottom: 20px;
-        }
-        .modal-input-wrap:focus-within {
-          border-color: rgba(99, 102, 241,0.5);
-          box-shadow: 0 0 0 3px rgba(99, 102, 241,0.1);
-        }
-        .modal-input-wrap input {
-          flex: 1;
-          background: transparent;
-          border: none;
-          outline: none;
-          color: #000;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 15px;
-        }
-        .modal-input-wrap input::placeholder { color: rgba(0,0,0,0.35); }
-
-        .modal-actions {
-          display: flex;
-          gap: 10px;
-          justify-content: flex-end;
-        }
-        .btn-cancel {
-          height: 42px;
-          padding: 0 18px;
-          border-radius: 10px;
-          border: 1px solid var(--border);
-          background: transparent;
-          color: var(--muted);
-          font-family: 'DM Sans', sans-serif;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: border-color .15s, color .15s;
-        }
-        .btn-cancel:hover { border-color: var(--border-h); color: var(--cream); }
-
-        .btn-create {
-          height: 42px;
-          padding: 0 22px;
-          border-radius: 10px;
-          border: none;
-          background: linear-gradient(135deg, var(--ember) 0%, var(--amber) 100%);
-          color: #1a0a00;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: filter .15s, transform .15s;
-          position: relative;
-          overflow: hidden;
-        }
-        .btn-create:hover { filter: brightness(1.1); transform: translateY(-1px); }
-
-        /* ── Utility animations ───────────────────────────────── */
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-
-        /* ── Toast (top-right, errors only) ─────────────────── */
-        .craving-toast {
-          position: fixed;
-          top: 24px;
-          right: 24px;
-          background: #1c1010;
-          border: 1px solid rgba(239,68,68,0.3);
-          border-left: 4px solid #ef4444;
-          border-radius: 12px;
-          padding: 14px 20px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          color: #fecaca;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 14px;
-          font-weight: 500;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-          z-index: 10000;
-          animation: toastIn 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
-          min-width: 260px;
-        }
-        @keyframes toastIn {
-          from { opacity: 0; transform: translateY(-16px) scale(0.95); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
-
-      <div className="tables-page">
-        {/* Floating food particles */}
-        {FOOD_PARTICLES.map((p, i) => (
-          <span
-            key={i}
-            className="fp"
-            style={{
-              left: `${p.x}%`,
-              top: `${p.y}%`,
-              fontSize: `${p.size}px`,
-              animationDuration: `${p.duration}s`,
-              animationDelay: `${p.delay}s`,
-            }}
-          >
-            {p.emoji}
-          </span>
-        ))}
-
-        <div className="tables-inner">
-          {/* ── Toolbar ─────────────────────────────────────── */}
-          <div className="toolbar">
-            <div className="toolbar-left">
-              <p className="toolbar-eyebrow">Craving Admin</p>
-              <h1 className="toolbar-title">
-                <em>Table</em> Management
-              </h1>
-              <p className="toolbar-sub">Manage your seating and QR codes for dine-in ordering.</p>
-              <div className="stat-pill">
-                <div className="stat-dot" />
-                {tables.length} {tables.length === 1 ? 'table' : 'tables'} active
-              </div>
+    <div className="tables-mgmt">
+      <div className="tables-mgmt__toolbar">
+        <div className="tables-mgmt__toolbar-main">
+          <div className="tables-mgmt__heading">
+            <h1 className="tables-mgmt__title">
+              <em>Table</em> Management
+            </h1>
+            <div className="tables-mgmt__stat">
+              <span className="tables-mgmt__stat-dot" aria-hidden />
+              <span>
+                {rows.length} {rows.length === 1 ? 'table' : 'tables'} active
+              </span>
             </div>
-            <button className="btn-add" onClick={() => setIsModalOpen(true)}>
-              <Plus size={17} />
-              Add New Table
-            </button>
           </div>
+          <p className="tables-mgmt__sub">
+            Seating, QR codes, and live order totals for dine-in.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="btn-premium tables-mgmt__toolbar-action d-inline-flex align-items-center gap-2 px-3"
+          onClick={() => void openAdd()}
+        >
+          <Plus size={18} /> Add table
+        </button>
+      </div>
 
-          {/* ── Loading ─────────────────────────────────────── */}
-          {loading && (
-            <div className="loading-state">
-              <span className="loading-bowl">🍽️</span>
-              <p className="loading-text">Setting the tables…</p>
-            </div>
-          )}
+      <div className="tables-mgmt__filters">
+        {(['all', 'Available', 'Occupied', 'Reserved'] as const).map((f) => (
+          <button
+            key={f}
+            type="button"
+            className={`tables-mgmt__filter-btn${filter === f ? ' tables-mgmt__filter-btn--active' : ''}`}
+            onClick={() => setFilter(f)}
+          >
+            {f === 'all' ? 'All tables' : f}
+          </button>
+        ))}
+      </div>
 
-          {/* ── Empty state ──────────────────────────────────── */}
-          {!loading && tables.length === 0 && (
-            <div className="empty-state">
-              <span className="empty-icon">🪑</span>
-              <h2 className="empty-title">No tables yet</h2>
-              <p className="empty-sub">
-                Add your first table to generate a QR code for contactless ordering.
-              </p>
-              <button className="btn-add" style={{ marginTop: 8 }} onClick={() => setIsModalOpen(true)}>
-                <Plus size={16} />
-                Add Your First Table
-              </button>
-            </div>
-          )}
+      {filtered.length === 0 && rows.length === 0 && (
+        <div className="tables-mgmt__empty">
+          <div className="tables-mgmt__empty-icon">🪑</div>
+          <h2 className="tables-mgmt__empty-title">No tables yet</h2>
+          <p className="tables-mgmt__empty-sub">Add a table to generate QR codes and track orders.</p>
+          <button type="button" className="btn-premium d-inline-flex align-items-center gap-2 px-3" style={{ height: 40 }} onClick={() => void openAdd()}>
+            <Plus size={18} /> Add Your First Table
+          </button>
+        </div>
+      )}
 
-          {/* ── Tables grid ──────────────────────────────────── */}
-          {!loading && tables.length > 0 && (
-            <div className="tables-grid">
-              {tables.map((table: Table, index: number) => (
-                <div
-                  key={table.id}
-                  className="table-card"
-                  style={{ animationDelay: `${index * 0.08}s` }}
-                >
-                  <div className="card-header">
-                    <div className="card-icon-name">
-                      <div className="table-icon-wrap">🪑</div>
-                      <span className="table-name">{table.name}</span>
-                    </div>
-                    <button
-                      className="btn-delete"
-                      onClick={() => deleteTable(table.id)}
-                      title="Delete table"
-                    >
-                      <Trash2 size={15} />
-                    </button>
+      {filtered.length === 0 && rows.length > 0 && (
+        <div className="tables-mgmt__empty">
+          <p className="tables-mgmt__empty-sub mb-0">No tables match this filter.</p>
+        </div>
+      )}
+
+      {filtered.length > 0 && (
+        <div className="tables-mgmt__grid">
+          {filtered.map((t) => (
+            <div key={t.id} className={`tables-card${t.isActive ? '' : ' tables-card--inactive'}`}>
+              <div className={`tables-card__bar tables-card__bar--${statusBar(t.status)}`} />
+              <div className="tables-card__head">
+                <div>
+                  <h3 className="tables-card__name">{t.name}</h3>
+                  <div className="tables-card__meta">
+                    {t.tableCode ? <>Code {t.tableCode}</> : 'No code'} · {t.capacity} seats
+                    {t.floorSection ? <> · {t.floorSection}</> : null}
                   </div>
+                </div>
+                <span className={`tables-card__badge tables-card__badge--${statusBar(t.status)}`}>{statusLabel(t.status)}</span>
+              </div>
 
-                  <div className="qr-wrap">
-                    <QRCodeSVG
-                      value={`http://localhost:5174/?tableId=${table.id}`}
-                      size={150}
-                      level="H"
-                      includeMargin={false}
-                      fgColor="#18181B"
-                    />
-                  </div>
+              <div className="tables-card__stats">
+                <div>
+                  <span className="tables-card__stat-label">Order total</span>
+                  <span className="tables-card__stat-val">
+                    {t.currentOrderTotal > 0 ? `₹ ${Number(t.currentOrderTotal).toFixed(2)}` : '—'}
+                  </span>
+                </div>
+                <div>
+                  <span className="tables-card__stat-label">Active since</span>
+                  <span className="tables-card__stat-val">{formatDuration(t.sessionStartedAt)}</span>
+                </div>
+              </div>
 
-                  <p className="qr-hint">
-                    Customers scan this to view the menu and order.
-                  </p>
+              {t.qrEnabled && (
+                <div className="tables-card__qr">
+                  <QRCodeSVG value={qrOrderUrl(t)} size={76} level="H" includeMargin={false} fgColor="#0f172a" />
+                </div>
+              )}
 
-                  <button className="btn-print" onClick={() => window.print()}>
-                    <PrinterIcon size={14} />
-                    Print QR Label
+              <div className="tables-card__actions">
+                <div className="tables-card__btn-grid">
+                  <button
+                    type="button"
+                    className="tables-card__btn tables-card__btn--primary"
+                    onClick={() => navigate(`/admin/orders`, { state: { highlightTableId: t.id } })}
+                    title="Open orders"
+                  >
+                    <UtensilsCrossed size={13} /> Order
+                  </button>
+                  <button type="button" className="tables-card__btn" onClick={() => void openDetail(t.id)}>
+                    <Eye size={13} /> View
+                  </button>
+                  <button
+                    type="button"
+                    className="tables-card__btn"
+                    onClick={() => navigate('/admin/bills', { state: { tableId: t.id } })}
+                  >
+                    <Receipt size={13} /> Bill
+                  </button>
+                  <button type="button" className="tables-card__btn" onClick={() => openEdit(t)}>
+                    <Pencil size={13} /> Edit
                   </button>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* ── Add table modal ─────────────────────────────────── */}
-        <Modal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          title="Add New Table"
-        >
-          <div className="craving-modal-body">
-            <form onSubmit={handleAddTable}>
-              <label className="modal-label">Table Name or Number</label>
-              <div className="modal-input-wrap">
-                <span style={{ fontSize: 18 }}>🪑</span>
-                <input
-                  type="text"
-                  placeholder="e.g. Terrace Table 4"
-                  value={newTableName}
-                  onChange={e => setNewTableName(e.target.value)}
-                  required
-                  autoFocus
-                />
-              </div>
-              <div className="modal-actions">
+                <select
+                  className="tables-card__select"
+                  aria-label="Change status"
+                  value={t.status}
+                  onChange={(e) => void changeStatus(t, e.target.value as TableListItem['status'])}
+                >
+                  <option value="Available">Available</option>
+                  <option value="Occupied">Occupied</option>
+                  <option value="Reserved">Reserved</option>
+                </select>
                 <button
                   type="button"
-                  className="btn-cancel"
-                  onClick={() => setIsModalOpen(false)}
+                  className="tables-card__btn tables-card__btn--danger tables-card__btn--block"
+                  onClick={() => void handleDelete(t)}
                 >
-                  Cancel
+                  <Trash2 size={13} /> Delete
                 </button>
-                <button type="submit" className="btn-create">
-                  Create Table
-                </button>
+                <div className="tables-card__tool-row">
+                  <button type="button" className="tables-card__btn" onClick={() => window.print()} title="Print QR">
+                    <PrinterIcon size={13} /> Print
+                  </button>
+                  <button type="button" className="tables-card__btn" disabled title="Coming soon">
+                    <RefreshCw size={13} /> Transfer
+                  </button>
+                  <button
+                    type="button"
+                    className="tables-card__btn"
+                    title="Copy customer table URL"
+                    onClick={() => void copyTablePageLink(t)}
+                  >
+                    <LinkIcon size={13} /> Link
+                  </button>
+                </div>
               </div>
-            </form>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Modal isOpen={formOpen} onClose={() => setFormOpen(false)} title={editing ? 'Edit Table' : 'Add New Table'}>
+        <form onSubmit={(e) => void submitForm(e)} className="d-flex flex-column gap-3">
+          <div className="input-group d-flex flex-column gap-1">
+            <label className="input-label">Table name *</label>
+            <input
+              className="dark-input"
+              value={form.name}
+              onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))}
+              required
+              placeholder="e.g. T1"
+            />
           </div>
-        </Modal>
-      </div>
-    </>
+          <div className="tables-form-grid">
+            <div className="input-group d-flex flex-column gap-1">
+              <label className="input-label">Table code</label>
+              <input
+                className="dark-input"
+                value={form.tableCode}
+                onChange={(e) => setForm((s) => ({ ...s, tableCode: e.target.value, useAutoCode: false }))}
+                placeholder="Auto"
+              />
+            </div>
+            <div className="input-group d-flex flex-column gap-1">
+              <label className="input-label">Capacity *</label>
+              <input
+                type="number"
+                min={1}
+                className="dark-input"
+                value={form.capacity}
+                onChange={(e) => setForm((s) => ({ ...s, capacity: Number(e.target.value) || 1 }))}
+              />
+            </div>
+          </div>
+          <div className="tables-form-grid">
+            <div className="input-group d-flex flex-column gap-1">
+              <label className="input-label">Branch</label>
+              <select
+                className="dark-input dark-select"
+                value={form.branchId === '' ? '' : String(form.branchId)}
+                onChange={(e) =>
+                  setForm((s) => ({ ...s, branchId: e.target.value === '' ? '' : Number(e.target.value) }))
+                }
+              >
+                <option value="">— Select branch —</option>
+                {branches.map((b) => (
+                  <option key={b.branchID} value={b.branchID}>
+                    {b.branchName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="input-group d-flex flex-column gap-1">
+              <label className="input-label">Floor / section</label>
+              <input
+                className="dark-input"
+                value={form.floorSection}
+                onChange={(e) => setForm((s) => ({ ...s, floorSection: e.target.value }))}
+                placeholder="Ground floor, Patio…"
+              />
+            </div>
+          </div>
+          <div className="d-flex flex-wrap gap-3 align-items-center">
+            <label className="d-flex align-items-center gap-2 small">
+              <input
+                type="checkbox"
+                checked={form.qrEnabled}
+                onChange={(e) => setForm((s) => ({ ...s, qrEnabled: e.target.checked }))}
+              />
+              QR enabled
+            </label>
+            <label className="d-flex align-items-center gap-2 small">
+              <input
+                type="checkbox"
+                checked={form.selfOrdering}
+                onChange={(e) => setForm((s) => ({ ...s, selfOrdering: e.target.checked }))}
+              />
+              Self-ordering
+            </label>
+            <label className="d-flex align-items-center gap-2 small">
+              <input
+                type="checkbox"
+                checked={form.isActive}
+                onChange={(e) => setForm((s) => ({ ...s, isActive: e.target.checked }))}
+              />
+              Active
+            </label>
+          </div>
+          <div className="input-group d-flex flex-column gap-1">
+            <label className="input-label">Default status</label>
+            <select
+              className="dark-input dark-select"
+              value={form.status}
+              onChange={(e) =>
+                setForm((s) => ({ ...s, status: e.target.value as TableListItem['status'] }))
+              }
+            >
+              <option value="Available">Available</option>
+              <option value="Occupied">Occupied</option>
+              <option value="Reserved">Reserved</option>
+            </select>
+          </div>
+          <div className="d-flex gap-2 justify-content-end mt-2">
+            <button type="button" className="btn-cancel" onClick={() => setFormOpen(false)} disabled={saving}>
+              Cancel
+            </button>
+            <button type="submit" className="btn-premium px-4" disabled={saving}>
+              {saving ? 'Saving…' : editing ? 'Save changes' : 'Create table'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal isOpen={detailOpen} onClose={() => setDetailOpen(false)} title="Table details">
+        {detail && (
+          <div className="d-flex flex-column gap-3">
+            <div>
+              <strong>{detail.name}</strong>
+              <div className="small text-muted">
+                Code {detail.tableCode || '—'} · {detail.capacity} seats · {detail.status}
+              </div>
+              {detail.floorSection ? <div className="small">{detail.floorSection}</div> : null}
+            </div>
+            <div>
+              <div className="small text-uppercase text-muted mb-1">Open orders total</div>
+              <div className="fs-5 fw-bold">₹ {Number(detail.openTotal).toFixed(2)}</div>
+              <div className="small text-muted">Session since {formatDuration(detail.sessionStart)}</div>
+            </div>
+            <div>
+              <div className="small text-uppercase text-muted mb-2">Orders</div>
+              <ul className="tables-detail-list">
+                {detail.orders.length === 0 ? (
+                  <li className="text-muted border-0">No orders for this table.</li>
+                ) : (
+                  detail.orders.map((o) => (
+                    <li key={o.id}>
+                      <span>
+                        #{o.id} · {o.status}
+                      </span>
+                      <span className="fw-semibold">₹ {Number(o.total).toFixed(2)}</span>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
+            <button type="button" className="btn-premium w-100" onClick={() => navigate('/admin/orders', { state: { highlightTableId: detail.id } })}>
+              <Armchair size={18} className="me-2" /> Go to orders
+            </button>
+          </div>
+        )}
+      </Modal>
+    </div>
   );
 };
 
 export default Tables;
-

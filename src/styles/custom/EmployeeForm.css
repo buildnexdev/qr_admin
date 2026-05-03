@@ -1,0 +1,394 @@
+/* Staff / employee wizard — scoped under .employee-form-scope */
+
+.employee-form-scope {
+	--employee-purple: #6d28d9;
+	--employee-purple-mid: #7c3aed;
+	--employee-purple-soft: rgba(109, 40, 217, 0.12);
+	--employee-line: rgba(109, 40, 217, 0.22);
+	--employee-input-bg: #f3f4f6;
+	--employee-input-border: #e5e7eb;
+	--employee-muted: #6b7280;
+	--employee-teal: #0d9488;
+	--employee-orange: #ea580c;
+}
+
+/* Main tab cards */
+.employee-form-scope .employee-form-card.card {
+	border-radius: 16px;
+	border: 1px solid rgba(0, 0, 0, 0.06);
+	box-shadow: 0 4px 20px rgba(109, 40, 217, 0.07);
+	overflow: hidden;
+}
+
+.employee-form-scope .employee-section-header.card-header {
+	background: linear-gradient(135deg, var(--employee-purple-mid) 0%, var(--employee-purple) 100%);
+	color: #fff !important;
+	border: none;
+	font-size: 0.9rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	padding: 1rem 1.35rem;
+}
+
+.employee-form-scope .employee-section-header.card-header * {
+	color: inherit;
+}
+
+/* Subsection title + rule */
+.employee-form-scope .employee-subsection-title {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	color: var(--employee-purple);
+	text-transform: uppercase;
+	margin-bottom: 0.75rem;
+}
+
+.employee-form-scope .employee-subsection-title::after {
+	content: '';
+	flex: 1;
+	height: 1px;
+	background: var(--employee-line);
+	min-width: 2rem;
+}
+
+/* Inner white panels */
+.employee-form-scope .employee-form-panel {
+	background: #fff;
+	border: 1px solid rgba(0, 0, 0, 0.08);
+	border-radius: 12px;
+	padding: 1.25rem 1.35rem;
+}
+
+.employee-form-scope .employee-form-panel-subhead {
+	margin-bottom: 1rem;
+}
+
+.employee-form-scope .employee-form-panel-subhead strong {
+	display: block;
+	font-size: 1rem;
+	color: #111827;
+}
+
+.employee-form-scope .employee-form-panel-subhead small {
+	display: block;
+	margin-top: 0.2rem;
+	color: var(--employee-muted);
+	font-size: 0.8rem;
+}
+
+/* Inputs inside wizard */
+.employee-form-scope .form-control:not([type='checkbox']):not([type='radio']),
+.employee-form-scope .form-select,
+.employee-form-scope input.form-control {
+	background-color: var(--employee-input-bg) !important;
+	border-color: var(--employee-input-border) !important;
+	border-radius: 10px !important;
+}
+
+.employee-form-scope .form-label,
+.employee-form-scope label.col-form-label {
+	color: #374151;
+	font-weight: 600;
+	font-size: 0.875rem;
+}
+
+/* Wizard top pills */
+.employee-form-scope .employee-wizard-pill {
+	white-space: nowrap;
+	border-radius: 999px !important;
+	font-weight: 700 !important;
+	font-size: 0.9rem !important;
+	padding: 0.55rem 1.35rem !important;
+	transition:
+		background 0.15s ease,
+		color 0.15s ease,
+		box-shadow 0.15s ease;
+}
+
+.employee-form-scope .employee-wizard-pill.is-active {
+	background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+	color: #fff !important;
+	box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+}
+
+.employee-form-scope .employee-wizard-pill:not(.is-active) {
+	background: #eef2ff !important;
+	color: #3730a3 !important;
+}
+
+.employee-form-scope.dark .employee-wizard-pill:not(.is-active),
+[data-theme='dark'] .employee-form-scope .employee-wizard-pill:not(.is-active) {
+	background: rgba(109, 40, 217, 0.2) !important;
+	color: #c4b5fd !important;
+}
+
+/* Additional details sub-tabs */
+.employee-form-scope .employee-sub-tab-pill.btn {
+	border-radius: 999px !important;
+	font-weight: 700 !important;
+	padding: 0.5rem 1.25rem !important;
+	text-decoration: none !important;
+	box-shadow: none !important;
+	border: 1px solid rgba(67, 56, 202, 0.15) !important;
+}
+
+.employee-form-scope .employee-sub-tab-pill.is-active {
+	background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%) !important;
+	color: #fff !important;
+	border: none !important;
+}
+
+.employee-form-scope .employee-sub-tab-pill:not(.is-active) {
+	background: #eef2ff !important;
+	color: #4338ca !important;
+	border: 1px solid rgba(67, 56, 202, 0.15) !important;
+}
+
+/* Emergency contact blocks */
+.employee-form-scope .employee-emergency-card {
+	border-radius: 12px;
+	padding: 1.15rem 1.25rem;
+	margin-bottom: 0.5rem;
+}
+
+.employee-form-scope .employee-emergency-card--primary {
+	background: rgba(13, 148, 136, 0.07);
+	border: 1px solid rgba(13, 148, 136, 0.28);
+}
+
+.employee-form-scope .employee-emergency-card--secondary {
+	background: rgba(234, 88, 12, 0.06);
+	border: 1px solid rgba(234, 88, 12, 0.25);
+}
+
+.employee-form-scope .employee-emergency-card__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 1rem;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.employee-form-scope .employee-emergency-card__title {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+	font-weight: 700;
+	font-size: 0.95rem;
+}
+
+.employee-form-scope .employee-emergency-card--primary .employee-emergency-card__title {
+	color: var(--employee-teal);
+}
+
+.employee-form-scope .employee-emergency-card--secondary .employee-emergency-card__title {
+	color: var(--employee-orange);
+}
+
+.employee-form-scope .employee-emergency-card__badge {
+	font-size: 0.75rem;
+	font-weight: 700;
+}
+
+.employee-form-scope .employee-emergency-card--primary .employee-emergency-card__badge {
+	color: var(--employee-teal);
+}
+
+.employee-form-scope .employee-emergency-card--secondary .employee-emergency-card__badge {
+	color: var(--employee-orange);
+}
+
+.employee-form-scope .employee-emergency-card__num {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	border-radius: 50%;
+	font-size: 0.85rem;
+	font-weight: 800;
+	color: #fff;
+}
+
+.employee-form-scope .employee-emergency-card--primary .employee-emergency-card__num {
+	background: var(--employee-teal);
+}
+
+.employee-form-scope .employee-emergency-card--secondary .employee-emergency-card__num {
+	background: var(--employee-orange);
+}
+
+/* Address mini-cards */
+.employee-form-scope .employee-address-card {
+	border: 1px solid rgba(0, 0, 0, 0.08);
+	border-radius: 12px;
+	overflow: hidden;
+	background: #fff;
+	height: 100%;
+}
+
+.employee-form-scope .employee-address-card__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	padding: 0.65rem 1rem;
+	background: linear-gradient(135deg, var(--employee-purple-mid) 0%, var(--employee-purple) 100%);
+	color: #fff;
+	font-size: 0.72rem;
+	font-weight: 800;
+	letter-spacing: 0.08em;
+}
+
+.employee-form-scope .employee-address-card__body {
+	padding: 1.1rem 1.15rem 1.25rem;
+}
+
+.employee-form-scope .employee-same-address-bar {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.65rem 0.85rem;
+	background: #f1f5f9;
+	border-radius: 10px;
+	margin-bottom: 1rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: #475569;
+}
+
+/* Upload dropzones */
+.employee-form-scope .employee-upload-box {
+	border: 2px dashed var(--employee-purple-mid);
+	border-radius: 12px;
+	padding: 1.5rem 1rem;
+	cursor: pointer;
+	text-align: center;
+	background: var(--employee-purple-soft);
+	transition:
+		border-color 0.15s ease,
+		background 0.15s ease;
+}
+
+.employee-form-scope .employee-upload-box:hover {
+	border-color: var(--employee-purple);
+	background: rgba(109, 40, 217, 0.16);
+}
+
+.employee-form-scope .employee-upload-icon {
+	font-size: 2rem;
+	color: #ca8a04;
+}
+
+.employee-form-scope .employee-upload-text {
+	font-weight: 700;
+	color: var(--employee-purple);
+	margin-top: 0.35rem;
+	font-size: 0.9rem;
+}
+
+.employee-form-scope .employee-upload-hint {
+	font-size: 0.75rem;
+	color: var(--employee-muted);
+	margin-top: 0.25rem;
+}
+
+/* Segmented controls (official details) */
+.employee-form-scope .segmented-control {
+	display: flex;
+	gap: 0.4rem;
+	flex-wrap: wrap;
+}
+
+.employee-form-scope .segmented-control .btn {
+	border-radius: 10px !important;
+	font-weight: 600 !important;
+	font-size: 0.82rem !important;
+	border: 1px solid var(--employee-input-border) !important;
+}
+
+.employee-form-scope .segmented-control--type .btn.active {
+	background: var(--employee-purple) !important;
+	color: #fff !important;
+	border-color: var(--employee-purple) !important;
+}
+
+.employee-form-scope .segmented-control--work .btn.active {
+	background: #2563eb !important;
+	color: #fff !important;
+	border-color: #2563eb !important;
+}
+
+.employee-form-scope .segmented-control--status .btn.active {
+	background: #16a34a !important;
+	color: #fff !important;
+	border-color: #16a34a !important;
+}
+
+.employee-form-scope .segmented-control .btn:not(.active) {
+	background: #f9fafb !important;
+	color: #4b5563 !important;
+}
+
+/* Leave balance cards (edit profile) */
+.employee-form-scope .employee-leave-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 1rem;
+}
+
+.employee-form-scope .employee-leave-card {
+	border-radius: 12px;
+	padding: 1rem;
+	border: 1px solid rgba(0, 0, 0, 0.06);
+	background: #fff;
+}
+
+.employee-form-scope .employee-leave-card--casual {
+	border-left: 4px solid #2563eb;
+	background: rgba(37, 99, 235, 0.04);
+}
+
+.employee-form-scope .employee-leave-card--sick {
+	border-left: 4px solid #dc2626;
+	background: rgba(220, 38, 38, 0.05);
+}
+
+.employee-form-scope .employee-leave-card--wfh {
+	border-left: 4px solid #ca8a04;
+	background: rgba(202, 138, 4, 0.08);
+}
+
+.employee-form-scope .employee-leave-card__title {
+	font-weight: 800;
+	font-size: 0.85rem;
+	margin-bottom: 0.75rem;
+	color: #111827;
+}
+
+/* Footer primary actions */
+.employee-form-scope .employee-form-footer .btn-primary,
+.employee-form-scope .btn-employee-primary {
+	background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+	border: none !important;
+	border-radius: 999px !important;
+	font-weight: 700 !important;
+	padding: 0.6rem 1.75rem !important;
+	box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+}
+
+.employee-form-scope .employee-form-footer .btn-outline-primary {
+	border-radius: 999px !important;
+	font-weight: 700 !important;
+	border-width: 2px !important;
+}
+
+/* Highlighted inputs (e.g. account holder) */
+.employee-form-scope .employee-input-highlight .form-control {
+	background-color: #eff6ff !important;
+}

@@ -8,7 +8,7 @@ import type { Order } from '../../store/orderSlice';
 import CommonHeader from '../../components/common/CommonHeader';
 import { triggerToast } from '../../components/common/CommonAlert';
 import './kitchenStyle.scss';
-import { API_BASE_URL } from '../../router/const';
+import { API_BASE_URL } from '../../routes/const';
 
 
 const Kitchen: React.FC = () => {
@@ -131,7 +131,7 @@ const Kitchen: React.FC = () => {
         onSearchChange={setSearchTerm}
       />
 
-      <div className="kds-grid mt-4">
+      <div className="kds-grid">
         {/* === PENDING COLUMN === */}
         <div className="kds-column">
           <div className="kds-column-header">
@@ -141,7 +141,7 @@ const Kitchen: React.FC = () => {
           </div>
           {pendingOrders.length === 0 ? (
             <div className="kds-empty">
-              <ChefHat size={48} />
+              <ChefHat size={36} />
               <p>No new orders waiting.</p>
             </div>
           ) : (
@@ -158,7 +158,7 @@ const Kitchen: React.FC = () => {
           </div>
           {preparingOrders.length === 0 ? (
             <div className="kds-empty">
-              <Flame size={48} />
+              <Flame size={36} />
               <p>No orders currently matching this status.</p>
             </div>
           ) : (
@@ -175,7 +175,7 @@ const Kitchen: React.FC = () => {
           </div>
           {readyOrders.length === 0 ? (
             <div className="kds-empty">
-              <CheckCircle size={48} />
+              <CheckCircle size={36} />
               <p>All prepared orders have been served.</p>
             </div>
           ) : (

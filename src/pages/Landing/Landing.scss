@@ -301,7 +301,7 @@ html[data-theme='light'] {
     &:hover {
       transform: translateY(-12px);
       background: rgba(255, 255, 255, 0.06);
-      border-color: rgba(99, 102, 241, 0.2);
+      border-color: rgba(var(--accent-rgb), 0.2);
       box-shadow: 0 30px 60px rgba(0,0,0,0.4);
 
       &::before {
@@ -319,7 +319,7 @@ html[data-theme='light'] {
       width: 64px;
       height: 64px;
       border-radius: 16px;
-      background: rgba(99, 102, 241, 0.1);
+      background: rgba(var(--accent-rgb), 0.1);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -557,7 +557,7 @@ html[data-theme='light'] {
 /* Footer Agency Design (Screenshot Match) */
 .landing-footer-agency {
   padding: 100px 0 40px;
-  background: #020617; // Very dark midnight blue/black
+  background: #0b0e14;
   color: #ffffff;
   position: relative;
   z-index: 1;

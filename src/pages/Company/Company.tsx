@@ -12,7 +12,7 @@ import {
   Info,
   CheckCircle2
 } from 'lucide-react';
-import { API_BASE_URL } from '../../router/const';
+import { API_BASE_URL } from '../../routes/const';
 import { triggerToast } from '../../components/common/CommonAlert';
 import CommonSubHeader from '../../components/common/CommonSubHeader';
 import CommonTable from '../../components/common/CommonTable';

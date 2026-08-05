@@ -2,27 +2,26 @@
 @import "bootstrap/scss/functions";
 @import "bootstrap/scss/variables";
 
-// Override Bootstrap primary colors with our Premium Dark Theme
+// Override Bootstrap primary colors — Facit glass + NammaQr blue
 $primary: var(--ember);
 $secondary: var(--muted);
 $dark: var(--bg);
 $light: var(--cream);
 
-// Custom Theme Variables — navy shell + #2D5CFE brand
 :root {
-  --bg: #0a0f1a;
-  --surface: #111827;
-  --card: #1a2332;
-  --card-hov: #243044;
+  --bg: #e7eef8;
+  --surface: rgba(255, 255, 255, 0.72);
+  --card: #ffffff;
+  --card-hov: #f1f5f9;
   --ember: #2d5cfe;
   --amber: #1e4fd4;
   --amber-lt: #5b7cff;
   --accent-rgb: 45, 92, 254;
-  --cream: #ffffff;
-  --muted: #94a3b8;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-h: rgba(255, 255, 255, 0.14);
-  --glow: rgba(45, 92, 254, 0.25);
+  --cream: #1f2128;
+  --muted: #808191;
+  --border: rgba(255, 255, 255, 0.45);
+  --border-h: rgba(15, 23, 42, 0.08);
+  --glow: rgba(45, 92, 254, 0.12);
 }
 
 @import "bootstrap/scss/bootstrap";

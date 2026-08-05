@@ -44,7 +44,7 @@ const Stocks: React.FC = () => {
   const fetchStocks = async () => {
     dispatch(setStockLoading(true));
     try {
-      const res = await axios.get<StockItem[]>(`${API_BASE_URL}/stocks`);
+      const res = await axios.get<StockItem[]>(`${API_BASE_URL}api/stocks`);
       dispatch(setStockItems(res.data));
     } catch (err) {
       console.error(err);
@@ -103,10 +103,10 @@ const Stocks: React.FC = () => {
     setSaving(true);
     try {
       if (editing) {
-        await axios.put(`${API_BASE_URL}/stocks/${editing.id}`, payload);
+        await axios.put(`${API_BASE_URL}api/stocks/${editing.id}`, payload);
         triggerToast('Updated', 'success', 'Stock item saved.');
       } else {
-        await axios.post(`${API_BASE_URL}/stocks`, payload);
+        await axios.post(`${API_BASE_URL}api/stocks`, payload);
         triggerToast('Added', 'success', 'New stock item created.');
       }
       await fetchStocks();
@@ -120,7 +120,7 @@ const Stocks: React.FC = () => {
   const deleteItem = async (id: number) => {
     if (!window.confirm('Delete this stock item?')) return;
     try {
-      await axios.delete(`${API_BASE_URL}/stocks/${id}`);
+      await axios.delete(`${API_BASE_URL}api/stocks/${id}`);
       await fetchStocks();
       triggerToast('Deleted', 'success', 'Item removed.');
     } catch (err) {
@@ -131,7 +131,7 @@ const Stocks: React.FC = () => {
   const markRestocked = async (row: StockItem) => {
     const today = new Date().toISOString().slice(0, 10);
     try {
-      await axios.put(`${API_BASE_URL}/stocks/${row.id}`, {
+      await axios.put(`${API_BASE_URL}api/stocks/${row.id}`, {
         name: row.name,
         category: row.category,
         quantity: row.quantity,

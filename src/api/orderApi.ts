@@ -3,6 +3,23 @@ import { API_BASE_URL } from '../routes/const';
 
 const ORDERS = `${API_BASE_URL}api/orders`;
 
+/** Raw rows from `GET /api/orders` (snake_case or camelCase depending on DB driver). */
+export type OrderListRow = Record<string, unknown> & {
+  id?: number;
+  customer_name?: string;
+  customerName?: string;
+  total_amount?: number | string;
+  total?: number;
+  status?: string;
+  created_at?: string;
+  timestamp?: string;
+};
+
+export async function fetchOrdersList(): Promise<OrderListRow[]> {
+  const { data } = await axios.get<OrderListRow[]>(ORDERS);
+  return Array.isArray(data) ? data : [];
+}
+
 export type CreateOrderLine = {
   id: number;
   quantity: number;

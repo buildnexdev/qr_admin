@@ -1,261 +1,306 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 import type { ApexOptions } from 'apexcharts';
-import {
-  Grid,
-  Utensils,
-  TrendingUp,
-  Users,
-  DollarSign,
-  Package,
-  ShoppingBag,
-  Calendar,
-  ChefHat,
-  Store,
-  Tags,
-  ArrowRight,
-} from 'lucide-react';
 import Chart from 'react-apexcharts';
-import './Dashboard.scss';
+import {
+  Award,
+  Calendar,
+  CheckCircle,
+  Clock,
+  IndianRupee,
+  LayoutGrid,
+  ShoppingBag,
+  TrendingUp,
+  Utensils,
+  Users,
+} from 'lucide-react';
 import { API_BASE_URL } from '../../routes/const';
+import { PageHeader } from '@/components/organisms/PageHeader';
+import { StatCard } from '@/components/organisms/StatCard';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { LayoutDashboard } from 'lucide-react';
 
-type DashData = {
-  orders: any[];
-  tables: any[];
-  staff: any[];
-  menu: any[];
-  stocks: any[];
-  branches: any[];
-  categories: any[];
-};
+function orderTs(o: { timestamp?: string; created_at?: string }) {
+  return o.timestamp ?? o.created_at;
+}
+
+function statusNorm(o: { status?: string }) {
+  return String(o.status ?? '')
+    .trim()
+    .toLowerCase();
+}
+
+const inrFull = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+});
+
+function formatInrCompact(val: number): string {
+  const v = Math.abs(val);
+  if (v >= 1e7) return `₹${(val / 1e7).toFixed(1)} Cr`;
+  if (v >= 1e5) return `₹${(val / 1e5).toFixed(1)} L`;
+  if (v >= 1e3) return `₹${(val / 1e3).toFixed(1)} k`;
+  return `₹${Math.round(val)}`;
+}
+
+/** Dine-in vs delivery vs takeaway for distribution donut */
+function orderChannel(o: Record<string, unknown>): 'dine' | 'delivery' | 'takeaway' {
+  const raw = String(o.orderType ?? o.order_type ?? '').toLowerCase();
+  if (raw.includes('deliver')) return 'delivery';
+  if (raw.includes('take') || raw.includes('pickup') || raw.includes('parcel')) return 'takeaway';
+  if (raw.includes('dine')) return 'dine';
+  const table = o.tableId ?? o.table_id;
+  const t = table != null ? String(table).trim() : '';
+  if (t !== '' && t.toLowerCase() !== 'general') return 'dine';
+  return 'delivery';
+}
+
+function isServedOrder(o: { status?: string }) {
+  return ['served', 'completed'].includes(statusNorm(o));
+}
+
+function itemLineRevenue(it: Record<string, unknown>): number {
+  const q = Number(it.quantity ?? 1);
+  const p = parseFloat(String(it.price ?? it.price_at_time ?? 0));
+  return q * p;
+}
+
+function orderStaffId(o: Record<string, unknown>): string | null {
+  const raw = o.staffId ?? o.staff_id ?? o.waiter_id ?? o.handled_by ?? o.server_id;
+  if (raw == null || raw === '') return null;
+  return String(raw);
+}
 
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate();
   const dateInputRef = useRef<HTMLInputElement>(null);
-  const [data, setData] = useState<DashData>({
-    orders: [],
-    tables: [],
-    staff: [],
-    menu: [],
-    stocks: [],
-    branches: [],
-    categories: [],
-  });
+  const [orders, setOrders] = useState<any[]>([]);
+  const [staff, setStaff] = useState<any[]>([]);
+  const [tables, setTables] = useState<any[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
-    const fetchAll = async () => {
+    const load = async () => {
       try {
-        const [
-          tablesRes,
-          menuRes,
-          ordersRes,
-          staffRes,
-          stocksRes,
-          branchesRes,
-          categoriesRes,
-        ] = await Promise.allSettled([
-          axios.get(`${API_BASE_URL}api/tables`),
-          axios.get(`${API_BASE_URL}api/menu`),
+        const [ordersRes, staffRes, tablesRes] = await Promise.allSettled([
           axios.get(`${API_BASE_URL}api/orders`),
           axios.get(`${API_BASE_URL}api/staff`),
-          axios.get(`${API_BASE_URL}api/stocks`),
-          axios.get(`${API_BASE_URL}api/branches`),
-          axios.get(`${API_BASE_URL}api/categories`),
+          axios.get(`${API_BASE_URL}api/tables`),
         ]);
-
-        setData({
-          tables: tablesRes.status === 'fulfilled' ? tablesRes.value.data : [],
-          menu: menuRes.status === 'fulfilled' ? menuRes.value.data : [],
-          orders: ordersRes.status === 'fulfilled' ? ordersRes.value.data : [],
-          staff: staffRes.status === 'fulfilled' ? staffRes.value.data : [],
-          stocks: stocksRes.status === 'fulfilled' ? stocksRes.value.data : [],
-          branches: branchesRes.status === 'fulfilled' ? branchesRes.value.data : [],
-          categories: categoriesRes.status === 'fulfilled' ? categoriesRes.value.data : [],
-        });
+        const oData = ordersRes.status === 'fulfilled' ? ordersRes.value.data : [];
+        const sData = staffRes.status === 'fulfilled' ? staffRes.value.data : [];
+        const tData = tablesRes.status === 'fulfilled' ? tablesRes.value.data : [];
+        setOrders(Array.isArray(oData) ? oData : []);
+        setStaff(Array.isArray(sData) ? sData : []);
+        setTables(Array.isArray(tData) ? tData : []);
       } catch (err) {
         console.error('Dashboard fetch error:', err);
       }
     };
-    fetchAll();
+    void load();
   }, []);
 
-  const today = new Date(selectedDate).toDateString();
-  const todayOrders = data.orders.filter((o) => {
-    const ts = o.timestamp ?? o.created_at;
-    return ts && new Date(ts).toDateString() === today;
+  const tableLabel = (tableId: unknown) => {
+    if (tableId == null || String(tableId).trim() === '') return 'Walk-in';
+    const idStr = String(tableId);
+    if (idStr.toLowerCase() === 'general') return 'General';
+    const t = tables.find((x) => String(x.id) === idStr);
+    return t?.name ? String(t.name) : `Table ${idStr}`;
+  };
+
+  const dayKey = new Date(selectedDate).toDateString();
+  const todayOrders = orders.filter((o) => {
+    const ts = orderTs(o);
+    return ts && new Date(ts).toDateString() === dayKey;
   });
 
-  const orderStats = {
-    total: todayOrders.length,
-    pending: todayOrders.filter((o) => o.status === 'Pending').length,
-    preparing: todayOrders.filter((o) => o.status === 'Preparing').length,
-    ready: todayOrders.filter((o) => o.status === 'Ready').length,
-    served: todayOrders.filter((o) => o.status === 'Served').length,
-    cancelled: todayOrders.filter((o) => o.status === 'Cancelled').length,
-  };
+  const todayOrderCount = todayOrders.length;
 
-  const revenue = todayOrders
-    .filter((o) => o.status === 'Served')
+  const todayEarnings = todayOrders
+    .filter((o) => ['served', 'completed'].includes(statusNorm(o)))
     .reduce((sum, o) => sum + parseFloat(String(o.total ?? o.total_amount ?? 0)), 0);
 
-  const tableStats = {
-    total: data.tables.length,
-    occupied: data.tables.filter((t) => t.status === 'Occupied' || t.is_occupied).length,
-    available: data.tables.filter((t) => t.status === 'Available' || !t.is_occupied).length,
-  };
+  const workingStaff = staff.filter((s) => s.status).length;
 
-  const staffStats = {
-    total: data.staff.length,
-    online: data.staff.filter((s) => s.status).length,
-    busy: Math.max(0, Math.floor(data.staff.filter((s) => s.status).length * 0.7)),
-  };
-
-  const customerCount = new Set(
+  const todayCustomers = new Set(
     todayOrders.map((o) => o.customerName || o.customer_name || o.customer_phone || '')
   ).size;
 
-  const stockStats = {
-    total: data.stocks.length,
-    low: data.stocks.filter((s) => Number(s.quantity) <= Number(s.minThreshold ?? s.min_threshold ?? 0)).length,
-  };
+  const pendingToday = todayOrders.filter((o) => ['pending', 'received'].includes(statusNorm(o))).length;
 
-  const last7Days = useMemo(
-    () =>
-      [...Array(7)].map((_, i) => {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        return d.toDateString();
-      }).reverse(),
-    []
-  );
+  const servedTodayCount = todayOrders.filter((o) => ['served', 'completed'].includes(statusNorm(o))).length;
 
-  const last7DayLabels = useMemo(
-    () =>
-      last7Days.map((d) => {
-        const parts = d.split(' ');
-        return `${parts[1]} ${parts[2]}`;
-      }),
-    [last7Days]
-  );
+  const { last7DayKeys, last7DayLabels } = useMemo(() => {
+    const anchor = new Date(selectedDate + 'T12:00:00');
+    const keys: string[] = [];
+    const labels: string[] = [];
+    for (let i = 6; i >= 0; i -= 1) {
+      const d = new Date(anchor);
+      d.setDate(d.getDate() - i);
+      keys.push(d.toDateString());
+      labels.push(d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase());
+    }
+    return { last7DayKeys: keys, last7DayLabels: labels };
+  }, [selectedDate]);
 
-  const revenueTrend = useMemo(
+  const revenueSeries = useMemo(
     () =>
-      last7Days.map((dateStr) =>
-        data.orders
+      last7DayKeys.map((dateStr) =>
+        orders
           .filter((o) => {
-            const ts = o.timestamp ?? o.created_at;
-            return (
-              ts &&
-              new Date(ts).toDateString() === dateStr &&
-              o.status === 'Served'
-            );
+            const ts = orderTs(o);
+            return ts && new Date(ts).toDateString() === dateStr && ['served', 'completed'].includes(statusNorm(o));
           })
           .reduce((sum, o) => sum + parseFloat(String(o.total ?? o.total_amount ?? 0)), 0)
       ),
-    [data.orders, last7Days]
+    [orders, last7DayKeys]
   );
 
-  const ordersPerDay = useMemo(
-    () =>
-      last7Days.map((dateStr) =>
-        data.orders.filter((o) => {
-          const ts = o.timestamp ?? o.created_at;
-          return ts && new Date(ts).toDateString() === dateStr;
-        }).length
-      ),
-    [data.orders, last7Days]
-  );
+  const distribution = useMemo(() => {
+    let dine = 0;
+    let delivery = 0;
+    let takeaway = 0;
+    for (const o of orders) {
+      const ch = orderChannel(o);
+      if (ch === 'dine') dine += 1;
+      else if (ch === 'takeaway') takeaway += 1;
+      else delivery += 1;
+    }
+    const total = dine + delivery + takeaway;
+    const pct = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
+    return {
+      series: [dine, delivery, takeaway] as number[],
+      total,
+      dine,
+      delivery,
+      takeaway,
+      pctDine: pct(dine),
+      pctDelivery: pct(delivery),
+      pctTakeaway: pct(takeaway),
+    };
+  }, [orders]);
 
-  const statusDistribution = useMemo(
-    () => ({
-      labels: ['Served', 'Preparing', 'Pending', 'Cancelled'],
-      series: [
-        data.orders.filter((o) => o.status === 'Served').length,
-        data.orders.filter((o) => o.status === 'Preparing').length,
-        data.orders.filter((o) => o.status === 'Pending').length,
-        data.orders.filter((o) => o.status === 'Cancelled').length,
-      ],
-    }),
-    [data.orders]
-  );
+  const bestMenu = useMemo(() => {
+    const map = new Map<string, { qty: number; revenue: number }>();
+    for (const o of orders) {
+      if (!isServedOrder(o)) continue;
+      const items = Array.isArray(o.items) ? o.items : [];
+      for (const it of items) {
+        const row = it as Record<string, unknown>;
+        const name = String(row.name ?? row.item_name ?? 'Item').trim();
+        if (!name) continue;
+        const addQty = Number(row.quantity ?? 1);
+        const rev = itemLineRevenue(row);
+        const cur = map.get(name) ?? { qty: 0, revenue: 0 };
+        cur.qty += addQty;
+        cur.revenue += rev;
+        map.set(name, cur);
+      }
+    }
+    return [...map.entries()]
+      .map(([name, v]) => ({ name, ...v }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
+  }, [orders]);
 
-  const avgBillToday =
-    orderStats.total > 0 ? (revenue / orderStats.total).toFixed(1) : '0.0';
+  const bestTables = useMemo(() => {
+    const map = new Map<string, { revenue: number; orders: number; label: string }>();
+    for (const o of orders) {
+      if (!isServedOrder(o)) continue;
+      const tid = o.tableId ?? o.table_id;
+      const key = tid == null || String(tid).trim() === '' ? '__walkin' : String(tid);
+      const label = tableLabel(tid);
+      const total = parseFloat(String(o.total ?? o.total_amount ?? 0));
+      const cur = map.get(key) ?? { revenue: 0, orders: 0, label };
+      cur.revenue += total;
+      cur.orders += 1;
+      cur.label = label;
+      map.set(key, cur);
+    }
+    return [...map.values()].sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+  }, [orders, tables]);
 
-  const recentOrders = useMemo(() => {
-    return [...data.orders]
+  const bestStaff = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const o of orders) {
+      if (!isServedOrder(o)) continue;
+      const sid = orderStaffId(o as Record<string, unknown>);
+      if (!sid) continue;
+      counts.set(sid, (counts.get(sid) ?? 0) + 1);
+    }
+    if (counts.size > 0) {
+      return [...counts.entries()]
+        .map(([id, servedCount]) => {
+          const m = staff.find((s) => String(s.id) === id);
+          return {
+            key: id,
+            name: m?.name ?? `Staff #${id}`,
+            sub: m?.department || m?.role || '—',
+            metric: servedCount,
+            metricLabel: 'Served orders',
+          };
+        })
+        .sort((a, b) => b.metric - a.metric)
+        .slice(0, 5);
+    }
+    return staff
+      .filter((s) => s.status)
       .sort((a, b) => {
-        const bt = b.timestamp ?? b.created_at;
-        const at = a.timestamp ?? a.created_at;
-        return new Date(bt).getTime() - new Date(at).getTime();
+        const da = String(a.department ?? '').toLowerCase();
+        const db = String(b.department ?? '').toLowerCase();
+        if (da.includes('kitchen') !== db.includes('kitchen')) return da.includes('kitchen') ? -1 : 1;
+        return String(a.name).localeCompare(String(b.name));
       })
-      .slice(0, 6);
-  }, [data.orders]);
+      .slice(0, 5)
+      .map((s) => ({
+        key: String(s.id),
+        name: s.name,
+        sub: s.department || s.role || 'Team',
+        metric: null as number | null,
+        metricLabel: 'Active',
+      }));
+  }, [orders, staff]);
 
-  const hasOrderStatusData = useMemo(
-    () => statusDistribution.series.some((n) => n > 0),
-    [statusDistribution.series]
+  const staffHasOrderStats = useMemo(
+    () => orders.some((o) => isServedOrder(o) && orderStaffId(o as Record<string, unknown>)),
+    [orders]
   );
 
   const areaChartOptions: ApexOptions = useMemo(
     () => ({
       chart: { type: 'area', toolbar: { show: false }, zoom: { enabled: false }, fontFamily: 'Inter, sans-serif' },
-      dataLabels: { enabled: false },
-      stroke: { curve: 'smooth', width: 3 },
+      stroke: { curve: 'smooth', width: 2.5 },
       fill: {
         type: 'gradient',
-        gradient: { shadeIntensity: 1, opacityFrom: 0.45, opacityTo: 0.05, stops: [0, 90, 100] },
+        gradient: { shadeIntensity: 1, opacityFrom: 0.42, opacityTo: 0.06, stops: [0, 90, 100] },
       },
+      colors: ['#22c55e'],
+      dataLabels: { enabled: false },
       xaxis: {
         categories: last7DayLabels,
         axisBorder: { show: false },
         axisTicks: { show: false },
-        labels: { style: { colors: '#64748b', fontSize: '11px' } },
+        labels: { style: { colors: '#94a3b8', fontSize: '11px', fontWeight: 600 } },
       },
       yaxis: {
         labels: {
-          formatter: (val: number) => `$${val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val.toFixed(0)}`,
-          style: { colors: '#64748b' },
+          formatter: (val: number) => formatInrCompact(val),
+          style: { colors: '#94a3b8', fontSize: '11px' },
         },
       },
-      grid: { borderColor: 'rgba(45, 92, 254, 0.08)', strokeDashArray: 4 },
-      colors: ['#2d5cfe'],
-      tooltip: { theme: 'light', y: { formatter: (val: number) => `$${val.toFixed(2)}` } },
-    }),
-    [last7DayLabels]
-  );
-
-  const barChartOptions: ApexOptions = useMemo(
-    () => ({
-      chart: { type: 'bar', toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
-      plotOptions: {
-        bar: { borderRadius: 10, columnWidth: '58%', dataLabels: { position: 'top' } },
-      },
-      dataLabels: {
-        enabled: true,
-        formatter: (val: number) => (val ? String(val) : ''),
-        offsetY: -18,
-        style: { fontSize: '11px', colors: ['#1e3a8a'] },
-      },
-      xaxis: {
-        categories: last7DayLabels,
-        axisBorder: { show: false },
-        labels: { style: { colors: '#64748b', fontSize: '11px' } },
-      },
-      yaxis: { labels: { style: { colors: '#64748b' } } },
-      grid: { borderColor: 'rgba(45, 92, 254, 0.06)', strokeDashArray: 4 },
-      colors: ['#5b7cff'],
-      tooltip: { y: { formatter: (val: number) => `${val} orders` } },
+      grid: { borderColor: '#f1f5f9', strokeDashArray: 4, padding: { left: 8, right: 8 } },
+      tooltip: { theme: 'light', y: { formatter: (val: number) => inrFull.format(val) } },
     }),
     [last7DayLabels]
   );
 
   const donutChartOptions: ApexOptions = useMemo(
     () => ({
-      labels: statusDistribution.labels,
-      colors: ['#10b981', '#f59e0b', '#6366f1', '#f43f5e'],
+      labels: ['Dine-in', 'Delivery', 'Takeaway'],
+      colors: ['#22c55e', '#f97316', '#3b82f6'],
       chart: { type: 'donut', fontFamily: 'Inter, sans-serif' },
       plotOptions: {
         pie: {
@@ -263,58 +308,39 @@ const Dashboard: React.FC = () => {
             size: '72%',
             labels: {
               show: true,
+              name: { show: false },
+              value: { show: false },
               total: {
                 show: true,
-                label: 'Orders',
-                fontSize: '13px',
-                fontWeight: 600,
-                formatter: () => String(data.orders.length),
+                showAlways: true,
+                label: 'TOTAL',
+                fontSize: '11px',
+                fontWeight: 700,
+                color: '#94a3b8',
+                formatter: () => distribution.total.toLocaleString('en-IN'),
               },
             },
           },
         },
       },
       dataLabels: { enabled: false },
-      legend: { position: 'bottom', fontSize: '12px', fontWeight: 500 },
-      stroke: { show: false },
+      legend: { show: false },
+      stroke: { width: 0 },
       tooltip: { y: { formatter: (val: number) => `${val} orders` } },
     }),
-    [statusDistribution.labels, data.orders.length]
+    [distribution]
   );
 
-  const sparklineOpts = (color: string): ApexOptions => ({
-    chart: { type: 'area', sparkline: { enabled: true }, animations: { enabled: true } },
-    stroke: { curve: 'smooth', width: 2 },
-    fill: { type: 'gradient', gradient: { shadeIntensity: 0.8, opacityFrom: 0.35, opacityTo: 0.05 } },
-    colors: [color],
-    tooltip: { enabled: true, fixed: { enabled: false } },
-  });
+  const revenueData = revenueSeries.length ? revenueSeries : [0, 0, 0, 0, 0, 0, 0];
 
   return (
-    <div className="dash-page">
-      {/* ── Welcome strip ───────────────────────────────── */}
-      <div className="dash-welcome">
-        <div>
-          <h1 className="dash-welcome__title">Restaurant overview</h1>
-          <p className="dash-welcome__sub">
-            Track sales, operations, and kitchen flow in one place. Data refreshes when you load this page.
-          </p>
-        </div>
-        <div className="dash-welcome__pill">
-          <span className="dash-welcome__dot" aria-hidden />
-          Live workspace
-        </div>
-      </div>
-
-      {/* ── Today's Summary ───────────────────────────────── */}
-      <div className="section-title">
-        {selectedDate === new Date().toISOString().split('T')[0]
-          ? "Today's Summary"
-          : 'Daily Summary'}
-        <div className="date-picker-container">
-          <button
-            type="button"
-            className="date-display-wrap"
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <PageHeader title="Dashboard" description="Real-time overview of your restaurant" icon={LayoutDashboard} />
+        <div className="relative shrink-0">
+          <Button
+            variant="outline"
+            className="gap-2"
             onClick={() => {
               const el = dateInputRef.current;
               if (el && typeof (el as HTMLInputElement & { showPicker?: () => void }).showPicker === 'function') {
@@ -324,320 +350,121 @@ const Dashboard: React.FC = () => {
               }
             }}
           >
-            <Calendar size={16} className="date-icon" />
-            <span className="section-date">
-              {new Date(selectedDate).toLocaleDateString('en-US', {
-                weekday: 'short',
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-              })}
-            </span>
-          </button>
+            <Calendar className="h-4 w-4" />
+            {new Date(selectedDate).toLocaleDateString('en-IN', {
+              weekday: 'short',
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+            })}
+          </Button>
           <input
             ref={dateInputRef}
-            id="dash-date-picker"
             type="date"
-            className="hidden-date-input"
+            className="absolute inset-0 opacity-0 pointer-events-none"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
             tabIndex={-1}
           />
         </div>
       </div>
-      <div className="dash-main-grid four-col">
-        <div className="stat-card">
-          <div className="stat-icon-wrap purple">
-            <ShoppingBag size={24} />
-          </div>
-          <div className="stat-content">
-            <span className="stat-label">Today Orders</span>
-            <div className="stat-value">{String(orderStats.total).padStart(2, '0')}</div>
-            <span className="stat-trend positive">+{orderStats.pending} pending</span>
-          </div>
-        </div>
 
-        <div className="stat-card">
-          <div className="stat-icon-wrap green">
-            <DollarSign size={24} />
-          </div>
-          <div className="stat-content">
-            <span className="stat-label">Today Earnings</span>
-            <div className="stat-value">${revenue.toLocaleString()}</div>
-            <span className="stat-trend positive">Average bill: ${avgBillToday}</span>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon-wrap blue">
-            <Users size={24} />
-          </div>
-          <div className="stat-content">
-            <span className="stat-label">Working Staff</span>
-            <div className="stat-value">{String(staffStats.online).padStart(2, '0')}</div>
-            <span className="stat-trend">{staffStats.busy} active now</span>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon-wrap amber">
-            <TrendingUp size={24} />
-          </div>
-          <div className="stat-content">
-            <span className="stat-label">Today Customers</span>
-            <div className="stat-value">{String(customerCount).padStart(2, '0')}</div>
-            <span className="stat-trend positive">Unique visitors</span>
-          </div>
-        </div>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+        <StatCard title="Today Orders" value={todayOrderCount} icon={ShoppingBag} />
+        <StatCard title="Today Earnings" value={todayEarnings} prefix="currency" icon={IndianRupee} />
+        <StatCard title="Working Staff" value={workingStaff} icon={Users} />
+        <StatCard title="Today Customers" value={todayCustomers} icon={TrendingUp} />
+        <StatCard title="Pending Today" value={pendingToday} icon={Clock} />
+        <StatCard title="Served Today" value={servedTodayCount} icon={CheckCircle} />
       </div>
 
-      {/* ── Apex: Revenue (full width) ───────────────────── */}
-      <div className="section-title section-title--compact">Revenue trend</div>
-      <div className="chart-card chart-card--featured">
-        <div className="chart-header">
-          <div className="chart-title-wrap">
-            <span className="chart-label">Last 7 days</span>
-            <span className="chart-main-val">
-              ${revenueTrend.reduce((a, b) => a + b, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-            </span>
-            <span className="chart-sub">Served orders total · ApexCharts area</span>
-          </div>
-          <div className="chart-header-spark">
-            <Chart
-              options={sparklineOpts('#2d5cfe')}
-              series={[{ name: 'r', data: revenueTrend.length ? revenueTrend : [0, 0, 0] }]}
-              type="area"
-              height={48}
-              width={120}
-            />
-          </div>
-        </div>
-        <div className="chart-body chart-body--tall">
-          <Chart
-            options={areaChartOptions}
-            series={[{ name: 'Revenue', data: revenueTrend.length ? revenueTrend : [0, 0, 0, 0, 0, 0, 0] }]}
-            type="area"
-            height={300}
-          />
-        </div>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div>
+              <CardTitle className="text-base">Daily Sales Revenue</CardTitle>
+              <CardDescription>Last 7 days performance</CardDescription>
+            </div>
+            <Badge variant="success">Revenue</Badge>
+          </CardHeader>
+          <CardContent>
+            <Chart options={areaChartOptions} series={[{ name: 'Revenue', data: revenueData }]} type="area" height={280} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Order Distribution</CardTitle>
+            <CardDescription>Dine-in · Delivery · Takeaway</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {distribution.total > 0 ? (
+              <>
+                <Chart options={donutChartOptions} series={distribution.series} type="donut" height={220} />
+                <div className="mt-4 space-y-2">
+                  {[
+                    { label: 'Dine-in', pct: distribution.pctDine, color: 'bg-success' },
+                    { label: 'Delivery', pct: distribution.pctDelivery, color: 'bg-warning' },
+                    { label: 'Takeaway', pct: distribution.pctTakeaway, color: 'bg-primary' },
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className={`h-2.5 w-2.5 rounded-full ${item.color}`} />
+                        {item.label}
+                      </div>
+                      <span className="font-semibold">{item.pct}%</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="py-12 text-center text-sm text-muted-foreground">No orders yet</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      {/* ── Operations ─────────────────────────────────────── */}
-      <div className="section-title">Operations Overview</div>
-      <div className="dash-main-grid three-col">
-        <div className="metric-card">
-          <div className="card-header">
-            <div className="card-icon-round blue">
-              <Package size={20} />
-            </div>
-            <div className="card-title-area">
-              <span className="card-title">Inventory Stocks</span>
-              <span className="card-subtitle">{stockStats.total} Items tracked</span>
-            </div>
-            <div className="card-main-num blue" style={{ marginLeft: 'auto' }}>
-              {String(stockStats.low).padStart(2, '0')}
-            </div>
-          </div>
-          <div className="card-subgrid">
-            <div className="subgrid-item">
-              <div className="subgrid-label">Low Stock</div>
-              <div className="subgrid-value" style={{ color: 'var(--accent-red)' }}>
-                {stockStats.low}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {[
+          { title: 'Best selling menu', sub: 'By line revenue', icon: Utensils, rows: bestMenu, render: (row: { name: string; qty: number; revenue: number }) => ({ main: row.name, meta: `${row.qty} sold`, value: inrFull.format(row.revenue) }) },
+          { title: 'Best sale tables', sub: 'By bill total', icon: LayoutGrid, rows: bestTables, render: (row: { label: string; orders: number; revenue: number }) => ({ main: row.label, meta: `${row.orders} bills`, value: inrFull.format(row.revenue) }) },
+          { title: 'Best staff', sub: staffHasOrderStats ? 'By served orders' : 'Active team', icon: Award, rows: bestStaff, render: (row: { name: string; sub: string; metric: number | null; metricLabel: string }) => ({ main: row.name, meta: row.sub, value: row.metric != null ? String(row.metric) : row.metricLabel }) },
+        ].map((section) => (
+          <Card key={section.title}>
+            <CardHeader className="flex flex-row items-start gap-3 space-y-0">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <section.icon className="h-4 w-4 text-primary" />
               </div>
-            </div>
-            <div className="subgrid-item">
-              <div className="subgrid-label">In Stock</div>
-              <div className="subgrid-value">{Math.max(0, stockStats.total - stockStats.low)}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="metric-card">
-          <div className="card-header">
-            <div className="card-icon-round green">
-              <Utensils size={20} />
-            </div>
-            <div className="card-title-area">
-              <span className="card-title">Kitchen Status</span>
-              <span className="card-subtitle">Active Preparations</span>
-            </div>
-            <div className="card-main-num green" style={{ marginLeft: 'auto' }}>
-              {String(orderStats.preparing).padStart(2, '0')}
-            </div>
-          </div>
-          <div className="card-subgrid">
-            <div className="subgrid-item">
-              <div className="subgrid-label">Preparing</div>
-              <div className="subgrid-value">{orderStats.preparing}</div>
-            </div>
-            <div className="subgrid-item">
-              <div className="subgrid-label">Ready</div>
-              <div className="subgrid-value">{orderStats.ready}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="metric-card">
-          <div className="card-header">
-            <div className="card-icon-round orange">
-              <Grid size={20} />
-            </div>
-            <div className="card-title-area">
-              <span className="card-title">Dining Areas</span>
-              <span className="card-subtitle">{tableStats.total} Tables total</span>
-            </div>
-            <div className="card-main-num orange" style={{ marginLeft: 'auto' }}>
-              {String(tableStats.occupied).padStart(2, '0')}
-            </div>
-          </div>
-          <div className="card-subgrid">
-            <div className="subgrid-item">
-              <div className="subgrid-label">Occupied</div>
-              <div className="subgrid-value">{tableStats.occupied}</div>
-            </div>
-            <div className="subgrid-item">
-              <div className="subgrid-label">Available</div>
-              <div className="subgrid-value">{tableStats.available}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Business insights (extra content) ──────────────── */}
-      <div className="section-title">Business snapshot</div>
-      <div className="dash-main-grid four-col dash-insights">
-        <div className="insight-tile">
-          <ChefHat size={22} className="insight-tile__icon" />
-          <div className="insight-tile__meta">
-            <span className="insight-tile__label">Menu items</span>
-            <span className="insight-tile__val">{data.menu.length}</span>
-            <span className="insight-tile__hint">Dishes &amp; drinks listed</span>
-          </div>
-        </div>
-        <div className="insight-tile">
-          <Store size={22} className="insight-tile__icon" />
-          <div className="insight-tile__meta">
-            <span className="insight-tile__label">Branches</span>
-            <span className="insight-tile__val">{data.branches.length}</span>
-            <span className="insight-tile__hint">Locations on file</span>
-          </div>
-        </div>
-        <div className="insight-tile">
-          <Tags size={22} className="insight-tile__icon" />
-          <div className="insight-tile__meta">
-            <span className="insight-tile__label">Categories</span>
-            <span className="insight-tile__val">{data.categories.length}</span>
-            <span className="insight-tile__hint">Menu organization</span>
-          </div>
-        </div>
-        <div className="insight-tile">
-          <ShoppingBag size={22} className="insight-tile__icon" />
-          <div className="insight-tile__meta">
-            <span className="insight-tile__label">Lifetime orders</span>
-            <span className="insight-tile__val">{data.orders.length}</span>
-            <span className="insight-tile__hint">All time in system</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Apex: Orders volume + Distribution ───────────── */}
-      <div className="section-title">Analytics &amp; distribution</div>
-      <div className="analytics-grid analytics-grid--triple">
-        <div className="chart-card">
-          <div className="chart-header">
-            <div className="chart-title-wrap">
-              <span className="chart-label">Order volume</span>
-              <span className="chart-main-val">
-                {ordersPerDay.reduce((a, b) => a + b, 0)}
-              </span>
-              <span className="chart-sub">Orders per day · last 7 days · ApexCharts column</span>
-            </div>
-          </div>
-          <div className="chart-body">
-            <Chart
-              options={barChartOptions}
-              series={[{ name: 'Orders', data: ordersPerDay.length ? ordersPerDay : [0, 0, 0, 0, 0, 0, 0] }]}
-              type="bar"
-              height={300}
-            />
-          </div>
-        </div>
-
-        <div className="chart-card">
-          <div className="chart-header">
-            <div className="chart-title-wrap">
-              <span className="chart-label">Order status mix</span>
-              <span className="chart-main-val">{data.orders.length}</span>
-              <span className="chart-sub">All orders · ApexCharts donut</span>
-            </div>
-          </div>
-          <div className="chart-body chart-body--donut">
-            {hasOrderStatusData ? (
-              <Chart
-                options={donutChartOptions}
-                series={statusDistribution.series}
-                type="donut"
-                height={300}
-              />
-            ) : (
-              <div className="chart-empty">No order status data yet — place or update orders to see the mix.</div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Recent orders table ───────────────────────────── */}
-      <div className="section-title">Recent orders</div>
-      <div className="recent-orders-card">
-        <table className="recent-orders-table">
-          <thead>
-            <tr>
-              <th>When</th>
-              <th>Order</th>
-              <th>Status</th>
-              <th className="text-end">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {recentOrders.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="recent-orders-empty">
-                  No orders yet — new orders will appear here.
-                </td>
-              </tr>
-            ) : (
-              recentOrders.map((o) => (
-                <tr key={o.id ?? `${o.timestamp ?? o.created_at}-${o.customerName}`}>
-                  <td className="recent-orders-muted">
-                    {new Date(o.timestamp ?? o.created_at).toLocaleString(undefined, {
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </td>
-                  <td>
-                    <span className="recent-orders-id">#{o.id ?? '—'}</span>
-                    <span className="recent-orders-phone">
-                      {o.customerName || o.customer_name || o.customer_phone || 'Walk-in'}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`order-pill order-pill--${(o.status || 'pending').toLowerCase()}`}>
-                      {o.status || '—'}
-                    </span>
-                  </td>
-                  <td className="text-end recent-orders-total">
-                    ${parseFloat(String(o.total ?? o.total_amount ?? 0)).toFixed(2)}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-        <button type="button" className="recent-orders-footer" onClick={() => navigate('/admin/orders')}>
-          View all orders <ArrowRight size={16} />
-        </button>
+              <div>
+                <CardTitle className="text-base">{section.title}</CardTitle>
+                <CardDescription>{section.sub}</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {section.rows.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">No data yet</p>
+              ) : (
+                <ol className="space-y-2">
+                  {section.rows.map((row, idx) => {
+                    const r = section.render(row as never);
+                    return (
+                      <li key={idx} className="flex items-center gap-3 rounded-lg border border-border/60 px-3 py-2.5 hover:bg-muted/40 transition-colors">
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-bold text-muted-foreground">
+                          {idx + 1}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">{r.main}</p>
+                          <p className="text-xs text-muted-foreground">{r.meta}</p>
+                        </div>
+                        <span className="shrink-0 text-sm font-semibold text-primary">{r.value}</span>
+                      </li>
+                    );
+                  })}
+                </ol>
+              )}
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );

@@ -1,11 +1,20 @@
-import React from 'react';
+import type { ReactNode } from 'react';
 import CommonPagination from './CommonPagination';
 import type { CommonPaginationProps } from './CommonPagination';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 
 interface Column {
   key: string;
   header: string;
-  render?: (row: any, index: number) => React.ReactNode;
+  render?: (row: any, index: number) => ReactNode;
   align?: 'left' | 'center' | 'right';
 }
 
@@ -13,10 +22,12 @@ interface CommonTableProps {
   columns: Column[];
   data: any[];
   emptyMessage?: string;
-  /** When set, replaces the plain empty message (e.g. illustration + caption). */
-  emptySlot?: React.ReactNode;
+  emptySlot?: ReactNode;
   pagination?: CommonPaginationProps;
 }
+
+const alignClass = (align?: 'left' | 'center' | 'right') =>
+  align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
 
 const CommonTable: React.FC<CommonTableProps> = ({
   columns,
@@ -26,44 +37,38 @@ const CommonTable: React.FC<CommonTableProps> = ({
   pagination,
 }) => {
   return (
-    <div className="table-wrapper">
-      <table className="premium-dark-table m-0">
-        <thead className="sticky-top z-2">
-          <tr className='text-nowrap'>
-            {columns.map((col, idx) => (
-              <th 
-                key={idx} 
-                className={`text-${col.align === 'center' ? 'center' : col.align === 'right' ? 'end' : 'start'} ${idx === 0 ? 'ps-5' : ''}`}
-              >
+    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-card)]">
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-muted/40 hover:bg-muted/40">
+            {columns.map((col) => (
+              <TableHead key={col.key} className={cn('font-semibold text-xs uppercase tracking-wide', alignClass(col.align))}>
                 {col.header}
-              </th>
+              </TableHead>
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.length > 0 ? data.map((row, rowIndex) => (
-            <tr key={row.id || rowIndex}>
-              {columns.map((col, colIndex) => (
-                <td 
-                  key={colIndex} 
-                  className={`text-${col.align === 'center' ? 'center' : col.align === 'right' ? 'end' : 'start'} ${colIndex === 0 ? 'ps-5' : ''}`}
-                >
-                  {col.render ? col.render(row, rowIndex) : row[col.key]}
-                </td>
-              ))}
-            </tr>
-          )) : (
-            <tr className="empty-row">
-              <td colSpan={columns.length}>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.length > 0 ? (
+            data.map((row, rowIndex) => (
+              <TableRow key={String(row.id ?? rowIndex)} className="group">
+                {columns.map((col) => (
+                  <TableCell key={col.key} className={alignClass(col.align)}>
+                    {col.render ? col.render(row, rowIndex) : String(row[col.key] ?? '—')}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground">
                 {emptySlot ?? emptyMessage}
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           )}
-        </tbody>
-      </table>
-      {pagination && (
-        <CommonPagination {...pagination} />
-      )}
+        </TableBody>
+      </Table>
+      {pagination && <CommonPagination {...pagination} />}
     </div>
   );
 };

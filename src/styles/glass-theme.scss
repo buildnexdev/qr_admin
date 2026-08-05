@@ -1,0 +1,561 @@
+/* Facit Modern — Glass UI theme for NammaQr */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+
+/* ── Design tokens ───────────────────────────────────────── */
+:root {
+  --glass-page: #e7eef8;
+  --glass-surface: rgba(255, 255, 255, 0.72);
+  --glass-surface-solid: #ffffff;
+  --glass-sidebar: #1f2128;
+  --glass-sidebar-hover: rgba(255, 255, 255, 0.08);
+  --glass-sidebar-active: #2d5cfe;
+  --glass-blur: 12px;
+  --glass-radius: 1rem;
+  --glass-radius-lg: 1.25rem;
+  --glass-shadow: 0 1.6rem 3rem rgba(15, 23, 42, 0.08);
+  --glass-shadow-sm: 0 0.5rem 1.5rem rgba(15, 23, 42, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.45);
+  --glass-line: rgba(15, 23, 42, 0.08);
+  --glass-ink: #1f2128;
+  --glass-muted: #808191;
+  --glass-primary: #2d5cfe;
+  --glass-primary-soft: rgba(45, 92, 254, 0.12);
+  --glass-success: #46bcaa;
+  --glass-header-h: 4.25rem;
+  --glass-aside-w: 15rem;
+  --glass-aside-mini: 4.5rem;
+  --glass-gap: 1rem;
+}
+
+html[data-theme='dark'] {
+  --glass-page: #14161c;
+  --glass-surface: rgba(36, 39, 49, 0.75);
+  --glass-surface-solid: #242731;
+  --glass-sidebar: #0d0f14;
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-line: rgba(255, 255, 255, 0.08);
+  --glass-ink: #e7eef8;
+  --glass-muted: #9ca3af;
+  --glass-shadow: 0 1.6rem 3rem rgba(0, 0, 0, 0.35);
+  --glass-shadow-sm: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.25);
+}
+
+/* ── Glass utility classes ───────────────────────────────── */
+.glass-card {
+  background: var(--glass-surface);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-lg);
+  box-shadow: var(--glass-shadow-sm);
+}
+
+.glass-panel {
+  background: var(--glass-surface);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border: 1px solid var(--glass-line);
+  background: var(--glass-surface-solid);
+  color: var(--glass-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--glass-primary);
+    color: var(--glass-primary);
+  }
+
+  &.active {
+    background: var(--glass-success);
+    border-color: var(--glass-success);
+    color: #fff;
+  }
+}
+
+/* ── Modern design shell (Facit floating layout) ─────────── */
+body.modern-design {
+  font-family: 'Poppins', system-ui, sans-serif;
+  background: var(--glass-page) !important;
+}
+
+body.modern-design::before {
+  background:
+    radial-gradient(ellipse 55% 45% at 10% 15%, rgba(45, 92, 254, 0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 50% at 90% 85%, rgba(70, 188, 170, 0.05) 0%, transparent 72%),
+    linear-gradient(180deg, var(--glass-page) 0%, #f1f5fb 100%) !important;
+}
+
+.admin-layout-root.modern-design {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  overflow: hidden;
+  background: transparent;
+  padding: var(--glass-gap);
+  gap: var(--glass-gap);
+  box-sizing: border-box;
+}
+
+.admin-layout-root.modern-design.setup-mode {
+  flex-direction: column;
+  padding: 0;
+}
+
+.admin-layout-root.modern-design.setup-mode .admin-wrapper {
+  margin: 0;
+  border-radius: 0;
+}
+
+/* ── Sidebar (Facit dark glass aside) ────────────────────── */
+.admin-layout-root.modern-design .sidebar-container {
+  position: relative;
+  top: auto;
+  bottom: auto;
+  left: auto;
+  flex-shrink: 0;
+  width: var(--glass-aside-w);
+  transform: none !important;
+  pointer-events: auto !important;
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
+  border-right: none;
+  background: var(--glass-sidebar);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width 0.25s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1035;
+}
+
+.admin-layout-root.modern-design.sidebar-mini .sidebar-container {
+  width: var(--glass-aside-mini);
+}
+
+.admin-layout-root.modern-design .aside-head {
+  padding: 1rem 0.85rem 0.75rem;
+  flex-shrink: 0;
+}
+
+.admin-layout-root.modern-design .aside-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.admin-layout-root.modern-design .aside-brand-mark {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.65rem;
+  background: linear-gradient(135deg, #2d5cfe 0%, #5b7cff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(45, 92, 254, 0.35);
+}
+
+.admin-layout-root.modern-design .aside-brand-text {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  span {
+    color: #5b7cff;
+  }
+}
+
+.admin-layout-root.modern-design.sidebar-mini .aside-brand-text,
+.admin-layout-root.modern-design.sidebar-mini .nav-label,
+.admin-layout-root.modern-design.sidebar-mini .sidebar-nav-link span,
+.admin-layout-root.modern-design.sidebar-mini .aside-user-info {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.admin-layout-root.modern-design .aside-collapse-btn {
+  margin-left: auto;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+  }
+}
+
+.admin-layout-root.modern-design .sidebar-nav {
+  padding: 0.5rem 0.65rem;
+  gap: 2px;
+}
+
+.admin-layout-root.modern-design .sidebar-nav > .nav-label {
+  display: block;
+  padding: 0.85rem 0.75rem 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.38) !important;
+}
+
+.admin-layout-root.modern-design .sidebar-nav .sidebar-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.75rem;
+  color: rgba(255, 255, 255, 0.72);
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap;
+
+  svg {
+    flex-shrink: 0;
+    opacity: 0.85;
+  }
+
+  &:hover {
+    background: var(--glass-sidebar-hover);
+    color: #fff;
+  }
+
+  &.sidebar-nav-link--active {
+    background: var(--glass-sidebar-active);
+    color: #fff !important;
+    box-shadow: 0 6px 20px rgba(45, 92, 254, 0.35);
+  }
+}
+
+.admin-layout-root.modern-design .aside-foot {
+  margin-top: auto;
+  padding: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.admin-layout-root.modern-design .aside-user {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: var(--glass-sidebar-hover);
+  }
+}
+
+.admin-layout-root.modern-design .aside-user-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.65rem;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.1);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.admin-layout-root.modern-design .aside-user-info {
+  min-width: 0;
+  transition: opacity 0.2s;
+}
+
+.admin-layout-root.modern-design .aside-user-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-layout-root.modern-design .aside-user-role {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* ── Content wrapper ─────────────────────────────────────── */
+.admin-layout-root.modern-design .admin-wrapper {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--glass-radius);
+}
+
+/* ── Glass header ────────────────────────────────────────── */
+.admin-layout-root.modern-design .admin-top-header {
+  height: var(--glass-header-h);
+  min-height: var(--glass-header-h);
+  flex-shrink: 0;
+  background: var(--glass-surface);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow-sm);
+  padding: 0 1.25rem;
+  margin-bottom: var(--glass-gap);
+  border-bottom: none;
+}
+
+.admin-layout-root.modern-design .header-search-wrap {
+  flex: 1;
+  max-width: 22rem;
+  margin: 0 1.5rem;
+  position: relative;
+}
+
+.admin-layout-root.modern-design .header-search-input {
+  width: 100%;
+  height: 2.5rem;
+  padding: 0 1rem 0 2.5rem;
+  border-radius: 2rem;
+  border: 1px solid var(--glass-line);
+  background: rgba(255, 255, 255, 0.6);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  color: var(--glass-ink);
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s;
+
+  &::placeholder {
+    color: var(--glass-muted);
+  }
+
+  &:focus {
+    border-color: var(--glass-primary);
+    box-shadow: 0 0 0 3px var(--glass-primary-soft);
+  }
+}
+
+html[data-theme='dark'] .admin-layout-root.modern-design .header-search-input {
+  background: rgba(0, 0, 0, 0.2);
+  border-color: var(--glass-line);
+  color: var(--glass-ink);
+}
+
+.admin-layout-root.modern-design .header-search-icon {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--glass-primary);
+  pointer-events: none;
+}
+
+.admin-layout-root.modern-design .header-action-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.65rem;
+  border: 1px solid var(--glass-line);
+  background: var(--glass-surface-solid);
+  color: var(--glass-muted);
+  transition: all 0.2s;
+
+  &:hover {
+    background: var(--glass-primary-soft);
+    color: var(--glass-primary);
+    border-color: rgba(45, 92, 254, 0.25);
+  }
+}
+
+.admin-layout-root.modern-design .header-profile-btn {
+  background: var(--glass-surface-solid);
+  border: 1px solid var(--glass-line);
+  border-radius: 2rem;
+  padding: 0.25rem 0.85rem 0.25rem 0.25rem;
+}
+
+.admin-layout-root.modern-design .profile-name {
+  color: var(--glass-ink);
+  font-weight: 600;
+  font-size: 0.8125rem;
+}
+
+.admin-layout-root.modern-design .profile-role {
+  color: var(--glass-muted);
+  font-size: 0.7rem;
+}
+
+.admin-layout-root.modern-design .header-logo .logo-text {
+  font-family: 'Poppins', sans-serif;
+  color: var(--glass-ink);
+}
+
+.admin-layout-root.modern-design .nav-toggle-btn {
+  background: var(--glass-primary-soft);
+  border-color: rgba(45, 92, 254, 0.2);
+  color: var(--glass-primary);
+}
+
+/* ── Content area ────────────────────────────────────────── */
+.admin-layout-root.modern-design .admin-content-area {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+}
+
+.admin-layout-root.modern-design .page-scroll-container {
+  padding: 0 0.25rem 0.25rem;
+  gap: var(--glass-gap);
+}
+
+@media (min-width: 1024px) {
+  .admin-layout-root.modern-design .page-scroll-container {
+    padding: 0;
+  }
+}
+
+.admin-layout-root.modern-design .admin-default-footer {
+  background: var(--glass-surface);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  margin-top: var(--glass-gap);
+  padding: 0.75rem 1.25rem;
+  color: var(--glass-muted);
+  font-size: 0.75rem;
+}
+
+/* ── Page-level glass cards ──────────────────────────────── */
+.admin-layout-root.modern-design .common-sub-header,
+.admin-layout-root.modern-design .common-header {
+  background: var(--glass-surface) !important;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--glass-radius-lg) !important;
+  box-shadow: var(--glass-shadow-sm) !important;
+}
+
+.admin-layout-root.modern-design .table-wrapper,
+.admin-layout-root.modern-design .glass-table-wrap {
+  background: var(--glass-surface);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-lg);
+  box-shadow: var(--glass-shadow-sm);
+  overflow: hidden;
+}
+
+/* ── Dashboard glass overrides ───────────────────────────── */
+.admin-layout-root.modern-design .dash-page {
+  background: transparent;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+.admin-layout-root.modern-design .dash-minimal__cell,
+.admin-layout-root.modern-design .dash-card,
+.admin-layout-root.modern-design .dash-stat-card,
+.admin-layout-root.modern-design .dash-chart-card {
+  background: var(--glass-surface) !important;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--glass-radius-lg) !important;
+  box-shadow: var(--glass-shadow-sm) !important;
+}
+
+/* ── Mobile: overlay drawer ──────────────────────────────── */
+@media (max-width: 1023px) {
+  .admin-layout-root.modern-design {
+    flex-direction: column;
+    padding: 0;
+    gap: 0;
+  }
+
+  .admin-layout-root.modern-design .sidebar-container {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1050;
+    transform: translateX(-100%) !important;
+    border-radius: 0 var(--glass-radius) var(--glass-radius) 0;
+    width: min(280px, 85vw) !important;
+  }
+
+  .admin-layout-root.modern-design.sidebar-open .sidebar-container {
+    transform: translateX(0) !important;
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.2);
+  }
+
+  .admin-layout-root.modern-design .admin-wrapper {
+    border-radius: 0;
+    margin: 0;
+  }
+
+  .admin-layout-root.modern-design .admin-top-header {
+    border-radius: 0;
+    margin-bottom: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+  }
+
+  .admin-layout-root.modern-design .header-search-wrap {
+    display: none;
+  }
+
+  .admin-layout-root.modern-design .page-scroll-container {
+    padding: 0.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .admin-layout-root.modern-design .sidebar-overlay {
+    display: none !important;
+  }
+
+  .admin-layout-root.modern-design .nav-toggle-btn {
+    display: none;
+  }
+}

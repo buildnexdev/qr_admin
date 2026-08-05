@@ -24,7 +24,7 @@ const Orders: React.FC = () => {
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/orders`);
+      const res = await axios.get(`${API_BASE_URL}api/orders`);
       dispatch(setOrders(res.data.reverse()));
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -33,7 +33,7 @@ const Orders: React.FC = () => {
 
   const updateOrderStatus = async (orderId: number, status: string) => {
     try {
-      await axios.post(`${API_BASE_URL}/orders/update-status`, { orderId, status });
+      await axios.post(`${API_BASE_URL}api/orders/update-status`, { orderId, status });
       fetchOrders();
     } catch (error) {
       alert('Failed to update status');

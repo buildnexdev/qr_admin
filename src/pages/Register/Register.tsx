@@ -1,290 +1,182 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import axios from 'axios';
-import { Building2, User, Mail, Phone, MapPin, FileText, Loader2, ArrowLeft, QrCode } from 'lucide-react';
-import { triggerToast } from '../../components/common/CommonAlert';
-import { getApiErrorMessage } from '../../utils/apiError';
-import '../Login/loginAuth.scss';
-import { API_BASE_URL } from '../../routes/const';
+import { motion } from 'framer-motion';
+import { Building2, User, Mail, Phone, MapPin, FileText, Loader2, QrCode, ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
+import { getApiErrorMessage } from '@/utils/apiError';
+import { API_BASE_URL } from '@/routes/const';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
+const registerSchema = z.object({
+  restaurantName: z.string().min(2, 'Restaurant name is required'),
+  contactName: z.string().min(2, 'Contact name is required'),
+  email: z.string().email('Enter a valid email'),
+  phone: z.string().regex(/^\d{10}$/, 'Enter exactly 10 digits'),
+  city: z.string().optional(),
+  message: z.string().optional(),
+});
 
+type RegisterForm = z.infer<typeof registerSchema>;
 
-/** Matches backend `registerController` email check */
-const EMAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function validateEmail(value: string): string | undefined {
-  const t = value.trim();
-  if (!t) return 'Email is required';
-  if (!EMAIL_RX.test(t)) return 'Enter a valid email address';
-  return undefined;
-}
-
-function phoneDigitsOnly(value: string): string {
-  return value.replace(/\D/g, '');
-}
-
-function validatePhone(value: string): string | undefined {
-  const t = value.trim();
-  if (!t) return 'Phone is required';
-  const digits = phoneDigitsOnly(t);
-  if (digits.length !== 10) return 'Enter exactly 10 digits (mobile number)';
-  return undefined;
-}
-
-const FOOD_PARTICLES = [
-  { emoji: '🍕', size: 38, x: 8, y: 12, duration: 14, delay: 0 },
-  { emoji: '🍔', size: 32, x: 80, y: 22, duration: 18, delay: 2 },
-  { emoji: '🌮', size: 28, x: 20, y: 70, duration: 16, delay: 4 },
-  { emoji: '🍜', size: 34, x: 70, y: 60, duration: 20, delay: 1 },
-  { emoji: '🍣', size: 30, x: 45, y: 85, duration: 15, delay: 6 },
-  { emoji: '🥗', size: 26, x: 60, y: 8, duration: 17, delay: 3 },
-  { emoji: '🍰', size: 30, x: 88, y: 78, duration: 13, delay: 5 },
-  { emoji: '🍷', size: 24, x: 5, y: 45, duration: 19, delay: 7 },
-  { emoji: '🥩', size: 32, x: 92, y: 40, duration: 22, delay: 8 },
-  { emoji: '🧆', size: 22, x: 35, y: 30, duration: 11, delay: 9 },
-  { emoji: '🍦', size: 26, x: 75, y: 90, duration: 24, delay: 2.5 },
-  { emoji: '🥐', size: 28, x: 15, y: 90, duration: 16, delay: 10 },
-];
-
-const Register: React.FC = () => {
+export default function Register() {
   const [submitting, setSubmitting] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<{ email?: string; phone?: string }>({});
-  const [form, setForm] = useState({
-    restaurantName: '',
-    contactName: '',
-    email: '',
-    phone: '',
-    city: '',
-    message: '',
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<RegisterForm>({
+    resolver: zodResolver(registerSchema),
   });
 
-  const update = (name: keyof typeof form, value: string) => {
-    setForm((prev) => ({ ...prev, [name]: value }));
-    if (name === 'email') setFieldErrors((e) => ({ ...e, email: undefined }));
-    if (name === 'phone') setFieldErrors((e) => ({ ...e, phone: undefined }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const emailErr = validateEmail(form.email);
-    const phoneErr = validatePhone(form.phone);
-    setFieldErrors({ email: emailErr, phone: phoneErr });
-    if (emailErr || phoneErr) {
-      triggerToast('Check your details', 'error', [emailErr, phoneErr].filter(Boolean).join(' · '));
-      return;
-    }
+  const onSubmit = async (data: RegisterForm) => {
     setSubmitting(true);
     try {
-      const { data } = await axios.post<{ message?: string; emailSent?: boolean }>(
-        `${API_BASE_URL}/register`,
+      const { data: res } = await axios.post<{ message?: string; emailSent?: boolean }>(
+        `${API_BASE_URL}api/register`,
         {
-          restaurantName: form.restaurantName.trim(),
-          contactName: form.contactName.trim(),
-          email: form.email.trim(),
-          phone: phoneDigitsOnly(form.phone),
-          message: [form.city.trim() ? `City / area: ${form.city.trim()}` : '', form.message.trim()]
+          restaurantName: data.restaurantName.trim(),
+          contactName: data.contactName.trim(),
+          email: data.email.trim(),
+          phone: data.phone.replace(/\D/g, ''),
+          message: [data.city?.trim() ? `City / area: ${data.city.trim()}` : '', data.message?.trim()]
             .filter(Boolean)
             .join('\n\n'),
         }
       );
-      const subtitle =
-        data?.message ||
-        (data?.emailSent ? 'We will contact you at your email soon.' : 'Your details were saved.');
-      triggerToast(data?.emailSent ? 'Request sent' : 'Registration saved', data?.emailSent ? 'success' : 'warning', subtitle);
-      setFieldErrors({});
-      setForm({
-        restaurantName: '',
-        contactName: '',
-        email: '',
-        phone: '',
-        city: '',
-        message: '',
+      toast.success(res?.emailSent ? 'Request sent!' : 'Registration saved', {
+        description: res?.message ?? 'We will contact you soon.',
       });
+      reset();
     } catch (err) {
-      triggerToast('Could not send', 'error', getApiErrorMessage(err, 'Failed to submit registration'));
+      toast.error('Could not submit', { description: getApiErrorMessage(err, 'Failed to submit registration') });
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
+  const fields = [
+    { name: 'restaurantName' as const, label: 'Restaurant / business name', icon: Building2, placeholder: 'e.g. Spice Garden', required: true },
+    { name: 'contactName' as const, label: 'Your full name', icon: User, placeholder: 'Primary contact person', required: true },
+    { name: 'email' as const, label: 'Email address', icon: Mail, placeholder: 'owner@restaurant.com', type: 'email', required: true },
+    { name: 'phone' as const, label: 'Phone number', icon: Phone, placeholder: '10-digit mobile number', required: true },
+    { name: 'city' as const, label: 'City / area', icon: MapPin, placeholder: 'e.g. Bangalore', required: false },
+  ];
+
   return (
-    <div className="craving-root">
-      {FOOD_PARTICLES.map((p, i) => (
-        <span
-          key={i}
-          className="food-particle"
-          style={{
-            left: `${p.x}%`,
-            top: `${p.y}%`,
-            fontSize: `${p.size}px`,
-            animationDuration: `${p.duration}s`,
-            animationDelay: `${p.delay}s`,
-          }}
-        >
-          {p.emoji}
-        </span>
-      ))}
-
-      <div className="craving-split">
-        <div className="brand-panel">
-          <div className="brand-panel-glow" />
-          <div className="brand-panel-mesh" />
-
-          <div className="brand-top">
-            <div className="nammaqr-wordmark">
-              <QrCode size={24} className="logo-icon" />
-              <span>NammaQr</span>
-            </div>
+    <div className="flex min-h-screen">
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="hidden lg:flex lg:w-2/5 flex-col justify-between bg-secondary p-12 text-white relative overflow-hidden"
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/25 to-accent/15" />
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
+            <QrCode className="h-6 w-6" />
           </div>
-
-          <div className="brand-hero-cinematic">
-            <div className="hero-floating-card">
-              <FileText size={48} className="hero-icon" />
-              <div className="card-shine" />
-            </div>
-            
-            <h2 className="cinematic-title">
-              Join the <span>Platform</span> today.
-            </h2>
-            <p className="cinematic-sub">
-              Tell us about your restaurant and who to contact. We will email you next steps.
-            </p>
-          </div>
-
-          <div className="brand-bottom">
-            <div className="premium-capsule">
-              <span className="dot" />
-              <span>Request · Review · Onboard</span>
-            </div>
-          </div>
+          <span className="text-xl font-bold">NammaQR</span>
         </div>
-
-        <div className="form-panel form-panel--scroll">
-          <p className="form-eyebrow">QR Order · Admin</p>
-          <h1 className="form-title">Register your restaurant</h1>
-          <p className="form-sub">Restaurant details and your contact info are sent to our team by email.</p>
-
-          <form className="auth-form-no-stagger" onSubmit={handleSubmit}>
-            <div className="field-group">
-              <label className="field-label">Restaurant / business name *</label>
-              <div className="field-input">
-                <Building2 size={17} />
-                <input
-                  type="text"
-                  placeholder="e.g. Namma Kitchen"
-                  value={form.restaurantName}
-                  onChange={(e) => update('restaurantName', e.target.value)}
-                  required
-                  autoComplete="organization"
-                />
-              </div>
-            </div>
-
-            <div className="field-group">
-              <label className="field-label">Your full name *</label>
-              <div className="field-input">
-                <User size={17} />
-                <input
-                  type="text"
-                  placeholder="Primary contact person"
-                  value={form.contactName}
-                  onChange={(e) => update('contactName', e.target.value)}
-                  required
-                  autoComplete="name"
-                />
-              </div>
-            </div>
-
-            <div className="field-group">
-              <label className="field-label">Email *</label>
-              <div className={`field-input${fieldErrors.email ? ' field-input--invalid' : ''}`}>
-                <Mail size={17} />
-                <input
-                  type="email"
-                  placeholder="you@restaurant.com"
-                  value={form.email}
-                  onChange={(e) => update('email', e.target.value)}
-                  onBlur={(e) => setFieldErrors((prev) => ({ ...prev, email: validateEmail(e.target.value) }))}
-                  required
-                  autoComplete="email"
-                  inputMode="email"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                  aria-invalid={Boolean(fieldErrors.email)}
-                />
-              </div>
-              {fieldErrors.email ? <p className="field-inline-error">{fieldErrors.email}</p> : null}
-            </div>
-
-            <div className="field-group">
-              <label className="field-label">Phone *</label>
-              <div className={`field-input${fieldErrors.phone ? ' field-input--invalid' : ''}`}>
-                <Phone size={17} />
-                <input
-                  type="tel"
-                  placeholder="9876543210"
-                  value={form.phone}
-                  onChange={(e) => update('phone', e.target.value)}
-                  onBlur={(e) => setFieldErrors((prev) => ({ ...prev, phone: validatePhone(e.target.value) }))}
-                  required
-                  autoComplete="tel"
-                  inputMode="tel"
-                  aria-invalid={Boolean(fieldErrors.phone)}
-                />
-              </div>
-              {fieldErrors.phone ? <p className="field-inline-error">{fieldErrors.phone}</p> : null}
-            </div>
-
-            <div className="field-group">
-              <label className="field-label">City / area</label>
-              <div className="field-input">
-                <MapPin size={17} />
-                <input
-                  type="text"
-                  placeholder="e.g. Chennai"
-                  value={form.city}
-                  onChange={(e) => update('city', e.target.value)}
-                  autoComplete="address-level2"
-                />
-              </div>
-            </div>
-
-            <div className="field-group">
-              <label className="field-label">Anything else?</label>
-              <div className="field-input field-input-textarea">
-                <FileText size={17} style={{ marginTop: 4 }} />
-                <textarea
-                  placeholder="Branches, seats, timeline, questions…"
-                  value={form.message}
-                  onChange={(e) => update('message', e.target.value)}
-                  rows={3}
-                />
-              </div>
-            </div>
-
-            <button type="submit" className="btn-craving" disabled={submitting}>
-              {submitting ? (
-                <Loader2 size={20} className="animate-spin" />
-              ) : (
-                <>
-                  <span>Submit registration</span>
-                </>
-              )}
-            </button>
-          </form>
-
-          <Link to="/login" className="btn-auth-secondary">
-            <ArrowLeft size={17} style={{ marginRight: 8 }} />
-            Back to sign in
-          </Link>
-
-          <p className="form-footer-txt">
-            © 2026 QR Order · Admin ·{' '}
-            <Link to="/login">Login</Link>
+        <div className="relative z-10 space-y-4">
+          <h1 className="text-3xl font-bold leading-tight">Join the platform today</h1>
+          <p className="text-white/70 text-lg">
+            Tell us about your restaurant. Our team will reach out with onboarding steps within 24 hours.
           </p>
+          <div className="flex items-center gap-2 pt-4">
+            <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
+            <span className="text-sm text-white/60">Request → Review → Onboard</span>
+          </div>
         </div>
+        <p className="relative z-10 text-sm text-white/40">© 2026 NammaQR</p>
+      </motion.div>
+
+      <div className="flex flex-1 items-center justify-center p-6 bg-background overflow-y-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-lg py-8"
+        >
+          <Button variant="ghost" size="sm" className="mb-6 -ml-2" asChild>
+            <Link to="/">
+              <ArrowLeft className="h-4 w-4" />
+              Back to home
+            </Link>
+          </Button>
+
+          <Card className="border-0 shadow-[var(--shadow-elevated)]">
+            <CardHeader>
+              <CardTitle className="text-2xl">Register your restaurant</CardTitle>
+              <CardDescription>Fill in your details and we&apos;ll get you started</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                {fields.map((field) => {
+                  const Icon = field.icon;
+                  return (
+                    <div key={field.name} className="space-y-2">
+                      <Label htmlFor={field.name}>
+                        {field.label} {field.required && '*'}
+                      </Label>
+                      <div className="relative">
+                        <Icon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          id={field.name}
+                          type={'type' in field ? field.type : 'text'}
+                          placeholder={field.placeholder}
+                          className="pl-9"
+                          {...register(field.name)}
+                        />
+                      </div>
+                      {errors[field.name] && (
+                        <p className="text-xs text-danger">{errors[field.name]?.message}</p>
+                      )}
+                    </div>
+                  );
+                })}
+
+                <div className="space-y-2">
+                  <Label htmlFor="message">Additional message</Label>
+                  <div className="relative">
+                    <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <textarea
+                      id="message"
+                      placeholder="Tell us about your restaurant size, outlets, etc."
+                      className="flex min-h-[80px] w-full rounded-lg border border-input bg-card px-3 py-2 pl-9 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      {...register('message')}
+                    />
+                  </div>
+                </div>
+
+                <Button type="submit" className="w-full" disabled={submitting}>
+                  {submitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    'Submit registration'
+                  )}
+                </Button>
+              </form>
+
+              <p className="mt-6 text-center text-sm text-muted-foreground">
+                Already have an account?{' '}
+                <Link to="/login" className="text-primary font-medium hover:underline">
+                  Sign in
+                </Link>
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );
-};
-
-export default Register;
+}

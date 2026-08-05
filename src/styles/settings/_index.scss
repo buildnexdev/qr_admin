@@ -7,7 +7,7 @@
 @use 'sass:map';
 
 //	stylelint-disable no-invalid-position-at-import-rule
-@import 'node_modules/bootstrap/scss/functions';
+@import 'bootstrap/scss/functions';
 //	stylelint-enable no-invalid-position-at-import-rule
 
 // stylelint-disable annotation-no-unknown
@@ -40,7 +40,7 @@ $grays: (
 	'900': $gray-900,
 );
 
-$primary: #6c5dd3; // Don't forget to make changes to the .env file as well.
+$primary: #2d5cfe; // NammaQr brand — sync with .env VITE_PRIMARY_COLOR
 $secondary: #ffa2c0; // Don't forget to make changes to the .env file as well.
 $success: #46bcaa; // Don't forget to make changes to the .env file as well.
 $info: #4d69fa; // Don't forget to make changes to the .env file as well.
@@ -584,8 +584,8 @@ $todo-bar-width: $spacer * 0.25;
 
 // Configuration
 //	stylelint-disable no-invalid-position-at-import-rule
-@import 'node_modules/bootstrap/scss/variables';
-@import 'node_modules/bootstrap/scss/variables-dark';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/variables-dark';
 //	stylelint-enable no-invalid-position-at-import-rule
 
 // Create your own map
@@ -605,10 +605,10 @@ $custom-colors: (
 $theme-colors: map.merge($theme-colors, $custom-colors);
 
 //	stylelint-disable no-invalid-position-at-import-rule
-@import 'node_modules/bootstrap/scss/maps';
-@import 'node_modules/bootstrap/scss/mixins';
-@import 'node_modules/bootstrap/scss/root';
-@import 'node_modules/bootstrap/scss/utilities';
+@import 'bootstrap/scss/maps';
+@import 'bootstrap/scss/mixins';
+@import 'bootstrap/scss/root';
+@import 'bootstrap/scss/utilities';
 //	stylelint-enable no-invalid-position-at-import-rule
 
 // stylelint-enable annotation-no-unknown

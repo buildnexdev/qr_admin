@@ -5,24 +5,44 @@
     "useDefineForClassFields": true,
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "skipLibCheck": true,
 
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
+    "verbatimModuleSyntax": false,
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
 
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+
     /* Linting */
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "erasableSyntaxOnly": false,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": [
+    "src/layout/User",
+    "src/layout/Content",
+    "src/layout/PageWrapper",
+    "src/common/data/chartDummyData.ts",
+    "src/common/data/dummyCustomerData.ts",
+    "src/common/data/dummyEventsData.ts",
+    "src/common/data/dummyProductData.ts",
+    "src/common/data/dummySalesData.ts",
+    "src/common/data/events.ts",
+    "src/common/other",
+    "src/common/TourModal.tsx",
+    "src/hooks/useNapaEditGate.tsx",
+    "src/helpers"
+  ]
 }

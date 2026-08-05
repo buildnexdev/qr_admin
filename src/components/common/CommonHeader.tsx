@@ -1,6 +1,9 @@
-import React from 'react';
-import { Search, Plus } from 'lucide-react';
+import type { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 interface CommonHeaderProps {
   title: string;
@@ -12,51 +15,44 @@ interface CommonHeaderProps {
   addButtonLabel?: string;
 }
 
-const CommonHeader: React.FC<CommonHeaderProps> = ({
+const CommonHeader = ({
   title,
   icon: Icon,
   searchPlaceholder = 'Search...',
   searchValue,
   onSearchChange,
   onAddClick,
-  addButtonLabel,
-}) => {
-  const restTitle = title.includes(' ') ? title.substring(title.indexOf(' ') + 1) : '';
-
+  addButtonLabel = 'Add New',
+}: CommonHeaderProps) => {
   return (
-    <header className="app-header app-header--responsive flex-shrink-0 sticky-top z-3">
-      <div className="app-header__brand d-flex align-items-center gap-3 min-w-0">
-        <div className="header-icon-box d-flex align-items-center justify-content-center flex-shrink-0">
-          <Icon size={20} />
+    <header className="mb-6 flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-card)] sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+          <Icon className="h-5 w-5 text-primary" strokeWidth={2} />
         </div>
-        <div className="d-flex flex-column gap-1 min-w-0">
-          <h2 className="header-title text-truncate">
-            <em>{title.split(' ')[0]}</em>
-            {restTitle ? <span className="header-title-rest"> {restTitle}</span> : null}
-          </h2>
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-bold tracking-tight text-foreground">{title}</h1>
+          <p className="text-xs text-muted-foreground">Manage and monitor your {title.toLowerCase()}</p>
         </div>
       </div>
 
-      <div className="app-header__search">
-        <div className="position-relative d-flex align-items-center">
-          <Search size={16} className="position-absolute ms-3 app-header__search-icon" aria-hidden />
-          <input
-            type="search"
-            placeholder={searchPlaceholder}
-            className="dark-input ps-5 w-100"
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
-            enterKeyHint="search"
+            placeholder={searchPlaceholder}
+            className="pl-9 bg-muted/40 border-border/60"
+            aria-label={searchPlaceholder}
           />
         </div>
-      </div>
-
-      <div className="app-header__actions">
-        {onAddClick && addButtonLabel ? (
-          <button type="button" onClick={onAddClick} className="btn-premium">
-            <Plus size={18} /> <span className="app-header__add-label">{addButtonLabel}</span>
-          </button>
-        ) : null}
+        {onAddClick && (
+          <Button onClick={onAddClick} className="shrink-0">
+            <Plus className="h-4 w-4" />
+            {addButtonLabel}
+          </Button>
+        )}
       </div>
     </header>
   );

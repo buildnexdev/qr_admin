@@ -1,12 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 .craving-root {
   min-height: 100vh;
-  background: var(--bg);
+  background: #e7eef8;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Poppins', sans-serif;
   position: relative;
   overflow: hidden;
 }
@@ -55,12 +55,10 @@
   display: flex;
   width: min(960px, 95vw);
   min-height: 560px;
-  border-radius: 18px;
+  border-radius: 1.25rem;
   overflow: hidden;
-  box-shadow:
-    0 0 0 1px var(--border),
-    0 40px 100px rgba(0, 0, 0, 0.7),
-    0 0 80px rgba(var(--accent-rgb), 0.08) inset;
+  box-shadow: 0 1.6rem 3rem rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   opacity: 0;
   transform: translateY(32px) scale(0.97);
   animation: cardReveal 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;

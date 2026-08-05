@@ -11,10 +11,10 @@ import { Link } from 'react-router-dom';
 import { HashLink } from 'react-router-hash-link';
 import TagWrapper from '../TagWrapper';
 import Icon from '../icon/Icon';
-import { TColor } from '../../type/color-type';
+import type { TColor } from '../../type/color-type';
 // eslint-disable-next-line import/no-cycle
-import { IDropdownProps } from './Dropdown';
-import { TIcons } from '../../type/icons-type';
+import type { IDropdownProps } from './Dropdown';
+import type { TIcons } from '../../type/icons-type';
 
 interface IButtonGroupProps extends HTMLAttributes<HTMLDivElement> {
 	children: ReactElement<IButtonProps>[] | ReactElement<IDropdownProps>[] | ReactElement<unknown> | ReactElement<unknown>[];

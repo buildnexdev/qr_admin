@@ -1,47 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 
-:root {
-  /* Dark theme — deep navy + brand blue #2D5CFE */
-  --bg: #0a0f1a;
-  --surface: #111827;
-  --card: #1a2332;
-  --card-hov: #243044;
-
-  /* Primary brand blue */
-  --ember: #2d5cfe;
-  --amber: #1e4fd4;
-  --amber-lt: #5b7cff;
-
-  /* RGB = #2D5CFE */
-  --accent-rgb: 45, 92, 254;
-
-  /* Text */
-  --cream: #ffffff;
-  --muted: #94a3b8;
-
-  /* Borders */
-  --border: rgba(255, 255, 255, 0.08);
-  --border-h: rgba(255, 255, 255, 0.14);
-  --glow: rgba(45, 92, 254, 0.25);
-
-  font-family: 'DM Sans', system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: dark;
-  color: var(--cream);
-  background-color: var(--bg);
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
+:root,
 html[data-theme='light'] {
-  /* Light — cool gray page + white cards + #2D5CFE primary */
-  --bg: #f8f9fd;
-  --surface: #ffffff;
+  /* Facit Modern light — soft gray page + glass white surfaces */
+  --bg: #e7eef8;
+  --surface: rgba(255, 255, 255, 0.72);
   --card: #ffffff;
   --card-hov: #f1f5f9;
 
@@ -51,21 +14,54 @@ html[data-theme='light'] {
 
   --accent-rgb: 45, 92, 254;
 
-  --cream: #1a202c;
-  --muted: #64748b;
+  --cream: #1f2128;
+  --muted: #808191;
 
-  --border: rgba(26, 32, 44, 0.08);
-  --border-h: rgba(26, 32, 44, 0.14);
+  --border: rgba(255, 255, 255, 0.45);
+  --border-h: rgba(15, 23, 42, 0.08);
   --glow: rgba(45, 92, 254, 0.12);
 
+  font-family: 'Poppins', system-ui, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
   color-scheme: light;
+  color: var(--cream);
+  background-color: var(--bg);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html[data-theme='dark'] {
+  --bg: #14161c;
+  --surface: rgba(36, 39, 49, 0.75);
+  --card: #242731;
+  --card-hov: #2d3142;
+
+  --ember: #5b7cff;
+  --amber: #2d5cfe;
+  --amber-lt: #8ba4ff;
+
+  --accent-rgb: 91, 124, 255;
+
+  --cream: #e7eef8;
+  --muted: #9ca3af;
+
+  --border: rgba(255, 255, 255, 0.06);
+  --border-h: rgba(255, 255, 255, 0.1);
+  --glow: rgba(91, 124, 255, 0.18);
+
+  color-scheme: dark;
 }
 
 html[data-theme='light'] body::before {
   background:
-    radial-gradient(ellipse 55% 40% at 15% 20%, rgba(var(--accent-rgb), 0.06) 0%, transparent 72%),
-    radial-gradient(ellipse 50% 50% at 85% 80%, rgba(30, 126, 52, 0.04) 0%, transparent 72%),
-    linear-gradient(180deg, #f8f9fd 0%, #f1f5f9 100%);
+    radial-gradient(ellipse 55% 40% at 15% 20%, rgba(var(--accent-rgb), 0.07) 0%, transparent 72%),
+    radial-gradient(ellipse 50% 50% at 85% 80%, rgba(70, 188, 170, 0.05) 0%, transparent 72%),
+    linear-gradient(180deg, #e7eef8 0%, #f1f5fb 100%);
 }
 
 html[data-theme='light'] .text-white {

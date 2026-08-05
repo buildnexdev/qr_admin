@@ -7,6 +7,7 @@ import branchReducer from './branchSlice';
 import categoryReducer from './categorySlice';
 import staffReducer from './staffSlice';
 import stockReducer from './stockSlice';
+import companyReducer from './companySlice';
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ export const store = configureStore({
     categories: categoryReducer,
     staff: staffReducer,
     stocks: stockReducer,
+    company: companyReducer,
   },
 });
 
@@ -30,6 +32,7 @@ export type RootState = {
   categories: ReturnType<typeof categoryReducer>;
   staff: ReturnType<typeof staffReducer>;
   stocks: ReturnType<typeof stockReducer>;
+  company: ReturnType<typeof companyReducer>;
 };
 
 export type AppDispatch = typeof store.dispatch;

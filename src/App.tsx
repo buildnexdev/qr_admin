@@ -1,29 +1,44 @@
 import { useRoutes, Navigate, type RouteObject } from 'react-router-dom';
 import { useEffect } from 'react';
-import Login from './pages/Login/Login';
-import Register from './pages/Register/Register';
-import Landing from './pages/Landing/Landing';
-import { contentRouters } from './routes/contentRouters';
-import './App.css';
-import './styles/common.scss';
+import LoginPage from '@/pages/auth/LoginPage';
+import Register from '@/pages/Register/Register';
+import Landing from '@/pages/Landing/Landing';
+import CustomerOrderPage from '@/pages/CustomerOrder/CustomerOrderPage';
+import { contentRouters } from '@/routes/appRoutes';
+import { GenericModulePage } from '@/pages/modules/GenericModulePage';
+import { KeyRound } from 'lucide-react';
+
+function ForgotPasswordPage() {
+  return (
+    <GenericModulePage
+      module={{
+        title: 'Forgot Password',
+        description: 'Reset your password via email or phone OTP.',
+        icon: KeyRound,
+        status: 'beta',
+        features: ['Email reset link', 'Phone OTP reset', '2FA verification'],
+      }}
+    />
+  );
+}
 
 function App() {
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.documentElement.classList.toggle('dark', savedTheme === 'dark');
   }, []);
 
   const routes: RouteObject[] = [
     { path: '/', element: <Landing /> },
-    { path: '/login', element: <Login /> },
+    { path: '/login', element: <LoginPage /> },
     { path: '/register', element: <Register /> },
+    { path: '/forgot-password', element: <ForgotPasswordPage /> },
+    { path: '/:companySlug/table/:tableKey', element: <CustomerOrderPage /> },
     ...contentRouters,
-    { path: '*', element: <Navigate to="/" replace /> }
+    { path: '*', element: <Navigate to="/" replace /> },
   ];
 
-  const element = useRoutes(routes);
-
-  return <>{element}</>;
+  return useRoutes(routes);
 }
 
 export default App;

@@ -1,39 +1,67 @@
+import type { LucideIcon } from 'lucide-react';
 import {
   Building2,
   MapPin,
   Phone,
   User,
-  Settings,
   CreditCard,
   QrCode,
   Utensils,
   Wallet,
   FileText,
   ChefHat,
-  Users,
   BarChart3,
   Package,
   Ticket,
   Truck,
-  Bell,
-  Palette,
-  Shield,
-  FileUp,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 export interface CompanyType {
-  owner_name: string;
   id: number;
   company_name: string;
   company_code: string;
-  address_line1: string;
+  owner_name: string;
+  address_line1?: string;
   city: string;
   state: string;
   pincode: string;
-  is_published: boolean;
+  is_active: boolean;
 }
 
-export const EMPTY_FORM = {
+/** tblCompany tinyint(1) fields toggled in Company Settings (0 = off, 1 = on). */
+export type CompanyModuleFlagKey =
+  | 'is_subscription'
+  | 'is_qr'
+  | 'is_menu'
+  | 'is_payment'
+  | 'is_invoice'
+  | 'is_kitchen'
+  | 'is_reports'
+  | 'is_inventory'
+  | 'is_offers'
+  | 'is_delivery';
+
+export interface CompanyModuleSettingRow {
+  id: CompanyModuleFlagKey;
+  name: string;
+  icon: LucideIcon;
+}
+
+export const COMPANY_MODULE_SETTINGS: CompanyModuleSettingRow[] = [
+  { id: 'is_subscription', name: 'Subscription', icon: CreditCard },
+  { id: 'is_qr', name: 'QR', icon: QrCode },
+  { id: 'is_menu', name: 'Menu', icon: Utensils },
+  { id: 'is_payment', name: 'Payment', icon: Wallet },
+  { id: 'is_invoice', name: 'Invoice', icon: FileText },
+  { id: 'is_kitchen', name: 'Kitchen', icon: ChefHat },
+  { id: 'is_reports', name: 'Reports', icon: BarChart3 },
+  { id: 'is_inventory', name: 'Inventory', icon: Package },
+  { id: 'is_offers', name: 'Offers', icon: Ticket },
+  { id: 'is_delivery', name: 'Delivery', icon: Truck },
+];
+
+export const EMPTY_FORM: Record<string, unknown> = {
   company_name: '',
   company_code: '',
   legal_name: '',
@@ -61,27 +89,33 @@ export const EMPTY_FORM = {
   owner_email: '',
   admin_username: '',
   admin_password: '',
+  is_active: true,
+  is_subscription: 0,
+  is_qr: 0,
+  is_menu: 0,
+  is_payment: 0,
+  is_invoice: 0,
+  is_kitchen: 0,
+  is_reports: 0,
+  is_inventory: 0,
+  is_offers: 0,
+  is_delivery: 0,
 };
 
-export const SECTIONS = [
-  { id: 'basic',    name: 'Basic Details',    icon: Building2 },
-  { id: 'address',  name: 'Address Details',  icon: MapPin },
-  { id: 'contact',  name: 'Contact Details',  icon: Phone },
-  { id: 'owner',    name: 'Owner / Admin',    icon: User },
-  { id: 'branch',   name: 'Branch Config',    icon: Settings },
-  { id: 'subscription', name: 'Subscription', icon: CreditCard },
-  { id: 'qr',       name: 'QR & Ordering',   icon: QrCode },
-  { id: 'menu',     name: 'Menu & Pricing',   icon: Utensils },
-  { id: 'payment',  name: 'Payment',          icon: Wallet },
-  { id: 'invoice',  name: 'Invoice & Billing',icon: FileText },
-  { id: 'kitchen',  name: 'Kitchen Settings', icon: ChefHat },
-  { id: 'staff',    name: 'Staff & Roles',    icon: Users },
-  { id: 'reports',  name: 'Reports',          icon: BarChart3 },
-  { id: 'inventory',name: 'Inventory',        icon: Package },
-  { id: 'offers',   name: 'Offers & Coupons', icon: Ticket },
-  { id: 'delivery', name: 'Delivery',         icon: Truck },
-  { id: 'notifications', name: 'Notifications', icon: Bell },
-  { id: 'branding', name: 'Branding & UI',    icon: Palette },
-  { id: 'security', name: 'Security',         icon: Shield },
-  { id: 'documents',name: 'Documents',        icon: FileUp },
+export const COMPANY_FORM_SECTIONS = [
+  { id: 'basic', name: 'Basic', icon: Building2 },
+  { id: 'address', name: 'Address', icon: MapPin },
+  { id: 'contact', name: 'Contact', icon: Phone },
+  { id: 'owner', name: 'Owner', icon: User },
+  { id: 'company-settings', name: 'Company Settings', icon: SlidersHorizontal },
 ];
+
+export function normalizeCompanyFormFromApi(raw: Record<string, unknown>) {
+  const o: Record<string, unknown> = { ...EMPTY_FORM, ...raw, admin_password: '' };
+  for (const { id } of COMPANY_MODULE_SETTINGS) {
+    const v = raw[id];
+    o[id] = v === 1 || v === '1' || v === true ? 1 : 0;
+  }
+  o.is_active = raw.is_active === true || raw.is_active === 1 || raw.is_active === '1';
+  return o;
+}

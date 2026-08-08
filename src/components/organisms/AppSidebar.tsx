@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, QrCode } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePermissions } from '@/hooks/usePermissions';
 import {
@@ -27,11 +27,16 @@ function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
       className={cn(
         'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
         isActive
-          ? 'bg-sidebar-active text-white shadow-sm'
+          ? 'bg-sidebar-active text-white shadow-sm shadow-primary/30'
           : 'text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground'
       )}
     >
-      <Icon className={cn('h-5 w-5 shrink-0', isActive ? 'text-white' : 'text-sidebar-muted group-hover:text-sidebar-foreground')} />
+      <Icon
+        className={cn(
+          'h-5 w-5 shrink-0',
+          isActive ? 'text-white' : 'text-sidebar-muted group-hover:text-sidebar-foreground'
+        )}
+      />
       {!collapsed && <span className="truncate">{item.label}</span>}
       {!collapsed && item.badge && (
         <span className="ml-auto rounded-full bg-accent/20 px-2 py-0.5 text-[10px] font-semibold text-accent">
@@ -44,7 +49,7 @@ function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const { role, filterNav } = usePermissions();
+  const { filterNav } = usePermissions();
   const location = useLocation();
   const isSuperAdminRoute = location.pathname.startsWith('/super-admin');
   const baseNav = isSuperAdminRoute ? SUPER_ADMIN_NAV : RESTAURANT_ADMIN_NAV;
@@ -58,15 +63,22 @@ export function AppSidebar() {
       transition={{ duration: 0.2 }}
       className="fixed inset-y-0 left-0 z-40 flex flex-col bg-sidebar border-r border-sidebar-hover"
     >
-      <div className="flex h-16 items-center gap-3 border-b border-sidebar-hover px-4">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary">
-          <QrCode className="h-5 w-5 text-white" />
-        </div>
+      <div className="flex h-16 items-center gap-3 border-b border-sidebar-hover px-3">
+        <img
+          src="/NammaqrProjectLogo.png"
+          alt="NammaQr"
+          className="h-10 w-10 shrink-0 rounded-lg bg-white object-contain p-0.5"
+        />
         {!collapsed && (
           <div className="min-w-0">
-            <p className="truncate text-sm font-bold text-sidebar-foreground">NammaQR</p>
+            <p
+              className="truncate text-sm font-bold text-sidebar-foreground"
+              style={{ fontFamily: 'Syne, sans-serif' }}
+            >
+              NammaQr
+            </p>
             <p className="truncate text-[11px] text-sidebar-muted">
-              {isSuperAdminRoute ? 'Super Admin' : 'Restaurant Admin'}
+              {isSuperAdminRoute ? 'Super Admin · Companies' : 'Restaurant Admin'}
             </p>
           </div>
         )}
@@ -104,3 +116,5 @@ export function AppSidebar() {
     </motion.aside>
   );
 }
+
+export default AppSidebar;

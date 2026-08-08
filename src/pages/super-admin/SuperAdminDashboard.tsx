@@ -93,7 +93,7 @@ export default function SuperAdminDashboard() {
           <CardContent>
             <div className="grid gap-3 sm:grid-cols-2">
               {[
-                { label: 'Add Restaurant', path: '/super-admin/restaurants', icon: Building2 },
+                { label: 'Manage Companies', path: '/super-admin/companies', icon: Building2 },
                 { label: 'Manage Plans', path: '/super-admin/plans', icon: Crown },
                 { label: 'View Revenue', path: '/super-admin/revenue', icon: TrendingUp },
                 { label: 'Support Tickets', path: '/super-admin/tickets', icon: CreditCard },

@@ -1,25 +1,18 @@
 import { useRoutes, Navigate, type RouteObject } from 'react-router-dom';
 import { useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import type { RootState } from '@/store';
 import LoginPage from '@/pages/auth/LoginPage';
-import Register from '@/pages/Register/Register';
-import Landing from '@/pages/Landing/Landing';
 import CustomerOrderPage from '@/pages/CustomerOrder/CustomerOrderPage';
 import { contentRouters } from '@/routes/appRoutes';
-import { GenericModulePage } from '@/pages/modules/GenericModulePage';
-import { KeyRound } from 'lucide-react';
+import { getHomePathForRole } from '@/components/templates/RoleGuard';
 
-function ForgotPasswordPage() {
-  return (
-    <GenericModulePage
-      module={{
-        title: 'Forgot Password',
-        description: 'Reset your password via email or phone OTP.',
-        icon: KeyRound,
-        status: 'beta',
-        features: ['Email reset link', 'Phone OTP reset', '2FA verification'],
-      }}
-    />
-  );
+function RootRedirect() {
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  if (isAuthenticated) {
+    return <Navigate to={getHomePathForRole(user?.role)} replace />;
+  }
+  return <LoginPage />;
 }
 
 function App() {
@@ -29,10 +22,8 @@ function App() {
   }, []);
 
   const routes: RouteObject[] = [
-    { path: '/', element: <Landing /> },
-    { path: '/login', element: <LoginPage /> },
-    { path: '/register', element: <Register /> },
-    { path: '/forgot-password', element: <ForgotPasswordPage /> },
+    { path: '/', element: <RootRedirect /> },
+    { path: '/login', element: <RootRedirect /> },
     { path: '/:companySlug/table/:tableKey', element: <CustomerOrderPage /> },
     ...contentRouters,
     { path: '*', element: <Navigate to="/" replace /> },

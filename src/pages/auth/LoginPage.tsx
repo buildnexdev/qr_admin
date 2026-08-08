@@ -1,286 +1,378 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { motion } from 'framer-motion';
-import { Mail, Phone, KeyRound, QrCode, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Eye, EyeOff, Loader2, Phone, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { loginUser, clearError } from '@/store/authSlice';
 import type { AppDispatch, RootState } from '@/store';
-import { Button } from '@/components/ui/button';
+import { getHomePathForRole } from '@/components/templates/RoleGuard';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const loginSchema = z.object({
-  identifier: z.string().min(1, 'Required'),
-  password: z.string().optional(),
-  remember: z.boolean().optional(),
+  phone: z
+    .string()
+    .min(10, 'Enter a valid phone number')
+    .regex(/^[0-9+\-\s]{10,15}$/, 'Enter a valid phone number'),
+  password: z.string().min(1, 'Password is required'),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
+
+const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function LoginPage() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { status, error } = useSelector((state: RootState) => state.auth);
   const [showPassword, setShowPassword] = useState(false);
-  const [loginMethod, setLoginMethod] = useState<'email' | 'phone' | 'otp'>('phone');
-  const [otpSent, setOtpSent] = useState(false);
+  const [phoneFocused, setPhoneFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    getValues,
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { remember: true },
+    defaultValues: { phone: '', password: '' },
   });
+
+  const phoneReg = register('phone');
+  const passwordReg = register('password');
 
   const onSubmit = async (data: LoginForm) => {
     dispatch(clearError());
 
-    if (loginMethod === 'otp') {
-      if (!otpSent) {
-        setOtpSent(true);
-        toast.success('OTP sent successfully (demo mode)');
-        return;
-      }
-      toast.info('OTP login will be available when backend is configured');
-      return;
-    }
-
     const result = await dispatch(
-      loginUser({ username: data.identifier, password: data.password })
+      loginUser({ username: data.phone.trim(), password: data.password })
     );
 
     if (loginUser.fulfilled.match(result)) {
       toast.success('Welcome back!');
-      const user = result.payload;
-      if (user.role === 0) {
-        navigate('/super-admin');
-      } else if (user.branchid === 0 || user.role === 0) {
-        navigate('/admin/company');
-      } else {
-        navigate('/admin');
-      }
+      navigate(getHomePathForRole(result.payload.role));
     } else {
       toast.error((result.payload as string) ?? 'Login failed');
     }
   };
 
-  const handleSendOtp = () => {
-    const id = getValues('identifier');
-    if (!id) {
-      toast.error('Enter your phone number first');
-      return;
-    }
-    setOtpSent(true);
-    toast.success('OTP sent to your phone');
-  };
-
   return (
-    <div className="flex min-h-screen">
-      {/* Brand panel */}
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="hidden lg:flex lg:w-1/2 flex-col justify-between bg-secondary p-12 text-white relative overflow-hidden"
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/10" />
-        <div className="relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-              <QrCode className="h-6 w-6" />
-            </div>
-            <span className="text-xl font-bold">NammaQR</span>
-          </div>
-        </div>
-        <div className="relative z-10 space-y-6">
-          <h1 className="text-4xl font-bold leading-tight">
-            Restaurant POS,<br />QR Ordering & Billing
-          </h1>
-          <p className="text-lg text-white/70 max-w-md">
-            Manage orders, kitchen, inventory, and billing from one powerful SaaS platform.
-          </p>
-          <div className="flex gap-8 pt-4">
-            {[
-              { label: 'Restaurants', value: '500+' },
-              { label: 'Orders/day', value: '50K+' },
-              { label: 'Uptime', value: '99.9%' },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <p className="text-2xl font-bold">{stat.value}</p>
-                <p className="text-sm text-white/60">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-        <p className="relative z-10 text-sm text-white/40">© 2026 NammaQR. All rights reserved.</p>
-      </motion.div>
-
-      {/* Login form */}
-      <div className="flex flex-1 items-center justify-center p-6 bg-background">
+    <div className="relative min-h-screen overflow-hidden bg-[#FAFCFA]">
+      {/* Animated atmosphere */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="w-full max-w-md"
-        >
-          <div className="mb-8 lg:hidden flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-              <QrCode className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-lg font-bold">NammaQR</span>
+          className="absolute inset-0"
+          animate={{ opacity: [0.7, 1, 0.7] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+          style={{
+            background:
+              'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(15,122,75,0.22), transparent)',
+          }}
+        />
+        <motion.div
+          animate={{ y: [0, -40, 0], x: [0, 28, 0], scale: [1, 1.15, 1] }}
+          transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -left-28 top-[20%] h-[380px] w-[380px] rounded-full bg-[#0F7A4B]/25 blur-3xl"
+        />
+        <motion.div
+          animate={{ y: [0, 32, 0], x: [0, -24, 0], scale: [1, 1.1, 1] }}
+          transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+          className="absolute -right-24 bottom-[15%] h-[320px] w-[320px] rounded-full bg-[#E8A317]/30 blur-3xl"
+        />
+        <motion.div
+          animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
+          transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute left-1/2 top-[35%] h-72 w-72 -translate-x-1/2 rounded-full bg-[#1FA971]/20 blur-3xl"
+        />
+        {/* Floating dots */}
+        {[
+          { top: '12%', left: '18%', delay: 0 },
+          { top: '22%', left: '78%', delay: 0.4 },
+          { top: '68%', left: '12%', delay: 0.8 },
+          { top: '75%', left: '85%', delay: 1.2 },
+          { top: '40%', left: '8%', delay: 0.2 },
+          { top: '55%', left: '92%', delay: 1 },
+        ].map((dot, i) => (
+          <motion.span
+            key={i}
+            className="absolute h-1.5 w-1.5 rounded-full bg-[#0F7A4B]/40"
+            style={{ top: dot.top, left: dot.left }}
+            animate={{ y: [0, -14, 0], opacity: [0.25, 0.85, 0.25] }}
+            transition={{
+              duration: 3.2 + i * 0.35,
+              repeat: Infinity,
+              ease: 'easeInOut',
+              delay: dot.delay,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-10">
+        <div className="w-full max-w-[420px]">
+          {/* Brand entrance */}
+          <div className="mb-8 flex flex-col items-center text-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5, rotate: -12 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 220, damping: 16 }}
+              className="relative mb-4"
+            >
+              <motion.div
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+                whileHover={{ scale: 1.08, rotate: -4 }}
+                className="rounded-2xl bg-white p-2.5 shadow-[0_8px_30px_rgba(15,122,75,0.18)] ring-1 ring-[#0F7A4B]/15"
+              >
+                <img
+                  src="/NammaqrProjectLogo.png"
+                  alt="NammaQr"
+                  className="h-14 w-14 object-contain"
+                />
+              </motion.div>
+              <motion.span
+                aria-hidden
+                className="absolute -inset-3 -z-10 rounded-3xl bg-[#0F7A4B]/20 blur-xl"
+                animate={{ opacity: [0.35, 0.7, 0.35], scale: [0.95, 1.05, 0.95] }}
+                transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+              />
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15, duration: 0.5, ease }}
+              className="text-3xl font-extrabold tracking-tight text-[#121A16]"
+              style={{ fontFamily: 'Syne, sans-serif' }}
+            >
+              {'NammaQr'.split('').map((char, i) => (
+                <motion.span
+                  key={i}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 + i * 0.045, duration: 0.35, ease }}
+                  className="inline-block"
+                >
+                  {char}
+                </motion.span>
+              ))}
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45, duration: 0.4 }}
+              className="mt-1.5 text-sm text-[#5C6B63]"
+            >
+              Smart billing · Simple business
+            </motion.p>
           </div>
 
-          <Card className="border-0 shadow-[var(--shadow-elevated)]">
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl">Sign in</CardTitle>
-              <CardDescription>Access your restaurant dashboard</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Tabs value={loginMethod} onValueChange={(v) => { setLoginMethod(v as typeof loginMethod); setOtpSent(false); }}>
-                <TabsList className="grid w-full grid-cols-3 mb-6">
-                  <TabsTrigger value="phone" className="gap-1.5">
-                    <Phone className="h-3.5 w-3.5" />
-                    Phone
-                  </TabsTrigger>
-                  <TabsTrigger value="email" className="gap-1.5">
-                    <Mail className="h-3.5 w-3.5" />
-                    Email
-                  </TabsTrigger>
-                  <TabsTrigger value="otp" className="gap-1.5">
-                    <KeyRound className="h-3.5 w-3.5" />
-                    OTP
-                  </TabsTrigger>
-                </TabsList>
+          {/* Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 40, filter: 'blur(8px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ delay: 0.25, duration: 0.55, ease }}
+            className="rounded-2xl border border-[#D8E3DB]/80 bg-white/95 p-7 shadow-[0_24px_60px_-28px_rgba(15,122,75,0.4)] backdrop-blur-md sm:p-8"
+          >
+            <motion.div
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4, duration: 0.4 }}
+              className="mb-6"
+            >
+              <h2
+                className="text-xl font-bold text-[#121A16]"
+                style={{ fontFamily: 'Syne, sans-serif' }}
+              >
+                Welcome back
+              </h2>
+              <p className="mt-1 text-sm text-[#5C6B63]">Sign in with your phone number</p>
+            </motion.div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                  <TabsContent value="phone" className="mt-0 space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input
-                        id="phone"
-                        placeholder="+91 98765 43210"
-                        {...register('identifier')}
-                      />
-                      {errors.identifier && <p className="text-xs text-danger">{errors.identifier.message}</p>}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password-phone">Password</Label>
-                      <div className="relative">
-                        <Input
-                          id="password-phone"
-                          type={showPassword ? 'text' : 'password'}
-                          placeholder="Enter password"
-                          {...register('password')}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                        >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="email" className="mt-0 space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="owner@restaurant.com"
-                        {...register('identifier')}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password-email">Password</Label>
-                      <Input
-                        id="password-email"
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="Enter password"
-                        {...register('password')}
-                      />
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="otp" className="mt-0 space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="otp-phone">Phone Number</Label>
-                      <Input
-                        id="otp-phone"
-                        placeholder="+91 98765 43210"
-                        {...register('identifier')}
-                      />
-                    </div>
-                    {otpSent && (
-                      <div className="space-y-2">
-                        <Label htmlFor="otp-code">Enter OTP</Label>
-                        <Input id="otp-code" placeholder="6-digit OTP" maxLength={6} />
-                      </div>
-                    )}
-                    {!otpSent && (
-                      <Button type="button" variant="outline" className="w-full" onClick={handleSendOtp}>
-                        Send OTP
-                      </Button>
-                    )}
-                  </TabsContent>
-
-                  {loginMethod !== 'otp' && (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Switch id="remember" {...register('remember')} />
-                        <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
-                          Remember me
-                        </Label>
-                      </div>
-                      <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                        Forgot password?
-                      </Link>
-                    </div>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.48, duration: 0.4 }}
+                className="space-y-2"
+              >
+                <Label htmlFor="phone" className="text-[#121A16]/80">
+                  User phone number
+                </Label>
+                <motion.div
+                  animate={{
+                    boxShadow: phoneFocused
+                      ? '0 0 0 3px rgba(15,122,75,0.18)'
+                      : '0 0 0 0px rgba(15,122,75,0)',
+                  }}
+                  className="relative rounded-xl"
+                >
+                  <Phone
+                    className={`pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 transition-colors ${
+                      phoneFocused ? 'text-[#0F7A4B]' : 'text-[#0F7A4B]/60'
+                    }`}
+                  />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="9444171368"
+                    className="h-12 rounded-xl border-[#D8E3DB] bg-[#EEF3EF]/50 pl-10 text-[15px] transition-colors focus-visible:border-[#0F7A4B] focus-visible:bg-white focus-visible:ring-[#0F7A4B]/25"
+                    name={phoneReg.name}
+                    ref={phoneReg.ref}
+                    onChange={phoneReg.onChange}
+                    onFocus={() => setPhoneFocused(true)}
+                    onBlur={(e) => {
+                      setPhoneFocused(false);
+                      phoneReg.onBlur(e);
+                    }}
+                  />
+                </motion.div>
+                <AnimatePresence>
+                  {errors.phone && (
+                    <motion.p
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="text-xs text-[#EF4444]"
+                    >
+                      {errors.phone.message}
+                    </motion.p>
                   )}
+                </AnimatePresence>
+              </motion.div>
 
-                  {error && (
-                    <p className="text-sm text-danger text-center">{error}</p>
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.56, duration: 0.4 }}
+                className="space-y-2"
+              >
+                <Label htmlFor="password" className="text-[#121A16]/80">
+                  Password
+                </Label>
+                <motion.div
+                  animate={{
+                    boxShadow: passwordFocused
+                      ? '0 0 0 3px rgba(15,122,75,0.18)'
+                      : '0 0 0 0px rgba(15,122,75,0)',
+                  }}
+                  className="relative rounded-xl"
+                >
+                  <Lock
+                    className={`pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 transition-colors ${
+                      passwordFocused ? 'text-[#0F7A4B]' : 'text-[#0F7A4B]/60'
+                    }`}
+                  />
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    placeholder="Enter your password"
+                    className="h-12 rounded-xl border-[#D8E3DB] bg-[#EEF3EF]/50 pl-10 pr-11 text-[15px] transition-colors focus-visible:border-[#0F7A4B] focus-visible:bg-white focus-visible:ring-[#0F7A4B]/25"
+                    name={passwordReg.name}
+                    ref={passwordReg.ref}
+                    onChange={passwordReg.onChange}
+                    onFocus={() => setPasswordFocused(true)}
+                    onBlur={(e) => {
+                      setPasswordFocused(false);
+                      passwordReg.onBlur(e);
+                    }}
+                  />
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.88 }}
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#5C6B63] hover:text-[#121A16]"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </motion.button>
+                </motion.div>
+                <AnimatePresence>
+                  {errors.password && (
+                    <motion.p
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="text-xs text-[#EF4444]"
+                    >
+                      {errors.password.message}
+                    </motion.p>
                   )}
+                </AnimatePresence>
+              </motion.div>
 
-                  <Button type="submit" className="w-full" disabled={status === 'loading'}>
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.96 }}
+                    className="rounded-xl border border-[#EF4444]/20 bg-[#EF4444]/5 px-3 py-2.5 text-center text-sm text-[#EF4444]"
+                  >
+                    {error}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.64, duration: 0.4 }}
+              >
+                <motion.button
+                  type="submit"
+                  disabled={status === 'loading'}
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="relative h-12 w-full overflow-hidden rounded-xl bg-[#0F7A4B] text-[15px] font-semibold text-white shadow-lg shadow-[#0F7A4B]/30 disabled:opacity-70"
+                >
+                  <motion.span
+                    aria-hidden
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent"
+                    animate={{ x: ['-120%', '120%'] }}
+                    transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1.2 }}
+                  />
+                  <span className="relative z-10 inline-flex items-center justify-center gap-2">
                     {status === 'loading' ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Signing in...
                       </>
-                    ) : loginMethod === 'otp' && otpSent ? (
-                      'Verify OTP'
                     ) : (
                       'Sign in'
                     )}
-                  </Button>
-                </form>
-              </Tabs>
+                  </span>
+                </motion.button>
+              </motion.div>
+            </form>
+          </motion.div>
 
-              <p className="mt-6 text-center text-sm text-muted-foreground">
-                Don&apos;t have an account?{' '}
-                <Link to="/register" className="text-primary font-medium hover:underline">
-                  Register your restaurant
-                </Link>
-              </p>
-
-              <p className="mt-3 text-center text-xs text-muted-foreground">
-                2FA ready · Secure login · Restaurant branding supported
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.75, duration: 0.5 }}
+            className="mt-8 text-center text-xs text-[#5C6B63]"
+          >
+            © {new Date().getFullYear()} NammaQr · Powered by{' '}
+            <a
+              href="https://buildnexdev.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-[#0F7A4B] hover:underline"
+            >
+              buildnexdev.in
+            </a>
+          </motion.p>
+        </div>
       </div>
     </div>
   );

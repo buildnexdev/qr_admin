@@ -124,7 +124,7 @@ export const RESTAURANT_ADMIN_NAV: NavItem[] = [
   { section: 'Feedback', path: '/admin/reviews', label: 'Reviews', icon: Star, permission: 'admin.reviews' },
   { section: 'Setup', path: '/admin/company', label: 'Company', icon: Building2, permission: 'admin.company' },
   { section: 'Setup', path: '/admin/branch', label: 'Branches', icon: MapPin, permission: 'admin.branch' },
-  { section: 'Setup', path: '/admin/settings', label: 'Settings', icon: Settings, permission: 'admin.settings' },
+  { section: 'Setup', path: '/admin/configuration', label: 'Configuration', icon: Settings, permission: 'admin.settings' },
   { section: 'Setup', path: '/admin/printer', label: 'Printer', icon: Printer, permission: 'admin.printer' },
   { section: 'Setup', path: '/admin/taxes', label: 'Taxes', icon: Percent, permission: 'admin.taxes' },
   { section: 'Setup', path: '/admin/notifications', label: 'Notifications', icon: Bell, permission: 'admin.notifications' },

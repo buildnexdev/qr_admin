@@ -29,8 +29,9 @@ axios.interceptors.response.use(
     const sentBearer = Boolean(error.config?.headers?.Authorization);
     if (sentBearer) {
       store.dispatch(logout());
-      if (!window.location.pathname.startsWith('/login')) {
-        window.location.assign('/login');
+      const path = window.location.pathname;
+      if (path !== '/' && !path.startsWith('/forgot-password')) {
+        window.location.assign('/');
       }
     }
     return Promise.reject(error);

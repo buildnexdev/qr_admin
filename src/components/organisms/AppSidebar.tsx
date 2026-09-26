@@ -1,6 +1,27 @@
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, QrCode } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  BarChart3,
+  Boxes,
+  Building2,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
+  CreditCard,
+  Headphones,
+  LayoutDashboard,
+  Megaphone,
+  Settings,
+  Shield,
+  Star,
+  TicketPercent,
+  UserCircle,
+  Users,
+  UtensilsCrossed,
+  type LucideIcon,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePermissions } from '@/hooks/usePermissions';
 import {
@@ -8,98 +29,223 @@ import {
   RESTAURANT_ADMIN_NAV,
   type NavItem,
 } from '@/config/navigation';
-import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { NammaQrLogo } from '@/components/brand/NammaQrLogo';
 
-function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
+type AppSidebarProps = {
+  collapsed: boolean;
+  onCollapsedChange: (collapsed: boolean) => void;
+};
+
+type NavGroup = {
+  key: string;
+  label: string;
+  icon: LucideIcon;
+  items: NavItem[];
+};
+
+const SECTION_ICONS: Record<string, LucideIcon> = {
+  Operations: ClipboardList,
+  Menu: UtensilsCrossed,
+  Inventory: Boxes,
+  Finance: CreditCard,
+  Customers: Users,
+  Staff: UserCircle,
+  Analytics: BarChart3,
+  Marketing: TicketPercent,
+  Feedback: Star,
+  Setup: Settings,
+  Tenants: Building2,
+  Billing: CreditCard,
+  Support: Headphones,
+  Content: Megaphone,
+  System: Shield,
+};
+
+function groupNav(items: NavItem[]): { top: NavItem[]; groups: NavGroup[] } {
+  const top: NavItem[] = [];
+  const map = new Map<string, NavItem[]>();
+
+  for (const item of items) {
+    if (!item.section) {
+      top.push(item);
+      continue;
+    }
+    const list = map.get(item.section) ?? [];
+    list.push(item);
+    map.set(item.section, list);
+  }
+
+  return {
+    top,
+    groups: [...map.entries()].map(([label, groupItems]) => ({
+      key: label,
+      label,
+      icon: SECTION_ICONS[label] ?? LayoutDashboard,
+      items: groupItems,
+    })),
+  };
+}
+
+function isItemActive(pathname: string, path: string) {
+  if (path === '/admin' || path === '/super-admin') return pathname === path;
+  return pathname.startsWith(path);
+}
+
+function LeafLink({
+  item,
+  collapsed,
+  nested,
+}: {
+  item: NavItem;
+  collapsed: boolean;
+  nested?: boolean;
+}) {
   const location = useLocation();
-  const isActive =
-    item.path === '/admin' || item.path === '/super-admin'
-      ? location.pathname === item.path
-      : location.pathname.startsWith(item.path);
-
+  const active = isItemActive(location.pathname, item.path);
   const Icon = item.icon;
 
   return (
     <Link
       to={item.path}
       title={collapsed ? item.label : undefined}
-      className={cn(
-        'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
-        isActive
-          ? 'bg-sidebar-active text-white shadow-sm'
-          : 'text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground'
-      )}
+      className={cn('nq-aside-link', active && 'is-active', nested && 'is-nested', collapsed && 'is-collapsed')}
     >
-      <Icon className={cn('h-5 w-5 shrink-0', isActive ? 'text-white' : 'text-sidebar-muted group-hover:text-sidebar-foreground')} />
-      {!collapsed && <span className="truncate">{item.label}</span>}
-      {!collapsed && item.badge && (
-        <span className="ml-auto rounded-full bg-accent/20 px-2 py-0.5 text-[10px] font-semibold text-accent">
-          {item.badge}
-        </span>
-      )}
+      <Icon className="nq-aside-link__icon" strokeWidth={1.75} />
+      {!collapsed && <span className="nq-aside-link__label">{item.label}</span>}
+      {!collapsed && item.badge ? <span className="nq-aside-link__badge">{item.badge}</span> : null}
     </Link>
   );
 }
 
-export function AppSidebar() {
-  const [collapsed, setCollapsed] = useState(false);
-  const { role, filterNav } = usePermissions();
+function AccordionSection({
+  group,
+  collapsed,
+  open,
+  onToggle,
+}: {
+  group: NavGroup;
+  collapsed: boolean;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const location = useLocation();
+  const hasActiveChild = group.items.some((item) => isItemActive(location.pathname, item.path));
+  const Icon = group.icon;
+
+  if (collapsed) {
+    return (
+      <div className="nq-aside-group">
+        {group.items.map((item) => (
+          <LeafLink key={item.path} item={item} collapsed />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="nq-aside-group">
+      <button
+        type="button"
+        onClick={onToggle}
+        className={cn('nq-aside-section', (hasActiveChild || open) && 'is-open')}
+      >
+        <Icon className="nq-aside-section__icon" strokeWidth={1.75} />
+        <span className="nq-aside-section__label">{group.label}</span>
+        <ChevronDown className={cn('nq-aside-section__chevron', open && 'is-rotated')} strokeWidth={2} />
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: 'easeInOut' }}
+            className="nq-aside-group__body"
+          >
+            <div className="nq-aside-group__items">
+              {group.items.map((item) => (
+                <LeafLink key={item.path} item={item} collapsed={false} nested />
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
+  const { filterNav } = usePermissions();
   const location = useLocation();
   const isSuperAdminRoute = location.pathname.startsWith('/super-admin');
   const baseNav = isSuperAdminRoute ? SUPER_ADMIN_NAV : RESTAURANT_ADMIN_NAV;
   const nav = filterNav(baseNav);
-  let lastSection: string | undefined;
+  const { top, groups } = useMemo(() => groupNav(nav), [nav]);
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    setOpenSections((prev) => {
+      const next = { ...prev };
+      for (const group of groups) {
+        const hasActive = group.items.some((item) => isItemActive(location.pathname, item.path));
+        if (hasActive) next[group.key] = true;
+        else if (next[group.key] === undefined) next[group.key] = group.key === 'Operations' || group.key === 'Menu';
+      }
+      return next;
+    });
+  }, [groups, location.pathname]);
 
   return (
     <motion.aside
       initial={false}
-      animate={{ width: collapsed ? 72 : 260 }}
-      transition={{ duration: 0.2 }}
-      className="fixed inset-y-0 left-0 z-40 flex flex-col bg-sidebar border-r border-sidebar-hover"
+      animate={{ width: collapsed ? 72 : 268 }}
+      transition={{ duration: 0.22, ease: 'easeInOut' }}
+      className="nq-aside"
     >
-      <div className="flex h-16 items-center gap-3 border-b border-sidebar-hover px-4">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary">
-          <QrCode className="h-5 w-5 text-white" />
-        </div>
-        {!collapsed && (
-          <div className="min-w-0">
-            <p className="truncate text-sm font-bold text-sidebar-foreground">NammaQR</p>
-            <p className="truncate text-[11px] text-sidebar-muted">
-              {isSuperAdminRoute ? 'Super Admin' : 'Restaurant Admin'}
-            </p>
+      <div className="nq-aside__brand">
+        {collapsed ? (
+          <div className="nq-aside__brand-mini">
+            <NammaQrLogo size={34} />
           </div>
+        ) : (
+          <>
+            <NammaQrLogo size={34} showWordmark wordmarkClassName="text-[17px]" />
+            <p className="nq-aside__subtitle">
+              {isSuperAdminRoute ? 'Platform' : 'Restaurant POS'}
+            </p>
+          </>
         )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-1">
-        {nav.map((item) => {
-          const showSection = item.section && item.section !== lastSection;
-          if (item.section) lastSection = item.section;
+      <nav className="nq-aside__nav" aria-label="Main">
+        {top.map((item) => (
+          <LeafLink key={item.path} item={item} collapsed={collapsed} />
+        ))}
 
-          return (
-            <div key={item.path}>
-              {showSection && !collapsed && (
-                <p className="mb-2 mt-4 px-3 text-[10px] font-semibold uppercase tracking-wider text-sidebar-muted">
-                  {item.section}
-                </p>
-              )}
-              <NavLink item={item} collapsed={collapsed} />
-            </div>
-          );
-        })}
+        {groups.map((group) => (
+          <AccordionSection
+            key={group.key}
+            group={group}
+            collapsed={collapsed}
+            open={!!openSections[group.key]}
+            onToggle={() =>
+              setOpenSections((prev) => ({ ...prev, [group.key]: !prev[group.key] }))
+            }
+          />
+        ))}
       </nav>
 
-      <div className="border-t border-sidebar-hover p-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setCollapsed(!collapsed)}
-          className="w-full justify-center text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground"
+      <div className="nq-aside__foot">
+        {!collapsed && <p className="nq-aside__status">NammaQR · Live</p>}
+        <button
+          type="button"
+          className="nq-aside__collapse"
+          onClick={() => onCollapsedChange(!collapsed)}
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-          {!collapsed && <span className="ml-2">Collapse</span>}
-        </Button>
+          {!collapsed && <span>Collapse</span>}
+        </button>
       </div>
     </motion.aside>
   );

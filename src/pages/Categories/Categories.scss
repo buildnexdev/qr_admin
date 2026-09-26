@@ -4,11 +4,9 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  height: 100%;
   position: relative;
-  overflow: hidden;
-  color: var(--cream);
-  font-family: 'DM Sans', sans-serif;
+  color: var(--color-foreground, #111827);
+  font-family: inherit;
 
   &__header {
     padding: 4px 10px 6px;
@@ -126,8 +124,8 @@
   }
 
   &__cat-card {
-    background: var(--card);
-    border: 1px solid rgba(59, 130, 246, 0.35);
+    background: #ffffff;
+    border: 1px solid #e2ebe5;
     border-radius: 14px;
     display: flex;
     flex-direction: column;
@@ -138,7 +136,7 @@
       transform 0.2s,
       box-shadow 0.2s;
     position: relative;
-    box-shadow: 0 1px 0 rgba(59, 130, 246, 0.06);
+    box-shadow: 0 1px 3px rgba(10, 93, 59, 0.04);
 
     &::before {
       content: '';
@@ -148,7 +146,7 @@
       width: 80px;
       height: 80px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(234, 88, 12, 0.15) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(10, 93, 59, 0.12) 0%, transparent 70%);
       pointer-events: none;
       transition: opacity 0.2s;
       opacity: 0;
@@ -159,12 +157,12 @@
     }
 
     &:hover {
-      border-color: rgba(59, 130, 246, 0.65);
-      background: var(--card-hov);
+      border-color: rgba(10, 93, 59, 0.35);
+      background: #ffffff;
       transform: translateY(-2px);
       box-shadow:
-        0 10px 28px rgba(0, 0, 0, 0.12),
-        0 0 0 1px rgba(59, 130, 246, 0.2);
+        0 10px 28px rgba(10, 93, 59, 0.08),
+        0 0 0 1px rgba(10, 93, 59, 0.12);
     }
   }
 

@@ -15,7 +15,10 @@ import CommonOffcanvas from '../../components/common/CommonOffcanvas';
 import { confirmAlert, triggerToast } from '../../components/common/CommonAlert';
 import AddMenu from './addMenu';
 import { getApiErrorMessage } from '../../utils/apiError';
-import './menuStyle.scss';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { cn, formatCurrency } from '@/lib/utils';
 
 const FALLBACK_CATEGORIES = ['Starters', 'Main', 'Beverages', 'Desserts', 'Sides', 'Specials'];
 
@@ -109,90 +112,101 @@ const Menu: React.FC = () => {
   };
 
   return (
-    <div className="menu-page-container">
+    <div className="space-y-4">
       <CommonHeader
-        title="Menu Management"
+        title="Menu"
         icon={Utensils}
-        searchPlaceholder="Search dishes or categories..."
+        searchPlaceholder="Search dishes, code, category…"
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         onAddClick={() => handleOpenOffcanvas()}
-        addButtonLabel="Add New Item"
+        addButtonLabel="Add item"
       />
 
-      <div className="">
-        {loading ? (
-          <div className="d-flex align-items-center justify-content-center menu-loading-state">
-            <span className="menu-loading-text">Loading culinary delights...</span>
-          </div>
-        ) : (
-          <div className="menu-card-grid">
-            {filteredMenu.map((item) => (
-              <div key={item.id} className="menu-card">
-                {item.image ? (
-                  <img src={item.image} alt={item.name} className="menu-card-img" />
-                ) : (
-                  <div className="menu-img-placeholder">
-                    <Utensils size={40} />
-                  </div>
-                )}
-
-                <div className="menu-card-content">
-                  <div className="menu-card-badges">
-                    {(item.category || '')
-                      .split(',')
-                      .map((c) => c.trim())
-                      .filter(Boolean)
-                      .map((cat) => (
-                        <span key={cat} className="menu-category-badge">
-                          {cat}
-                        </span>
-                      ))}
-                  </div>
-                  {item.code ? <div className="menu-card-code">Code {item.code}</div> : null}
-                  <h3 className="menu-card-title">{item.name}</h3>
-                  <p className="menu-card-desc">{item.description}</p>
-
-                  {item.rate != null && Number(item.rate) > 0 && (
-                    <div className="menu-card-rating">
-                      <span className="menu-card-rating-star">★</span>
-                      <span className="menu-card-rating-val">{item.rate}/5</span>
-                    </div>
-                  )}
-
-                  <div className="menu-card-price">
-                    <span className="menu-card-price-currency">₹</span>
-                    {Number(item.price).toFixed(2)}
+      {loading ? (
+        <div className="rounded-xl border border-border bg-card py-16 text-center text-sm text-muted-foreground">
+          Loading menu…
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          {filteredMenu.map((item) => (
+            <Card
+              key={item.id}
+              className={cn(
+                'overflow-hidden transition-shadow hover:shadow-[var(--shadow-elevated)]',
+                !item.status && 'opacity-70'
+              )}
+            >
+              {item.image ? (
+                <img src={item.image} alt={item.name} className="h-40 w-full object-cover" />
+              ) : (
+                <div className="flex h-40 w-full items-center justify-center bg-muted/60 text-muted-foreground">
+                  <Utensils className="h-10 w-10" />
+                </div>
+              )}
+              <CardContent className="space-y-3 p-4">
+                <div className="flex flex-wrap gap-1.5">
+                  {(item.category || '')
+                    .split(',')
+                    .map((c) => c.trim())
+                    .filter(Boolean)
+                    .map((cat) => (
+                      <Badge key={cat} variant="secondary" className="font-normal">
+                        {cat}
+                      </Badge>
+                    ))}
+                  {!item.status && <Badge variant="outline">Inactive</Badge>}
+                </div>
+                {item.code ? (
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Code {item.code}
+                  </p>
+                ) : null}
+                <h3 className="text-base font-semibold leading-snug">{item.name}</h3>
+                {item.description ? (
+                  <p className="line-clamp-2 text-sm text-muted-foreground">{item.description}</p>
+                ) : null}
+                <div className="flex items-end justify-between gap-2 pt-1">
+                  <p className="text-lg font-bold text-primary">
+                    {formatCurrency(Number(item.price) || 0)}
+                  </p>
+                  <div className="flex gap-1">
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      className="h-8 w-8"
+                      title="Edit"
+                      onClick={() => handleOpenOffcanvas(item)}
+                    >
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      className="h-8 w-8 text-danger hover:text-danger"
+                      title="Delete"
+                      onClick={() => void deleteMenuItem(item.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          ))}
 
-                <div className="menu-actions">
-                  <button
-                    type="button"
-                    onClick={() => handleOpenOffcanvas(item)}
-                    className="btn-icon-edit"
-                    title="Edit Item"
-                  >
-                    <Edit2 size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void deleteMenuItem(item.id)}
-                    className="btn-icon-delete"
-                    title="Delete Item"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            ))}
-
-            {filteredMenu.length === 0 && (
-              <div className="menu-empty-state">No menu items found. Try a different search!</div>
-            )}
-          </div>
-        )}
-      </div>
+          {filteredMenu.length === 0 && (
+            <div className="col-span-full rounded-xl border border-dashed border-border bg-card py-16 text-center">
+              <p className="text-sm text-muted-foreground">No menu items found.</p>
+              <Button className="mt-4" onClick={() => handleOpenOffcanvas()}>
+                Add your first dish
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
 
       <CommonOffcanvas
         isOpen={isOffcanvasOpen}
@@ -201,17 +215,18 @@ const Menu: React.FC = () => {
         width="480px"
         footer={
           <>
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => setIsOffcanvasOpen(false)}
-              className="btn-cancel"
               disabled={saving}
             >
               Cancel
-            </button>
-            <button type="submit" form="menu-form" className="btn-premium btn-save" disabled={saving}>
-              <Save size={18} /> {saving ? 'Saving…' : editingItem ? 'Save Updates' : 'Publish Dish'}
-            </button>
+            </Button>
+            <Button type="submit" form="menu-form" disabled={saving}>
+              <Save className="h-4 w-4" />
+              {saving ? 'Saving…' : editingItem ? 'Save updates' : 'Publish dish'}
+            </Button>
           </>
         }
       >

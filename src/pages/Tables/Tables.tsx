@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { setTables, setLoading } from '../../store/tableSlice';
 import Modal from '../../components/Modal';
+import CommonHeader from '../../components/common/CommonHeader';
 import { confirmAlert, triggerToast } from '../../components/common/CommonAlert';
 import { getApiErrorMessage } from '../../utils/apiError';
 import {
@@ -95,6 +96,7 @@ const Tables: React.FC = () => {
   const [rows, setRows] = useState<TableListItem[]>([]);
   const [branches, setBranches] = useState<BranchRow[]>([]);
   const [filter, setFilter] = useState<Filter>('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<TableListItem | null>(null);
   const [form, setForm] = useState(defaultForm);
@@ -128,9 +130,18 @@ const Tables: React.FC = () => {
   }, [load]);
 
   const filtered = useMemo(() => {
-    if (filter === 'all') return rows;
-    return rows.filter((t) => t.status === filter);
-  }, [rows, filter]);
+    const q = searchTerm.trim().toLowerCase();
+    let list = filter === 'all' ? rows : rows.filter((t) => t.status === filter);
+    if (q) {
+      list = list.filter(
+        (t) =>
+          t.name.toLowerCase().includes(q) ||
+          String(t.tableCode || '').toLowerCase().includes(q) ||
+          String(t.floorSection || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [rows, filter, searchTerm]);
 
   const openAdd = async () => {
     setEditing(null);
@@ -260,32 +271,16 @@ const Tables: React.FC = () => {
   };
 
   return (
-    <div className="tables-mgmt">
-      <div className="tables-mgmt__toolbar">
-        <div className="tables-mgmt__toolbar-main">
-          <div className="tables-mgmt__heading">
-            <h1 className="tables-mgmt__title">
-              <em>Table</em> Management
-            </h1>
-            <div className="tables-mgmt__stat">
-              <span className="tables-mgmt__stat-dot" aria-hidden />
-              <span>
-                {rows.length} {rows.length === 1 ? 'table' : 'tables'} active
-              </span>
-            </div>
-          </div>
-          <p className="tables-mgmt__sub">
-            Seating, QR codes, and live order totals for dine-in.
-          </p>
-        </div>
-        <button
-          type="button"
-          className="btn-premium tables-mgmt__toolbar-action d-inline-flex align-items-center gap-2 px-3"
-          onClick={() => void openAdd()}
-        >
-          <Plus size={18} /> Add table
-        </button>
-      </div>
+    <div className="tables-mgmt space-y-4">
+      <CommonHeader
+        title="Tables"
+        icon={Armchair}
+        searchPlaceholder="Search table, code, section…"
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        onAddClick={() => void openAdd()}
+        addButtonLabel="Add table"
+      />
 
       <div className="tables-mgmt__filters">
         {(['all', 'Available', 'Occupied', 'Reserved'] as const).map((f) => (
@@ -298,6 +293,14 @@ const Tables: React.FC = () => {
             {f === 'all' ? 'All tables' : f}
           </button>
         ))}
+        <button
+          type="button"
+          className="tables-mgmt__filter-btn"
+          onClick={() => void load()}
+          title="Refresh"
+        >
+          <RefreshCw size={14} /> Refresh
+        </button>
       </div>
 
       {filtered.length === 0 && rows.length === 0 && (

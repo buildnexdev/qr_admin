@@ -1,166 +1,187 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
-import { ShoppingBag, CheckCircle, Clock } from 'lucide-react';
+import { CheckCircle, Clock, ShoppingBag } from 'lucide-react';
 import { setOrders } from '../../store/orderSlice';
 import type { RootState } from '../../store';
 import type { Order } from '../../store/orderSlice';
 import type { Table } from '../../store/tableSlice';
 import CommonHeader from '../../components/common/CommonHeader';
 import { API_BASE_URL } from '../../routes/const';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { cn, formatCurrency } from '@/lib/utils';
+import { triggerToast } from '../../components/common/CommonAlert';
+import { getApiErrorMessage } from '../../utils/apiError';
 
+function orderTotal(order: Order) {
+  const anyOrder = order as Order & { total_amount?: number | string };
+  return Number(order.total ?? anyOrder.total_amount ?? 0) || 0;
+}
+
+function statusTone(status: string) {
+  const s = status.toLowerCase();
+  if (s === 'served' || s === 'completed') return 'success';
+  if (s === 'preparing' || s === 'pending') return 'warning';
+  return 'default';
+}
 
 const Orders: React.FC = () => {
   const dispatch = useDispatch();
   const { orders, loading } = useSelector((state: RootState) => state.orders);
   const { tables } = useSelector((state: RootState) => state.tables);
   const [searchTerm, setSearchTerm] = useState('');
-
-  useEffect(() => {
-    fetchOrders();
-    const interval = setInterval(fetchOrders, 10000);
-    return () => clearInterval(interval);
-  }, []);
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
 
   const fetchOrders = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}api/orders`);
-      dispatch(setOrders(res.data.reverse()));
+      const list = Array.isArray(res.data) ? res.data : [];
+      dispatch(setOrders([...list].reverse()));
     } catch (error) {
       console.error('Error fetching orders:', error);
     }
   };
 
+  useEffect(() => {
+    void fetchOrders();
+    const interval = setInterval(() => void fetchOrders(), 10000);
+    return () => clearInterval(interval);
+  }, []);
+
   const updateOrderStatus = async (orderId: number, status: string) => {
+    setUpdatingId(orderId);
     try {
       await axios.post(`${API_BASE_URL}api/orders/update-status`, { orderId, status });
-      fetchOrders();
+      triggerToast('Order updated', 'success', `Marked as ${status}`);
+      await fetchOrders();
     } catch (error) {
-      alert('Failed to update status');
+      triggerToast('Update failed', 'error', getApiErrorMessage(error, 'Failed to update status'));
+    } finally {
+      setUpdatingId(null);
     }
   };
 
   const filteredOrders = orders.filter(
-    o => o.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-         o.id.toString().includes(searchTerm)
+    (o) =>
+      o.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      o.id.toString().includes(searchTerm)
   );
 
   return (
-    <div className="d-flex flex-column h-100" style={{ background: 'var(--bg)' }}>
-      <CommonHeader 
-        title="Live Orders Overview"
+    <div className="space-y-4">
+      <CommonHeader
+        title="Orders"
         icon={ShoppingBag}
         searchPlaceholder="Search guest or order #"
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
       />
-      
-      <div className="flex-grow-1 p-4" style={{ overflowY: 'auto' }}>
-        {loading ? (
-          <div className="text-center py-5" style={{ color: 'var(--muted)' }}>Synchronizing floor data...</div>
-        ) : (
-          <div className="row g-4">
-            {filteredOrders.length === 0 && (
-               <div className="col-12 py-5 text-center text-muted">
-                 No orders found matching your criteria.
-               </div>
-            )}
-            {filteredOrders.map((order: Order, index: number) => (
-              <div key={order.id} className="col-12 col-md-6 col-lg-4">
-                <div 
-                  className="rounded-4 p-4 h-100 d-flex flex-column" 
-                  style={{ 
-                    background: 'var(--card)', 
-                    border: '1px solid var(--border)',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
-                    transition: 'transform 0.2s',
-                    animation: `fadeUp 0.4s ease ${index * 0.05}s backwards`
-                  }}
-                >
-                  <div className="d-flex justify-content-between align-items-center mb-3">
+
+      {loading && orders.length === 0 ? (
+        <div className="rounded-xl border border-border bg-card py-16 text-center text-sm text-muted-foreground">
+          Synchronizing floor data…
+        </div>
+      ) : filteredOrders.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border bg-card py-16 text-center text-sm text-muted-foreground">
+          No orders found matching your criteria.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {filteredOrders.map((order: Order) => {
+            const status = String(order.status || 'pending');
+            const canServe = ['preparing', 'pending', 'confirmed'].includes(status.toLowerCase());
+            return (
+              <Card key={order.id} className="flex flex-col">
+                <CardContent className="flex flex-1 flex-col gap-4 p-5">
+                  <div className="flex items-start justify-between gap-3">
                     <div>
-                      <h4 className="m-0 text-white" style={{ fontFamily: 'Playfair Display, serif'}}>
-                        #{order.id.toString().slice(-4)}
-                      </h4>
-                      <small style={{ color: 'var(--muted)' }}><Clock size={12} className="me-1" />
-                        {new Date(order.timestamp || (order as any).created_at || new Date()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </small>
+                      <h3 className="text-lg font-semibold">#{order.id.toString().slice(-4)}</h3>
+                      <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        {new Date(
+                          order.timestamp ||
+                            (order as Order & { created_at?: string }).created_at ||
+                            Date.now()
+                        ).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
                     </div>
-                    <span 
-                      className="badge rounded-pill px-3 py-2 fw-semibold"
-                      style={{ 
-                        background: order.status.toLowerCase() === 'served' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(var(--accent-rgb), 0.15)',
-                        color: order.status.toLowerCase() === 'served' ? '#10B981' : 'var(--amber)',
-                        border: `1px solid ${order.status.toLowerCase() === 'served' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(var(--accent-rgb), 0.3)'}`
-                      }}
+                    <Badge
+                      className={cn(
+                        'capitalize',
+                        statusTone(status) === 'success' && 'bg-success/15 text-success hover:bg-success/15',
+                        statusTone(status) === 'warning' && 'bg-warning/15 text-warning hover:bg-warning/15'
+                      )}
+                      variant="secondary"
                     >
-                      {order.status}
-                    </span>
+                      {status}
+                    </Badge>
                   </div>
-                  
-                  <div className="mb-4">
-                    <div className="d-flex justify-content-between align-items-center mb-1">
-                      <span className="text-secondary small text-uppercase fw-semibold">GUEST</span>
-                      <span className="text-white">{order.customerName}</span>
+
+                  <div className="space-y-1.5 text-sm">
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">Guest</span>
+                      <span className="font-medium">{order.customerName || 'Guest'}</span>
                     </div>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span className="text-secondary small text-uppercase fw-semibold">TABLE</span>
-                      <span className="text-white fw-medium">
-                        {tables.find((t: Table) => t.id === order.tableId)?.name || order.tableId}
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">Table</span>
+                      <span className="font-medium">
+                        {tables.find((t: Table) => t.id === order.tableId)?.name || order.tableId || '—'}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex-grow-1 border-top border-bottom py-3 mb-4" style={{ borderColor: 'rgba(128,128,128,0.1) !important' }}>
-                    {(order.items || []).map((item: any, idx: number) => {
-                      const itemPrice = item.price !== undefined ? item.price : (item.price_at_time !== undefined ? item.price_at_time : 0);
-                      const itemQuantity = item.quantity || 1;
+                  <div className="flex-1 space-y-2 border-y border-border py-3">
+                    {(order.items || []).map((item, idx) => {
+                      const anyItem = item as { price?: number; price_at_time?: number; quantity?: number; name?: string };
+                      const itemPrice = anyItem.price ?? anyItem.price_at_time ?? 0;
+                      const qty = anyItem.quantity || 1;
                       return (
-                        <div key={idx} className="d-flex justify-content-between align-items-center mb-2">
-                          <span className="text-white">
-                            <span className="badge me-2" style={{ background: 'var(--card-hov)', color: 'var(--amber)' }}>{itemQuantity}x</span>
-                            {item.name}
+                        <div key={idx} className="flex items-center justify-between gap-2 text-sm">
+                          <span className="min-w-0 truncate">
+                            <span className="mr-2 inline-flex h-5 min-w-5 items-center justify-center rounded bg-primary/10 px-1.5 text-[11px] font-semibold text-primary">
+                              {qty}×
+                            </span>
+                            {anyItem.name}
                           </span>
-                          <span style={{ color: 'var(--muted)' }}>${Number(itemPrice * itemQuantity).toFixed(2)}</span>
+                          <span className="shrink-0 tabular-nums text-muted-foreground">
+                            {formatCurrency(Number(itemPrice) * qty)}
+                          </span>
                         </div>
                       );
                     })}
                   </div>
 
-                  <div className="mt-auto">
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                      <span className="text-secondary small text-uppercase fw-bold">TOTAL AMOUNT</span>
-                      <span className="fs-5 fw-bold" style={{ color: 'var(--cream)' }}>
-                        ${Number(order.total !== undefined ? order.total : ((order as any).total_amount !== undefined ? (order as any).total_amount : 0)).toFixed(2)}
+                  <div className="mt-auto space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Total
+                      </span>
+                      <span className="text-lg font-bold text-foreground">
+                        {formatCurrency(orderTotal(order))}
                       </span>
                     </div>
-                    
-                    {order.status === 'Preparing' && (
-                      <button 
-                        className="btn w-100 d-flex align-items-center justify-content-center gap-2 fw-semibold"
-                        style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', color: '#fff', border: 'none', height: '44px', borderRadius: '10px' }}
-                        onClick={() => updateOrderStatus(order.id, 'Served')}
+
+                    {canServe && (
+                      <Button
+                        className="w-full"
+                        disabled={updatingId === order.id}
+                        onClick={() => void updateOrderStatus(order.id, 'Served')}
                       >
-                        <CheckCircle size={18} /> Mark as Served
-                      </button>
+                        <CheckCircle className="h-4 w-4" />
+                        {updatingId === order.id ? 'Updating…' : 'Mark as served'}
+                      </Button>
                     )}
                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(15px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
 
 export default Orders;
-

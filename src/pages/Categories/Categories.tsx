@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Tags, Search, Plus, Edit2, Trash2, X, Save } from 'lucide-react';
+import { Tags, Edit2, Trash2, X, Save } from 'lucide-react';
 import type { RootState, AppDispatch } from '../../store';
 import {
   fetchCategories,
@@ -13,6 +13,7 @@ import {
 import { triggerToast } from '../../components/common/CommonAlert';
 import { getApiErrorMessage } from '../../utils/apiError';
 import { fetchNextCategoryCode } from '../../api/categoryApi';
+import CommonHeader from '../../components/common/CommonHeader';
 import './Categories.scss';
 
 const Categories: React.FC = () => {
@@ -138,35 +139,16 @@ const Categories: React.FC = () => {
   });
 
   return (
-    <div className="categories-page page-container">
-      <header className="categories-page__header app-header">
-        <div className="categories-page__header-left">
-          <div className="categories-page__icon-wrap">
-            <Tags size={18} />
-          </div>
-          <div className="categories-page__title-block">
-            <h2 className="categories-page__title">
-              <em className="categories-page__title-em">Category</em> Management
-            </h2>
-          </div>
-        </div>
-
-        <div className="categories-page__header-right header-right">
-          <div className="categories-page__search-wrap">
-            <Search size={16} className="categories-page__search-icon" />
-            <input
-              type="text"
-              placeholder="Search by code, name…"
-              className="categories-page__search-input dark-input"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <button type="button" className="btn-add" onClick={() => handleOpenModal()}>
-            <Plus size={18} /> Add Category
-          </button>
-        </div>
-      </header>
+    <div className="categories-page space-y-4">
+      <CommonHeader
+        title="Categories"
+        icon={Tags}
+        searchPlaceholder="Search by code, name…"
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        onAddClick={() => handleOpenModal()}
+        addButtonLabel="Add category"
+      />
 
       {error && <div className="categories-page__error-banner">{error}</div>}
 

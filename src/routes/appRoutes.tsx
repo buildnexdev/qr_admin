@@ -1,9 +1,8 @@
-import { type RouteObject } from 'react-router-dom';
+import { Navigate, type RouteObject } from 'react-router-dom';
 import AppShell from '@/components/templates/AppShell';
 import { GenericModulePage } from '@/pages/modules/GenericModulePage';
 import { MODULE_DEFINITIONS } from '@/config/moduleDefinitions';
 
-// Existing feature pages (legacy — wrapped in new shell)
 import Dashboard from '@/pages/Dashboard/Dashboard';
 import Company from '@/pages/Company/Company';
 import Branch from '@/pages/Branch/Branch';
@@ -19,16 +18,38 @@ import Reports from '@/pages/Reports/Reports';
 import Profile from '@/pages/Profile/Profile';
 import CustomerPage from '@/pages/customer/CustomerPage';
 import Delivery from '@/pages/Delivery/Delivery';
-
-// New pages
 import SuperAdminDashboard from '@/pages/super-admin/SuperAdminDashboard';
+
+import ConfigurationLayout from '@/pages/configuration/ConfigurationLayout';
+import ConfigurationHub from '@/pages/configuration/ConfigurationHub';
+import {
+  RestaurantConfigPage,
+  BranchConfigPage,
+  PosConfigPage,
+  BillingConfigPage,
+  TaxConfigPage,
+  OrderConfigPage,
+  TableConfigPage,
+  KotConfigPage,
+  MenuConfigPage,
+  InventoryConfigPage,
+  PaymentConfigPage,
+  DiscountConfigPage,
+  CustomerConfigPage,
+  QrConfigPage,
+  PrinterConfigPage,
+  ReceiptConfigPage,
+  BusinessHoursConfigPage,
+  NotificationsConfigPage,
+  UsersConfigPage,
+  GeneralConfigPage,
+} from '@/pages/configuration/sectionPages';
 
 function moduleRoute(key: string) {
   const def = MODULE_DEFINITIONS[key];
   return def ? <GenericModulePage module={def} /> : null;
 }
 
-/** Restaurant Admin routes */
 export const adminRoutes: RouteObject[] = [
   {
     path: '/admin',
@@ -49,12 +70,38 @@ export const adminRoutes: RouteObject[] = [
       { path: 'stocks', element: <Stocks /> },
       { path: 'reports', element: <Reports /> },
       { path: 'profile', element: <Profile /> },
-      // New module routes
+      {
+        path: 'configuration',
+        element: <ConfigurationLayout />,
+        children: [
+          { index: true, element: <ConfigurationHub /> },
+          { path: 'restaurant', element: <RestaurantConfigPage /> },
+          { path: 'branch', element: <BranchConfigPage /> },
+          { path: 'pos', element: <PosConfigPage /> },
+          { path: 'billing', element: <BillingConfigPage /> },
+          { path: 'tax', element: <TaxConfigPage /> },
+          { path: 'order', element: <OrderConfigPage /> },
+          { path: 'table', element: <TableConfigPage /> },
+          { path: 'kot', element: <KotConfigPage /> },
+          { path: 'menu', element: <MenuConfigPage /> },
+          { path: 'inventory', element: <InventoryConfigPage /> },
+          { path: 'payment', element: <PaymentConfigPage /> },
+          { path: 'discount', element: <DiscountConfigPage /> },
+          { path: 'customer', element: <CustomerConfigPage /> },
+          { path: 'qr', element: <QrConfigPage /> },
+          { path: 'printer', element: <PrinterConfigPage /> },
+          { path: 'receipt', element: <ReceiptConfigPage /> },
+          { path: 'business-hours', element: <BusinessHoursConfigPage /> },
+          { path: 'notifications', element: <NotificationsConfigPage /> },
+          { path: 'users', element: <UsersConfigPage /> },
+          { path: 'general', element: <GeneralConfigPage /> },
+        ],
+      },
       { path: 'pos', element: moduleRoute('pos') },
       { path: 'variants', element: moduleRoute('variants') },
       { path: 'addons', element: moduleRoute('addons') },
       { path: 'combos', element: moduleRoute('combos') },
-      { path: 'stock', element: moduleRoute('stock') },
+      { path: 'stock', element: <Navigate to="/admin/stocks" replace /> },
       { path: 'purchase', element: moduleRoute('purchase') },
       { path: 'suppliers', element: moduleRoute('suppliers') },
       { path: 'expenses', element: moduleRoute('expenses') },
@@ -69,10 +116,10 @@ export const adminRoutes: RouteObject[] = [
       { path: 'wallet', element: moduleRoute('wallet') },
       { path: 'membership', element: moduleRoute('membership') },
       { path: 'reviews', element: moduleRoute('reviews') },
-      { path: 'settings', element: moduleRoute('settings') },
-      { path: 'printer', element: moduleRoute('printer') },
-      { path: 'taxes', element: moduleRoute('taxes') },
-      { path: 'notifications', element: moduleRoute('notifications') },
+      { path: 'settings', element: <ConfigurationHub /> },
+      { path: 'printer', element: <PrinterConfigPage /> },
+      { path: 'taxes', element: <TaxConfigPage /> },
+      { path: 'notifications', element: <NotificationsConfigPage /> },
       { path: 'refunds', element: moduleRoute('refunds') },
       { path: 'invoices', element: moduleRoute('invoices') },
       { path: 'audit-logs', element: moduleRoute('audit-logs') },
@@ -80,7 +127,6 @@ export const adminRoutes: RouteObject[] = [
   },
 ];
 
-/** Super Admin routes */
 export const superAdminRoutes: RouteObject[] = [
   {
     path: '/super-admin',

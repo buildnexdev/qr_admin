@@ -2,7 +2,6 @@ import { useRoutes, Navigate, type RouteObject } from 'react-router-dom';
 import { useEffect } from 'react';
 import LoginPage from '@/pages/auth/LoginPage';
 import Register from '@/pages/Register/Register';
-import Landing from '@/pages/Landing/Landing';
 import CustomerOrderPage from '@/pages/CustomerOrder/CustomerOrderPage';
 import { contentRouters } from '@/routes/appRoutes';
 import { GenericModulePage } from '@/pages/modules/GenericModulePage';
@@ -13,10 +12,10 @@ function ForgotPasswordPage() {
     <GenericModulePage
       module={{
         title: 'Forgot Password',
-        description: 'Reset your password via email or phone OTP.',
+        description: 'Reset your password via phone OTP.',
         icon: KeyRound,
         status: 'beta',
-        features: ['Email reset link', 'Phone OTP reset', '2FA verification'],
+        features: ['Phone OTP reset', 'Secure password update'],
       }}
     />
   );
@@ -29,8 +28,8 @@ function App() {
   }, []);
 
   const routes: RouteObject[] = [
-    { path: '/', element: <Landing /> },
-    { path: '/login', element: <LoginPage /> },
+    { path: '/', element: <LoginPage /> },
+    { path: '/login', element: <Navigate to="/" replace /> },
     { path: '/register', element: <Register /> },
     { path: '/forgot-password', element: <ForgotPasswordPage /> },
     { path: '/:companySlug/table/:tableKey', element: <CustomerOrderPage /> },

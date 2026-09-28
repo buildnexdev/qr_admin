@@ -1,11 +1,14 @@
 import { useRoutes, Navigate, type RouteObject } from 'react-router-dom';
 import { useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { KeyRound } from 'lucide-react';
+import type { RootState } from '@/store';
 import LoginPage from '@/pages/auth/LoginPage';
 import Register from '@/pages/Register/Register';
 import CustomerOrderPage from '@/pages/CustomerOrder/CustomerOrderPage';
-import { contentRouters } from '@/routes/appRoutes';
 import { GenericModulePage } from '@/pages/modules/GenericModulePage';
-import { KeyRound } from 'lucide-react';
+import { contentRouters } from '@/routes/appRoutes';
+import { getHomePathForRole } from '@/components/templates/RoleGuard';
 
 function ForgotPasswordPage() {
   return (
@@ -21,6 +24,14 @@ function ForgotPasswordPage() {
   );
 }
 
+function RootRedirect() {
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  if (isAuthenticated) {
+    return <Navigate to={getHomePathForRole(user?.role)} replace />;
+  }
+  return <LoginPage />;
+}
+
 function App() {
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'light';
@@ -28,8 +39,8 @@ function App() {
   }, []);
 
   const routes: RouteObject[] = [
-    { path: '/', element: <LoginPage /> },
-    { path: '/login', element: <Navigate to="/" replace /> },
+    { path: '/', element: <RootRedirect /> },
+    { path: '/login', element: <RootRedirect /> },
     { path: '/register', element: <Register /> },
     { path: '/forgot-password', element: <ForgotPasswordPage /> },
     { path: '/:companySlug/table/:tableKey', element: <CustomerOrderPage /> },

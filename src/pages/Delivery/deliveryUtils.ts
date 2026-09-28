@@ -13,8 +13,8 @@ export function orderChannel(o: Record<string, unknown>): OrderChannel {
   return 'delivery';
 }
 
-export function isDeliveryOrder(o: Record<string, unknown>): boolean {
-  return orderChannel(o) === 'delivery';
+export function isDeliveryOrder(o: object): boolean {
+  return orderChannel(o as Record<string, unknown>) === 'delivery';
 }
 
 export function orderTs(o: { timestamp?: string; created_at?: string }) {

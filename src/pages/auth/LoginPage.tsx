@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { loginUser, clearError } from '@/store/authSlice';
 import type { AppDispatch, RootState } from '@/store';
 import { NammaQrLogo } from '@/components/brand/NammaQrLogo';
+import { getHomePathForRole } from '@/components/templates/RoleGuard';
 
 const loginSchema = z.object({
   phone: z
@@ -59,6 +60,7 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
+    defaultValues: { phone: '', password: '' },
   });
 
   const phoneReg = register('phone');
@@ -68,19 +70,12 @@ export default function LoginPage() {
     dispatch(clearError());
 
     const result = await dispatch(
-      loginUser({ username: data.phone, password: data.password })
+      loginUser({ username: data.phone.trim(), password: data.password })
     );
 
     if (loginUser.fulfilled.match(result)) {
       toast.success('Welcome back!');
-      const user = result.payload;
-      if (user.role === 0) {
-        navigate('/super-admin');
-      } else if (user.branchid === 0) {
-        navigate('/admin/company');
-      } else {
-        navigate('/admin');
-      }
+      navigate(getHomePathForRole(result.payload.role));
     } else {
       toast.error((result.payload as string) ?? 'Login failed');
     }
@@ -235,10 +230,7 @@ export default function LoginPage() {
                           : 'none',
                       }}
                       {...phoneReg}
-                      onFocus={(e) => {
-                        setPhoneFocused(true);
-                        phoneReg.onFocus?.(e);
-                      }}
+                      onFocus={() => setPhoneFocused(true)}
                       onBlur={(e) => {
                         setPhoneFocused(false);
                         phoneReg.onBlur?.(e);
@@ -287,10 +279,7 @@ export default function LoginPage() {
                           : 'none',
                       }}
                       {...passwordReg}
-                      onFocus={(e) => {
-                        setPassFocused(true);
-                        passwordReg.onFocus?.(e);
-                      }}
+                      onFocus={() => setPassFocused(true)}
                       onBlur={(e) => {
                         setPassFocused(false);
                         passwordReg.onBlur?.(e);

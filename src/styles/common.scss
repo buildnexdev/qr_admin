@@ -1,9 +1,11 @@
 // Import Bootstrap CSS configuration and functions
 @import "bootstrap/scss/functions";
+
+$primary: #0A5D3B;
+$link-decoration: none;
+
 @import "bootstrap/scss/variables";
 
-// Override Bootstrap primary colors — Facit glass + NammaQr blue
-$primary: var(--ember);
 $secondary: var(--muted);
 $dark: var(--bg);
 $light: var(--cream);
@@ -24,7 +26,10 @@ $light: var(--cream);
   --glow: rgba(45, 92, 254, 0.12);
 }
 
-@import "bootstrap/scss/bootstrap";
+// Layered so Tailwind components/utilities win; order is declared in globals.css
+@layer bootstrap {
+  @import "bootstrap/scss/bootstrap";
+}
 
 // --- Custom Reusable Classes --- //
 

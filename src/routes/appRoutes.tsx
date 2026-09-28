@@ -1,5 +1,6 @@
 import { Navigate, type RouteObject } from 'react-router-dom';
 import AppShell from '@/components/templates/AppShell';
+import { RoleGuard } from '@/components/templates/RoleGuard';
 import { GenericModulePage } from '@/pages/modules/GenericModulePage';
 import { MODULE_DEFINITIONS } from '@/config/moduleDefinitions';
 
@@ -50,13 +51,17 @@ function moduleRoute(key: string) {
   return def ? <GenericModulePage module={def} /> : null;
 }
 
+/** Restaurant Admin / Owner — full restaurant access */
 export const adminRoutes: RouteObject[] = [
   {
     path: '/admin',
-    element: <AppShell />,
+    element: (
+      <RoleGuard allow={['owner', 'admin', 'manager', 'cashier', 'waiter', 'kitchen', 'delivery', 'accountant', 'inventory_manager', 'support']}>
+        <AppShell />
+      </RoleGuard>
+    ),
     children: [
       { index: true, element: <Dashboard /> },
-      { path: 'company', element: <Company /> },
       { path: 'branch', element: <Branch /> },
       { path: 'staff', element: <Staff /> },
       { path: 'customers', element: <CustomerPage /> },
@@ -127,13 +132,19 @@ export const adminRoutes: RouteObject[] = [
   },
 ];
 
+/** Super Admin — platform companies & system */
 export const superAdminRoutes: RouteObject[] = [
   {
     path: '/super-admin',
-    element: <AppShell />,
+    element: (
+      <RoleGuard allow={['super_admin']}>
+        <AppShell />
+      </RoleGuard>
+    ),
     children: [
       { index: true, element: <SuperAdminDashboard /> },
-      { path: 'restaurants', element: moduleRoute('super-restaurants') },
+      { path: 'companies', element: <Company /> },
+      { path: 'restaurants', element: <Navigate to="/super-admin/companies" replace /> },
       { path: 'subscriptions', element: moduleRoute('super-subscriptions') },
       { path: 'plans', element: moduleRoute('super-plans') },
       { path: 'invoices', element: moduleRoute('super-invoices') },

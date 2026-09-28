@@ -176,23 +176,31 @@ function AccordionSection({
 }
 
 export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
-  const { filterNav } = usePermissions();
+  const { role, filterNav } = usePermissions();
   const location = useLocation();
   const isSuperAdminRoute = location.pathname.startsWith('/super-admin');
-  const baseNav = isSuperAdminRoute ? SUPER_ADMIN_NAV : RESTAURANT_ADMIN_NAV;
-  const nav = filterNav(baseNav);
-  const { top, groups } = useMemo(() => groupNav(nav), [nav]);
+  const { top, groups } = useMemo(
+    () => groupNav(filterNav(isSuperAdminRoute ? SUPER_ADMIN_NAV : RESTAURANT_ADMIN_NAV)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- filterNav is recreated each render; role captures its inputs
+    [role, isSuperAdminRoute]
+  );
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     setOpenSections((prev) => {
+      let changed = false;
       const next = { ...prev };
       for (const group of groups) {
         const hasActive = group.items.some((item) => isItemActive(location.pathname, item.path));
-        if (hasActive) next[group.key] = true;
-        else if (next[group.key] === undefined) next[group.key] = group.key === 'Operations' || group.key === 'Menu';
+        if (hasActive && !next[group.key]) {
+          next[group.key] = true;
+          changed = true;
+        } else if (next[group.key] === undefined) {
+          next[group.key] = group.key === 'Operations' || group.key === 'Menu';
+          changed = true;
+        }
       }
-      return next;
+      return changed ? next : prev;
     });
   }, [groups, location.pathname]);
 
@@ -250,3 +258,5 @@ export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
     </motion.aside>
   );
 }
+
+export default AppSidebar;

@@ -17,7 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export type FieldDef =
   | { key: string; label: string; type: 'text' | 'number' | 'email' | 'url' | 'textarea'; help?: string; required?: boolean }
   | { key: string; label: string; type: 'switch'; help?: string }
-  | { key: string; label: string; type: 'select'; options: { value: string; label: string }[]; help?: string }
+  | { key: string; label: string; type: 'select'; options: { value: string; label: string }[]; help?: string; required?: boolean }
   | { key: string; label: string; type: 'nested-switch'; parent: string; nestedKey: string; help?: string };
 
 type Props = {

@@ -72,7 +72,7 @@ export type NavItem = {
 
 export const SUPER_ADMIN_NAV: NavItem[] = [
   { path: '/super-admin', label: 'Dashboard', icon: LayoutDashboard, permission: 'super.dashboard' },
-  { section: 'Tenants', path: '/super-admin/restaurants', label: 'Restaurants', icon: Building2, permission: 'super.restaurants' },
+  { section: 'Tenants', path: '/super-admin/companies', label: 'Companies', icon: Building2, permission: 'super.restaurants' },
   { section: 'Tenants', path: '/super-admin/subscriptions', label: 'Subscriptions', icon: CreditCard, permission: 'super.subscriptions' },
   { section: 'Tenants', path: '/super-admin/plans', label: 'Plans', icon: Crown, permission: 'super.plans' },
   { section: 'Billing', path: '/super-admin/invoices', label: 'Invoices', icon: FileText, permission: 'super.invoices' },
@@ -122,7 +122,6 @@ export const RESTAURANT_ADMIN_NAV: NavItem[] = [
   { section: 'Marketing', path: '/admin/wallet', label: 'Wallet', icon: Wallet, permission: 'admin.wallet' },
   { section: 'Marketing', path: '/admin/membership', label: 'Membership', icon: Crown, permission: 'admin.membership' },
   { section: 'Feedback', path: '/admin/reviews', label: 'Reviews', icon: Star, permission: 'admin.reviews' },
-  { section: 'Setup', path: '/admin/company', label: 'Company', icon: Building2, permission: 'admin.company' },
   { section: 'Setup', path: '/admin/branch', label: 'Branches', icon: MapPin, permission: 'admin.branch' },
   { section: 'Setup', path: '/admin/configuration', label: 'Configuration', icon: Settings, permission: 'admin.settings' },
   { section: 'Setup', path: '/admin/printer', label: 'Printer', icon: Printer, permission: 'admin.printer' },
@@ -142,7 +141,8 @@ export type ModuleMeta = {
 };
 
 export const MODULE_META: Record<string, ModuleMeta> = {
-  'super-admin/restaurants': { title: 'Restaurants', description: 'Manage all tenant restaurants on the platform.', icon: Building2, features: ['Tenant onboarding', 'Status control', 'Module toggles'], status: 'live' },
+  'super-admin/restaurants': { title: 'Companies', description: 'Manage all tenant companies on the platform.', icon: Building2, features: ['Tenant onboarding', 'Status control', 'Module toggles'], status: 'live' },
+  'super-admin/companies': { title: 'Companies', description: 'Manage all tenant companies on the platform.', icon: Building2, features: ['Tenant onboarding', 'Status control', 'Module toggles'], status: 'live' },
   'admin/pos': { title: 'POS Billing', description: 'Point of sale for in-store order entry and billing.', icon: Monitor, features: ['Quick billing', 'Split payments', 'Receipt print'], status: 'coming_soon' },
   'admin/variants': { title: 'Variants', description: 'Size, spice level, and custom item variants.', icon: Layers, features: ['Variant groups', 'Price modifiers'], status: 'coming_soon' },
   'admin/addons': { title: 'Addons', description: 'Extra toppings and add-on items.', icon: PackagePlus, features: ['Addon groups', 'Mandatory rules'], status: 'coming_soon' },
